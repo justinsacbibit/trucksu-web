@@ -38,6 +38,8 @@ defmodule Trucksu.ScoreController do
       | _osu_version
     ] = score_data
 
+    username = String.rstrip(username)
+
     case Session.authenticate(username, pass, true) do
       :error ->
         raise "no"
@@ -57,7 +59,9 @@ defmodule Trucksu.ScoreController do
 
     completed = case params["x"] do
       nil -> 2
-      completed -> completed
+      completed ->
+        {int, _} = Integer.parse(completed)
+        int
     end
 
     cond do
@@ -68,7 +72,8 @@ defmodule Trucksu.ScoreController do
           where: b.file_md5 == ^beatmap_file_md5
             and u.username == ^username
             and s.game_mode == ^game_mode,
-          order_by: [desc: s.score]
+          order_by: [desc: s.score],
+          limit: 1
 
         user = Repo.one! from u in User,
           join: s in assoc(u, :stats),
@@ -103,8 +108,8 @@ defmodule Trucksu.ScoreController do
             ranked_score: new_score,
             total_score: new_score,
             playcount: stats.playcount + 1,
-            total_hits: count_300 + count_100 + count_50,
-            accuracy: accuracy
+            total_hits: stats.total_hits + count_300 + count_100 + count_50,
+            accuracy: accuracy # TODO: Calculate actual updated accuracy
 
           {:ok, _} = Repo.update user_stats
 
