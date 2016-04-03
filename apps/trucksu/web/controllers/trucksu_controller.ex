@@ -82,30 +82,21 @@ defmodule Trucksu.TrucksuController do
     |> GenServer.cast({:change_action, data})
 
     packet = Packet.user_stats(user)
-    enqueue_all(packet)
+    UserServer.Supervisor.enqueue_all(packet)
     <<>>
-  end
-
-  defp enqueue_all(packet, opts \\ []) do
-    # Spawn a new process to send the message to users, so that the current
-    # request is not blocked
-    spawn(fn ->
-      Supervisor.which_children(UserServer.Supervisor)
-      |> Enum.each(fn({_, pid, _, _}) ->
-        GenServer.cast(pid, {:enqueue, packet, opts})
-      end)
-    end)
   end
 
   defp handle_packet(1, data, user) do
     packet = Packet.send_message(user.username, data[:message], data[:to], user.id)
-    enqueue_all(packet, exclude: [user.id])
+    # UserServer.Supervisor.enqueue_all(packet, exclude: [user.id])
     <<>>
   end
 
   defp handle_packet(2, data, user) do
-    # TODO: Send packet to all users
-    Packet.logout(user.id)
+    packet = Packet.logout(user.id)
+    UserServer.Supervisor.enqueue_all(packet)
+
+    <<>>
   end
 
   defp handle_packet(3, data, user) do
@@ -125,6 +116,12 @@ defmodule Trucksu.TrucksuController do
   defp handle_packet(68, data, user) do
     IO.puts "Unhandled beatmapInfoRequest"
     IO.inspect data
+    <<>>
+  end
+
+  # client_channelPart
+  defp handle_packet(78, [channel: channel], user) do
+    Logger.warn "Handling channel part"
     <<>>
   end
 
@@ -163,10 +160,12 @@ defmodule Trucksu.TrucksuController do
     Packet.silence_end_time(0)
     <> Packet.user_id(user.id)
     <> Packet.protocol_version
-    <> Packet.user_supporter_gmt(false, false)
+    <> Packet.user_supporter_gmt(true, true)
     <> Packet.user_panel(user)
     <> Packet.user_stats(user)
     <> Packet.channel_info_end
+    <> Packet.channel_join_success("#osu")
+    <> Packet.channel_join_success("#announce")
     <> Packet.channel_info("#osu")
     <> Packet.channel_info("#announce")
     # TODO: Dynamically add channel info

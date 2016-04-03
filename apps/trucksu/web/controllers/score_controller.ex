@@ -73,6 +73,7 @@ defmodule Trucksu.ScoreController do
         user = Repo.one! from u in User,
           join: s in assoc(u, :stats),
           where: s.game_mode == ^game_mode,
+          where: u.username == ^username,
           preload: [stats: s]
 
         {score, _} = Integer.parse(score)
