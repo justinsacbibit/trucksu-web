@@ -19,7 +19,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = 'ubuntu/trusty64'
 
-  config.vm.network "private_network", type: "dhcp"
+  if OS.mac?
+    config.vm.network "private_network", type: "dhcp"
+  else
+    config.vm.network "public_network"
+  end
   config.vm.synced_folder('.', '/vagrant', type: 'nfs')
 
   config.vm.provision :shell, path: 'vagrant/build_dependency_setup.sh'
@@ -32,20 +36,29 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision :shell, path: 'vagrant/nginx_setup.sh'
   config.vm.provision :shell, path: 'vagrant/php_setup.sh'
 
-  # Phoenix port forwarding
-  config.vm.network :forwarded_port, host: 8080, guest: 8080
-  config.vm.network :forwarded_port, host: 4001, guest: 4001
-  # PostgreSQL Server port forwarding
+  # Phoenix
+  if OS.mac?
+    config.vm.network :forwarded_port, host: 8080, guest: 8080
+  else
+    config.vm.network :forwarded_port, host: 80, guest: 8080
+  end
+  # Ops
+  config.vm.network :forwarded_port, host: 4002, guest: 4002, auto_correct: true
+  # Webpack
+  config.vm.network :forwarded_port, host: 4001, guest: 4001, auto_correct: true
+  # PostgreSQL
   config.vm.network :forwarded_port, host: 5432, guest: 5432
 
-  config.trigger.after [:provision, :up, :reload] do
-    system('echo "
-      rdr pass on lo0 inet proto tcp from any to 127.0.0.1 port 80 -> 127.0.0.1 port 8080
-      rdr pass on lo0 inet proto tcp from any to 127.0.0.1 port 443 -> 127.0.0.1 port 8443
-      " | sudo pfctl -f - > /dev/null 2>&1; sudo pfctl -e; echo "==> Forwarding Ports: 80 -> 8080, 443 -> 8443"')
-  end
-  config.trigger.after [:halt, :destroy] do
-    system("sudo pfctl -f /etc/pf.conf > /dev/null 2>&1; echo '==> Removing Port Forwarding'")
+  if OS.mac?
+    config.trigger.after [:provision, :up, :reload] do
+      system('echo "
+        rdr pass on lo0 inet proto tcp from any to 127.0.0.1 port 80 -> 127.0.0.1 port 8080
+        rdr pass on lo0 inet proto tcp from any to 127.0.0.1 port 443 -> 127.0.0.1 port 8443
+        " | sudo pfctl -f - > /dev/null 2>&1; sudo pfctl -e; echo "==> Forwarding Ports: 80 -> 8080, 443 -> 8443"')
+    end
+    config.trigger.after [:halt, :destroy] do
+      system("sudo pfctl -f /etc/pf.conf > /dev/null 2>&1; echo '==> Removing Port Forwarding'")
+    end
   end
 
   # Disable automatic box update checking. If you disable this, then
@@ -155,4 +168,22 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # chef-validator, unless you changed the configuration.
   #
   #   chef.validation_client_name = "ORGNAME-validator"
+end
+
+module OS
+    def OS.windows?
+        (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+    end
+
+    def OS.mac?
+        (/darwin/ =~ RUBY_PLATFORM) != nil
+    end
+
+    def OS.unix?
+        !OS.windows?
+    end
+
+    def OS.linux?
+        OS.unix? and not OS.mac?
+    end
 end
