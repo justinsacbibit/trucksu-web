@@ -88,7 +88,7 @@ defmodule Trucksu.TrucksuController do
 
   defp handle_packet(1, data, user) do
     packet = Packet.send_message(user.username, data[:message], data[:to], user.id)
-    # UserServer.Supervisor.enqueue_all(packet, exclude: [user.id])
+    UserServer.Supervisor.enqueue_all(packet, exclude: [user.id])
     <<>>
   end
 
@@ -160,7 +160,7 @@ defmodule Trucksu.TrucksuController do
     Packet.silence_end_time(0)
     <> Packet.user_id(user.id)
     <> Packet.protocol_version
-    <> Packet.user_supporter_gmt(true, true)
+    <> Packet.user_supporter_gmt(false, false)
     <> Packet.user_panel(user)
     <> Packet.user_stats(user)
     <> Packet.channel_info_end
