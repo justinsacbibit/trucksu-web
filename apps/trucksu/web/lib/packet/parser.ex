@@ -73,6 +73,7 @@ defmodule Trucksu.Packet.Decoder do
   defp decode_packet(3, _), do: [] # requestStatusUpdate
   defp decode_packet(4, _), do: [] # ping
   defp decode_packet(63, data), do: channel_join(data)
+  defp decode_packet(63, _), do: [] # beatmapInfoRequest
   defp decode_packet(78, data), do: channel_part(data)
   defp decode_packet(79, _), do: [] # receiveUpdates
   defp decode_packet(85, data), do: user_stats_request(data)
