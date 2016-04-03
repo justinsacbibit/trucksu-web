@@ -31,6 +31,10 @@ defmodule Trucksu.Router do
       post "/osu-submit-modular.php", ScoreController, :create
     end
 
+    scope "/pages" do
+      post "/include/home-ircfeed.php", OsuPagesController, :irc_feed
+    end
+
     scope "/api" do
       pipe_through :api
 
