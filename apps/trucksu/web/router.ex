@@ -58,4 +58,9 @@ defmodule Trucksu.Router do
   scope "/c", Trucksu do
     post "/", TrucksuController, :index
   end
+
+  # Internal API calls
+  scope "/ops", Trucksu do
+    post "restart", OpsController, :restart
+  end
 end
