@@ -44,13 +44,7 @@ defmodule Trucksu.OsuWebController do
   def get_scores(conn, %{"c" => file_md5, "i" => beatmapset_id, "f" => filename, "us" => username, "m" => mode, "v" => type} = params) do
 
     query = from b in Beatmap,
-      left_join: s in assoc(b, :scores),
-      left_join: u in assoc(s, :user),
-      where: b.file_md5 == ^file_md5,
-      where: is_nil(s.completed) or s.completed == 2,
-      order_by: [desc: s.score],
-      distinct: s.user_id,
-      preload: [scores: {s, user: u}]
+      where: b.file_md5 == ^file_md5
 
     beatmap = case Repo.one query do
       nil ->
@@ -63,7 +57,16 @@ defmodule Trucksu.OsuWebController do
         Repo.preload beatmap, :scores
 
       beatmap ->
-        beatmap
+        beatmap_id = beatmap.id
+        preload_query = from s in Score,
+          join: u in assoc(s, :user),
+          where: s.completed == 2 or s.completed == 3,
+          where: s.beatmap_id == ^beatmap_id,
+          order_by: [desc: s.score],
+          distinct: s.user_id,
+          preload: [user: u]
+
+        Repo.preload beatmap, scores: preload_query
     end
 
     data = format_beatmap(2, beatmapset_id, beatmap)

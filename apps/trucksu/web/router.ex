@@ -31,6 +31,10 @@ defmodule Trucksu.Router do
       post "/osu-submit-modular.php", ScoreController, :create
     end
 
+    scope "/pages" do
+      post "/include/home-ircfeed.php", OsuPagesController, :irc_feed
+    end
+
     scope "/api" do
       pipe_through :api
 
@@ -57,5 +61,10 @@ defmodule Trucksu.Router do
   # The following calls go to c.ppy.sh or c1.ppy.sh
   scope "/c", Trucksu do
     post "/", TrucksuController, :index
+  end
+
+  # Internal API calls
+  scope "/ops", Trucksu do
+    post "restart", OpsController, :restart
   end
 end

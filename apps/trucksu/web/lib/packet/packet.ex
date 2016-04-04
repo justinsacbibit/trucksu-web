@@ -179,4 +179,8 @@ defmodule Trucksu.Packet do
   def channel_join_success(channel_name) do
     new(Ids.server_channelJoinSuccess, [{channel_name, :string}])
   end
+
+  def server_restart(ms_until_reconnect) do
+    new(Ids.server_restart, [{ms_until_reconnect, :uint32}])
+  end
 end
