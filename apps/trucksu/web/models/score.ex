@@ -1,5 +1,6 @@
 defmodule Trucksu.Score do
   use Trucksu.Web, :model
+  import Ecto.Query, only: [from: 2]
 
   schema "scores" do
     field :score, :integer
@@ -34,5 +35,10 @@ defmodule Trucksu.Score do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
+  end
+
+  def completed(query \\ __MODULE__) do
+    from s in query,
+      where: s.completed == 2 or s.completed == 3
   end
 end

@@ -19,13 +19,50 @@ defmodule Trucksu.OsuWebController do
     Timex.to_unix(datetime)
   end
 
+  defp format_score(score, place) do
+    "#{score.id}|#{score.user.username}|#{score.score}|#{score.max_combo}"
+    <> "|#{score.count_50}|#{score.count_100}|#{score.count_300}|#{score.miss_count}"
+    <> "|#{score.katu_count}|#{score.geki_count}|#{score.full_combo}"
+    <> "|#{score.mods}|#{score.user.id}|#{place}|#{osu_date_to_unix_timestamp(score.time)}|0\n" # the 0 is has_replay
+  end
+
+  defp format_personal_best(beatmap, username) do
+    beatmap_id = beatmap.id
+
+    query = from s in Score,
+      join: s_ in fragment("
+        SELECT row_number, id
+        FROM
+          (SELECT
+             row_number()
+             OVER (
+               ORDER BY score DESC),
+             id, username
+           FROM
+             (SELECT DISTINCT ON (sc.user_id) sc.id, score, username
+              FROM scores sc
+                JOIN users u ON u.id = sc.user_id
+              WHERE sc.beatmap_id = (?) AND completed = 2 OR completed = 3
+              ORDER BY sc.user_id, sc.score DESC
+             ) sc) sc
+        WHERE username = (?)
+      ", ^beatmap_id, ^username),
+        on: s.id == s_.id,
+      join: u in assoc(s, :user),
+      preload: [user: u],
+      select: {s, s_.row_number}
+
+    case Repo.one query do
+      nil ->
+        "\n"
+      {score, place} ->
+        format_score(score, place)
+    end
+  end
+
   defp format_beatmap_top_scores(beatmap) do
     {acc, _} = Enum.reduce beatmap.scores, {"", 0}, fn score, {acc, index} ->
-      acc = acc
-      <> "#{score.id}|#{score.user.username}|#{score.score}|#{score.max_combo}"
-      <> "|#{score.count_50}|#{score.count_100}|#{score.count_300}|#{score.miss_count}"
-      <> "|#{score.katu_count}|#{score.geki_count}|#{score.full_combo}"
-      <> "|#{score.mods}|#{score.user.id}|#{index + 1}|#{osu_date_to_unix_timestamp(score.time)}|0\n" # the 0 is has_replay
+      acc = acc <> format_score(score, index + 1)
 
       {acc, index + 1}
     end
@@ -33,11 +70,12 @@ defmodule Trucksu.OsuWebController do
     acc
   end
 
-  defp format_beatmap(ranked_status, beatmapset_id, beatmap) do
+  defp format_beatmap(ranked_status, beatmapset_id, beatmap, username) do
     format_beatmap_header(ranked_status, beatmapset_id, beatmap)
     <> "0\n" # nothing?
     <> format_beatmap_song_info
-    <> "0\n\n" # beatmap appreciation
+    <> "0\n" # beatmap appreciation
+    <> format_personal_best(beatmap, username)
     <> format_beatmap_top_scores(beatmap)
   end
 
@@ -58,9 +96,8 @@ defmodule Trucksu.OsuWebController do
 
       beatmap ->
         beatmap_id = beatmap.id
-        preload_query = from s in Score,
+        preload_query = from s in Score.completed,
           join: u in assoc(s, :user),
-          where: s.completed == 2 or s.completed == 3,
           where: s.beatmap_id == ^beatmap_id,
           order_by: [desc: s.score],
           distinct: s.user_id,
@@ -69,7 +106,7 @@ defmodule Trucksu.OsuWebController do
         Repo.preload beatmap, scores: preload_query
     end
 
-    data = format_beatmap(2, beatmapset_id, beatmap)
+    data = format_beatmap(2, beatmapset_id, beatmap, username)
     render conn, "response.raw", data: data
   end
 
