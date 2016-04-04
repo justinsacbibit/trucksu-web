@@ -1,8 +1,9 @@
-# TrucksuUmbrella
+# Trucksu
 
 ## Running on Windows
 
-- Run all git bash shells with admin privileges
+- Run all git bash shells, cmd.exe with admin privileges
+- If vagrant says port 80 is in use, try `net stop http` in an admin shell
 - `npm install --no-bin-links`, otherwise you get symlink errors
 
 ### Sniffing HTTP requests on Loopback interface
