@@ -1,17 +1,17 @@
 defmodule Trucksu.TrucksuController do
   use Trucksu.Web, :controller
   require Logger
-  alias Trucksu.{Packet, Session, Token, User, UserServer}
+  alias Trucksu.{ChannelServer, Packet, Session, Token, User, UserServer}
 
   defp get_user_server(user_id, username \\ nil, token \\ nil, force_restart \\ false) do
     case UserServer.whereis(user_id) do
       nil ->
-        IO.inspect "starting user server for #{user_id}"
+        Logger.info "starting user server for #{user_id}"
         {:ok, pid} = UserServer.Supervisor.start_user_server(user_id: user_id, username: username, token: token)
         pid
       pid ->
         if force_restart do
-          IO.inspect "Restarting user server for #{user_id}"
+          Logger.info "Restarting user server for #{user_id}"
           UserServer.Supervisor.terminate_child(user_id)
           UserServer.Supervisor.delete_child(user_id)
           {:ok, pid} = UserServer.Supervisor.start_user_server(user_id: user_id, username: username, token: token)
@@ -33,6 +33,7 @@ defmodule Trucksu.TrucksuController do
   end
 
   defp handle_request(conn, body, []) do
+    Logger.debug body
     [username, hashed_password | _] = String.split(body, "\n")
 
     case Trucksu.Session.authenticate(username, hashed_password, true) do
@@ -43,7 +44,7 @@ defmodule Trucksu.TrucksuController do
 
         render prepare_conn(conn, jwt), "response.raw", data: login_packets(user)
       :error ->
-        IO.inspect Packet.login_failed
+        Logger.debug Packet.login_failed
         render prepare_conn(conn), "response.raw", data: Packet.login_failed
     end
   end
@@ -87,8 +88,12 @@ defmodule Trucksu.TrucksuController do
   end
 
   defp handle_packet(1, data, user) do
-    packet = Packet.send_message(user.username, data[:message], data[:to], user.id)
-    UserServer.Supervisor.enqueue_all(packet, exclude: [user.id])
+    channel_name = data[:to]
+    Logger.warn "handling sendPublicMessage for channel #{channel_name}"
+    packet = Packet.send_message(user.username, data[:message], channel_name, user.id)
+    ChannelServer.whereis(channel_name)
+    |> GenServer.cast({:send, packet, user.id})
+
     <<>>
   end
 
@@ -96,11 +101,13 @@ defmodule Trucksu.TrucksuController do
     packet = Packet.logout(user.id)
     UserServer.Supervisor.enqueue_all(packet)
 
+    ChannelServer.Supervisor.cast_all({:part, user.id})
+
     <<>>
   end
 
   defp handle_packet(3, data, user) do
-    IO.puts "Unhandled requestStatusUpdate"
+    Logger.debug "Unhandled requestStatusUpdate"
     <<>>
   end
 
@@ -109,19 +116,29 @@ defmodule Trucksu.TrucksuController do
   end
 
   defp handle_packet(63, data, user) do
-    IO.puts "Handling channel join"
-    Packet.channel_join_success(data[:channel])
+    channel_name = data[:channel]
+    Logger.warn "Handling channel join for channel #{channel_name}"
+    IO.inspect "Handling channel join for channel #{channel_name}"
+
+    ChannelServer.whereis(channel_name)
+    |> GenServer.cast({:join, user.id})
+
+    Packet.channel_join_success(channel_name)
   end
 
   defp handle_packet(68, data, user) do
-    IO.puts "Unhandled beatmapInfoRequest"
-    IO.inspect data
+    Logger.warn "Unhandled beatmapInfoRequest"
+    Logger.warn inspect data
     <<>>
   end
 
   # client_channelPart
-  defp handle_packet(78, [channel: channel], user) do
-    Logger.warn "Handling channel part"
+  defp handle_packet(78, [channel: channel_name], user) do
+    Logger.warn "Handling channel part for channel #{channel_name}"
+
+    ChannelServer.whereis(channel_name)
+    |> GenServer.cast({:part, user.id})
+
     <<>>
   end
 
@@ -141,8 +158,8 @@ defmodule Trucksu.TrucksuController do
   end
 
   defp handle_packet(packet_id, data, user) do
-    IO.puts "Unhandled packet #{packet_id}"
-    IO.inspect data
+    Logger.warn "Unhandled packet #{packet_id}"
+    Logger.warn inspect data
     <<>>
   end
 
@@ -157,6 +174,13 @@ defmodule Trucksu.TrucksuController do
   end
 
   defp login_packets(user) do
+    channels = ["#osu", "#announce"]
+
+    Enum.each channels, fn channel_name ->
+      ChannelServer.whereis(channel_name)
+      |> GenServer.cast({:join, user.id})
+    end
+
     Packet.silence_end_time(0)
     <> Packet.user_id(user.id)
     <> Packet.protocol_version
@@ -164,10 +188,8 @@ defmodule Trucksu.TrucksuController do
     <> Packet.user_panel(user)
     <> Packet.user_stats(user)
     <> Packet.channel_info_end
-    <> Packet.channel_join_success("#osu")
-    <> Packet.channel_join_success("#announce")
-    <> Packet.channel_info("#osu")
-    <> Packet.channel_info("#announce")
+    <> Enum.reduce(channels, <<>>, &(&2 <> Packet.channel_join_success(&1)))
+    <> Enum.reduce(channels, <<>>, &(&2 <> Packet.channel_info(&1)))
     # TODO: Dynamically add channel info
     <> Packet.friends_list(user)
     # TODO: Menu icon

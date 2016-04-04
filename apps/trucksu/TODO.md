@@ -1,3 +1,4 @@
+- Screenshot upload `POST /osu/web/osu-screenshot.php`
 
 ## User status
 
@@ -17,13 +18,8 @@
 
 ## Channels
 
+- When joining, the welcome message in #osu is not cased correctly
 - Add support for more, non-hardcoded channels
-- Correct channelJoin logic
-  - Join ChannelServer
-- Correct channelPart logic
-  - Leave ChannelServer
-- Correct send
-  - Send only to users in the channel
 
 ## Ops
 

@@ -14,6 +14,7 @@ defmodule Trucksu do
       # Here you could define other workers and supervisors as children
       # worker(Trucksu.Worker, [arg1, arg2, arg3]),
       worker(Trucksu.UserServer.Supervisor, []),
+      worker(Trucksu.ChannelServer.Supervisor, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
