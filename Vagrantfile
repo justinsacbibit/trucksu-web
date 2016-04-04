@@ -34,6 +34,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Phoenix port forwarding
   config.vm.network :forwarded_port, host: 8080, guest: 8080
+  config.vm.network :forwarded_port, host: 8443, guest: 8443
   config.vm.network :forwarded_port, host: 4001, guest: 4001
   # PostgreSQL Server port forwarding
   config.vm.network :forwarded_port, host: 5432, guest: 5432

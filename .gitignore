@@ -21,3 +21,6 @@ node_modules/
 priv/static/css/application.css
 priv/static/js/application.js
 
+/host.crt
+/host.key
+
