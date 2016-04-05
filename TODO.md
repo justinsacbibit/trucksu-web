@@ -11,9 +11,6 @@
 ### Completed
 - Calculate accuracy update
 
-### Failed / retry
-- Should total hits be updated?
-
 ## Friends
 
 - Add support for friends list

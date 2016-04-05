@@ -1,5 +1,6 @@
 defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
+  require Logger
   alias Trucksu.Session
   alias Trucksu.{Repo, Beatmap, User, Score}
 
@@ -66,6 +67,18 @@ defmodule Trucksu.ScoreController do
         int
     end
 
+    user = Repo.one! from u in User,
+      join: s in assoc(u, :stats),
+      where: s.game_mode == ^game_mode,
+      where: u.username == ^username,
+      preload: [stats: s]
+    [stats] = user.stats
+
+    {count_300, _} = Integer.parse(count_300)
+    {count_100, _} = Integer.parse(count_100)
+    {count_50, _} = Integer.parse(count_50)
+    {count_miss, _} = Integer.parse(count_miss)
+
     cond do
       completed >= 2 ->
         top_score = Repo.one from s in Score,
@@ -77,12 +90,6 @@ defmodule Trucksu.ScoreController do
           order_by: [desc: s.score],
           limit: 1
 
-        user = Repo.one! from u in User,
-          join: s in assoc(u, :stats),
-          where: s.game_mode == ^game_mode,
-          where: u.username == ^username,
-          preload: [stats: s]
-
         {score, _} = Integer.parse(score)
 
         score_difference = case top_score do
@@ -92,20 +99,13 @@ defmodule Trucksu.ScoreController do
             score - top_score.score
         end
 
-        [stats] = user.stats
         new_score = stats.ranked_score + score_difference
-
-        {count_300, _} = Integer.parse(count_300)
-        {count_100, _} = Integer.parse(count_100)
-        {count_50, _} = Integer.parse(count_50)
-        {count_miss, _} = Integer.parse(count_miss)
 
         total_points_of_hits = count_50 * 50 + count_100 * 100 + count_300 * 300
         total_number_of_hits = count_miss + count_50 + count_100 + count_300
         accuracy = total_points_of_hits / (total_number_of_hits * 300)
 
         Repo.transaction fn ->
-          # TODO: Update accuracy
           user_stats = Ecto.Changeset.change stats,
             ranked_score: new_score,
             total_score: new_score,
@@ -113,7 +113,7 @@ defmodule Trucksu.ScoreController do
             total_hits: stats.total_hits + count_300 + count_100 + count_50,
             accuracy: accuracy # TODO: Calculate actual updated accuracy
 
-          {:ok, _} = Repo.update user_stats
+          Repo.update! user_stats
 
           query = from b in Beatmap,
             where: b.file_md5 == ^beatmap_file_md5
@@ -151,8 +151,13 @@ defmodule Trucksu.ScoreController do
           Repo.insert! score
         end
       true ->
-        # TODO: Handle when a user failed/retried
-        :ok
+        # User failed or retried
+
+        user_stats = Ecto.Changeset.change stats,
+          playcount: stats.playcount + 1,
+          total_hits: stats.total_hits + count_300 + count_100 + count_50
+
+        Repo.update! user_stats
     end
 
     render conn, "response.raw", data: <<>>
