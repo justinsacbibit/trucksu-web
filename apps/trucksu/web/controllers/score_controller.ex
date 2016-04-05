@@ -2,7 +2,7 @@ defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.Session
-  alias Trucksu.{Repo, Beatmap, User, Score}
+  alias Trucksu.{Accuracy, Repo, Beatmap, User, Score, UserStats}
 
   def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
@@ -106,15 +106,6 @@ defmodule Trucksu.ScoreController do
         accuracy = total_points_of_hits / (total_number_of_hits * 300)
 
         Repo.transaction fn ->
-          user_stats = Ecto.Changeset.change stats,
-            ranked_score: new_score,
-            total_score: new_score,
-            playcount: stats.playcount + 1,
-            total_hits: stats.total_hits + count_300 + count_100 + count_50,
-            accuracy: accuracy # TODO: Calculate actual updated accuracy
-
-          Repo.update! user_stats
-
           query = from b in Beatmap,
             where: b.file_md5 == ^beatmap_file_md5
           beatmap = case Repo.one query do
@@ -146,9 +137,26 @@ defmodule Trucksu.ScoreController do
             accuracy: accuracy,
             completed: completed,
           })
-          IO.inspect score
+          # IO.inspect score
 
           Repo.insert! score
+
+          user_id = user.id
+          scores = Repo.all from s in Score,
+            where: s.user_id == ^user_id
+              and s.game_mode == ^game_mode
+              and s.completed == 2 or s.completed == 3,
+            order_by: [desc: s.score],
+            distinct: s.beatmap_id
+
+          new_accuracy = Accuracy.from_accuracies(Enum.map scores, fn %Score{accuracy: accuracy} -> accuracy end)
+
+          Repo.update! Ecto.Changeset.change stats,
+            ranked_score: new_score,
+            total_score: new_score,
+            playcount: stats.playcount + 1,
+            total_hits: stats.total_hits + count_300 + count_100 + count_50,
+            accuracy: new_accuracy
         end
       true ->
         # User failed or retried
