@@ -36,9 +36,9 @@ defmodule Trucksu.UserServer do
     {:reply, action, state}
   end
 
-  #def handle_call(_, _from, state) do
-    #{:reply, :ok, state}
-  #end
+  def handle_call(:username, _from, %{username: username} = state) do
+    {:reply, username, state}
+  end
 
   @doc """
   Enqueues a packet into the packet queue. The packet will be sent to the client
@@ -73,9 +73,5 @@ defmodule Trucksu.UserServer do
 
     {:noreply, state}
   end
-
-  #def handle_cast(_, state) do
-    #{:noreply, state}
-  #end
 end
 

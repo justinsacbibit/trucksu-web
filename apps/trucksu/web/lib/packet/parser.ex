@@ -49,6 +49,15 @@ defmodule Trucksu.Packet.Decoder do
     ])
   end
 
+  defp send_private_message(data) do
+    decode_with_format(data, [
+      unknown: :string,
+      message: :string,
+      to: :string,
+      unknown2: :string,
+    ])
+  end
+
   defp change_action(data) do
     decode_with_format(data, [
       action_id: :uint8,
@@ -72,6 +81,7 @@ defmodule Trucksu.Packet.Decoder do
   defp decode_packet(2, _), do: [] # logout
   defp decode_packet(3, _), do: [] # requestStatusUpdate
   defp decode_packet(4, _), do: [] # ping
+  defp decode_packet(25, data), do: send_private_message(data)
   defp decode_packet(63, data), do: channel_join(data)
   defp decode_packet(68, _), do: [] # beatmapInfoRequest
   defp decode_packet(78, data), do: channel_part(data)

@@ -1,5 +1,6 @@
 - Screenshot upload `POST /osu/web/osu-screenshot.php`
 - Favourites
+- User IDs of 1 and 2 are reserved for BanchoBot and peppy
 
 ## User status
 
@@ -19,6 +20,7 @@
 
 ## Channels
 
+- ~~Private messaging~~ (I think it's working)
 - When joining, the welcome message in #osu is not cased correctly
 - Add support for more, non-hardcoded channels
 
@@ -32,3 +34,4 @@
 ## Release streams
 
 - Support HTTPS for Stable, Beta, Cutting Edge
+  - Import rootCA.crt under Current User

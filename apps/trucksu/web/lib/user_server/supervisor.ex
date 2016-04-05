@@ -33,13 +33,9 @@ defmodule Trucksu.UserServer.Supervisor do
   end
 
   def enqueue_all(packet, opts \\ []) do
-    # Spawn a new process to send the message to users, so that the current
-    # request is not blocked
-    spawn(fn ->
-      Supervisor.which_children(__MODULE__)
-      |> Enum.each(fn({_, pid, _, _}) ->
-        GenServer.cast(pid, {:enqueue, packet, opts})
-      end)
+    Supervisor.which_children(__MODULE__)
+    |> Enum.each(fn({_, pid, _, _}) ->
+      GenServer.cast(pid, {:enqueue, packet, opts})
     end)
   end
 end

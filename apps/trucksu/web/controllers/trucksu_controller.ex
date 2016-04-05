@@ -32,9 +32,15 @@ defmodule Trucksu.TrucksuController do
     handle_request(conn, body, osu_token)
   end
 
+  def send_packet(packet_id, data, user) do
+    handle_packet(packet_id, data, user)
+  end
+
   defp handle_request(conn, body, []) do
     Logger.debug body
     [username, hashed_password | _] = String.split(body, "\n")
+
+    Logger.warn "Handling login for #{username}"
 
     case Trucksu.Session.authenticate(username, hashed_password, true) do
       {:ok, user} ->
@@ -115,10 +121,35 @@ defmodule Trucksu.TrucksuController do
     <<>>
   end
 
+  defp handle_packet(25, data, user) do
+    Logger.warn "Handling sendPrivateMessage from #{user.username}, data: #{inspect data}"
+
+    to = data[:to]
+    message = data[:message]
+
+    packet = Packet.send_message(user.username, message, to, user.id)
+
+    pid = Supervisor.which_children(UserServer.Supervisor)
+    |> Enum.reduce_while(nil, fn({_, pid, _, _}, acc) ->
+      case GenServer.call(pid, :username) do
+        ^to -> {:halt, pid}
+        _ -> {:cont, acc}
+      end
+    end)
+
+    if is_nil(pid) do
+      Logger.error "Unable to find UserServer for #{to} when sending private message"
+    else
+      Logger.warn "Sending private message \"#{message}\" from #{user.username} to #{to}"
+      GenServer.cast(pid, {:enqueue, packet})
+    end
+
+    <<>>
+  end
+
   defp handle_packet(63, data, user) do
     channel_name = data[:channel]
     Logger.warn "Handling channel join for channel #{channel_name}"
-    IO.inspect "Handling channel join for channel #{channel_name}"
 
     ChannelServer.whereis(channel_name)
     |> GenServer.cast({:join, user.id})
@@ -181,20 +212,34 @@ defmodule Trucksu.TrucksuController do
       |> GenServer.cast({:join, user.id})
     end
 
+    user_panel_packet = Packet.user_panel(user)
+    user_stats_packet = Packet.user_stats(user)
+
+    UserServer.Supervisor.enqueue_all(user_panel_packet)
+    UserServer.Supervisor.enqueue_all(user_stats_packet)
+
+    online_users = Supervisor.which_children(UserServer.Supervisor)
+    |> Enum.map(fn({user_id, _pid, _, _}) ->
+      Repo.get! User, user_id
+    end)
+
+    # Logger.warn "online users: #{inspect online_users}"
+
     Packet.silence_end_time(0)
     <> Packet.user_id(user.id)
     <> Packet.protocol_version
     <> Packet.user_supporter_gmt(false, false)
-    <> Packet.user_panel(user)
-    <> Packet.user_stats(user)
+    <> user_panel_packet
+    <> user_stats_packet
     <> Packet.channel_info_end
     <> Enum.reduce(channels, <<>>, &(&2 <> Packet.channel_join_success(&1)))
     <> Enum.reduce(channels, <<>>, &(&2 <> Packet.channel_info(&1)))
     # TODO: Dynamically add channel info
     <> Packet.friends_list(user)
     # TODO: Menu icon
-    # TODO: Login notification
-    # TODO: Other users' user panels, stats
+    <> Packet.notification("Welcome to the UW Meme Server!")
+    <> Enum.reduce(online_users, <<>>, &(&2 <> Packet.user_panel(&1)))
+    <> Enum.reduce(online_users, <<>>, &(&2 <> Packet.user_stats(&1)))
     <> Packet.online_users
   end
 end

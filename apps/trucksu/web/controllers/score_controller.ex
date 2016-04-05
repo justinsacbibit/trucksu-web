@@ -3,18 +3,20 @@ defmodule Trucksu.ScoreController do
   alias Trucksu.Session
   alias Trucksu.{Repo, Beatmap, User, Score}
 
-  def create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "osuver" => osuver} = params) do
+  def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
-    {:ok, score} = File.read(score.path)
-    IO.inspect score
 
-    raise "no"
+    actually_create(conn, params, key)
   end
 
-  @key "h89f2-890h2h89b34g-h80g134n90133"
+  def create(conn, params) do
+    key = "h89f2-890h2h89b34g-h80g134n90133"
 
-  def create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => score_file} = params) do
-    {score, 0} = System.cmd("php", ["apps/trucksu/score.php", @key, score, iv])
+    actually_create(conn, params, key)
+  end
+
+  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => score_file} = params, key) do
+    {score, 0} = System.cmd("php", ["apps/trucksu/score.php", key, score, iv])
     score_data = String.split(score, ":")
 
     [

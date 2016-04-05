@@ -87,8 +87,10 @@ defmodule Trucksu.Packet do
   end
 
   def online_users do
-    users = [40, 346]
-    users = []
+    users = Supervisor.which_children(UserServer.Supervisor)
+    |> Enum.map(fn({user_id, _pid, _, _}) ->
+      user_id
+    end)
 
     data = [{length(users), :int16}]
 
@@ -127,9 +129,19 @@ defmodule Trucksu.Packet do
 
     {stats, game_rank} = Repo.one! from s in UserStats,
       join: s_ in fragment("
-        SELECT *, rank() OVER (ORDER BY ranked_score) as game_rank FROM user_stats us
-        WHERE us.user_id = (?) AND us.game_mode = (?)
-      ", ^user_id, ^game_mode),
+        SELECT game_rank, id
+        FROM
+          (SELECT
+             row_number()
+             OVER (
+               ORDER BY ranked_score DESC) game_rank,
+             user_id, id
+           FROM
+             (SELECT * FROM user_stats us
+               WHERE us.game_mode = (?)
+             ) sc) sc
+        WHERE user_id = (?)
+      ", ^game_mode, ^user_id),
         on: s.id == s_.id,
       select: {s, s_.game_rank}
 
@@ -182,5 +194,13 @@ defmodule Trucksu.Packet do
 
   def server_restart(ms_until_reconnect) do
     new(Ids.server_restart, [{ms_until_reconnect, :uint32}])
+  end
+
+  def notification(message) do
+    new(Ids.server_notification, [{message, :string}])
+  end
+
+  def jumpscare(message) do
+    new(Ids.server_jumpscare, [{message, :string}])
   end
 end

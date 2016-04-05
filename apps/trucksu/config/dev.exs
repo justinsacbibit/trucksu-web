@@ -18,6 +18,8 @@ config :trucksu, Trucksu.Endpoint,
 # Do not include metadata nor timestamps in development logs
 # config :logger, :console #, format: "[$level] $message\n"
 
+config :logger, level: :warn # Client ping packets cause too much noise
+
 # Set a higher stacktrace during development.
 # Do not configure such in production as keeping
 # and calculating stacktraces is usually expensive.
