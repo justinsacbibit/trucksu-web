@@ -8,16 +8,12 @@
 
 ## Score submission
 
-### Completed
-- Calculate accuracy update
-
 ## Friends
 
 - Add support for friends list
 
 ## Channels
 
-- ~~Private messaging~~ (I think it's working)
 - When joining, the welcome message in #osu is not cased correctly
 - Add support for more, non-hardcoded channels
 
