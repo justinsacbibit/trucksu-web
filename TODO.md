@@ -1,6 +1,7 @@
 - Screenshot upload `POST /osu/web/osu-screenshot.php`
 - Favourites
 - User IDs of 1 and 2 are reserved for BanchoBot and peppy
+- Separate game server into its own application
 
 ## User status
 
@@ -14,7 +15,7 @@
 
 ## Channels
 
-- When joining, the welcome message in #osu is not cased correctly
+- ~~When joining, the welcome message in #osu is not cased correctly~~ clientside issue?
 - Add support for more, non-hardcoded channels
 
 ## Ops
