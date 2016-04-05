@@ -1,4 +1,5 @@
 - Screenshot upload `POST /osu/web/osu-screenshot.php`
+- Favourites
 
 ## User status
 
