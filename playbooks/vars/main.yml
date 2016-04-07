@@ -1,0 +1,4 @@
+---
+app_name: trucksu
+repo_url: "git@github.com:justinsacbibit/trucksu.git"
+app_port: 4000
