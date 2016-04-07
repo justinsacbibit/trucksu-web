@@ -1,4 +1,4 @@
-defmodule Trucksu.UserServer do
+defmodule Game.UserServer do
   use GenServer
 
   def start_link(args) do

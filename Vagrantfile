@@ -44,8 +44,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.network :forwarded_port, host: 80, guest: 8080
     config.vm.network :forwarded_port, host: 443, guest: 8443
   end
-  # Ops
-  config.vm.network :forwarded_port, host: 4002, guest: 4002, auto_correct: true
   # Webpack
   config.vm.network :forwarded_port, host: 4001, guest: 4001, auto_correct: true
   # PostgreSQL

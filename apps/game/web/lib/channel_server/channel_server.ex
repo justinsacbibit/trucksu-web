@@ -1,6 +1,6 @@
-defmodule Trucksu.ChannelServer do
+defmodule Game.ChannelServer do
   use GenServer
-  alias Trucksu.{Packet, UserServer}
+  alias Game.{Packet, UserServer}
 
   def start_link(channel_name) do
     state = %{

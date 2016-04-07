@@ -1,4 +1,4 @@
-defmodule Trucksu.Packet.Decoder do
+defmodule Game.Packet.Decoder do
 
   defp unpack_num(data, size, signed) do
     if signed do

@@ -1,8 +1,8 @@
-defmodule Trucksu.ChannelServer.Supervisor do
+defmodule Game.ChannelServer.Supervisor do
   use Supervisor
-  alias Trucksu.ChannelServer
+  alias Game.ChannelServer
 
-  @name Trucksu.ChannelServer.Supervisor
+  @name Game.ChannelServer.Supervisor
 
   def start_link() do
     Supervisor.start_link(__MODULE__, :ok, name: @name)
@@ -11,7 +11,7 @@ defmodule Trucksu.ChannelServer.Supervisor do
   def start_channel_server(channel_name) do
     Supervisor.start_child(
       @name,
-      worker(Trucksu.ChannelServer, [channel_name], id: channel_name)
+      worker(ChannelServer, [channel_name], id: channel_name)
     )
   end
 

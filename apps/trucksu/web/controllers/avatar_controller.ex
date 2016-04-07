@@ -3,7 +3,7 @@ defmodule Trucksu.AvatarController do
 
   defp avatar_path(filename) do
     # TODO: Figure out how not to hardcode the path
-    "apps/trucksu/priv/static/images/" <> filename
+    "priv/static/images/" <> filename
   end
 
   def show(conn, _params) do

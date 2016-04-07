@@ -12,15 +12,17 @@
 
 alias Trucksu.{Repo, User}
 
-def random_password do
-  length = 8
-  :crypto.strong_rand_bytes(length) |> Base.url_encode64 |> binary_part(0, length)
+defmodule Helpers do
+  def random_password do
+    length = 8
+    :crypto.strong_rand_bytes(length) |> Base.url_encode64 |> binary_part(0, length)
+  end
 end
 
 Repo.transaction fn ->
   changeset = User.changeset %User{}, %{
     username: "TruckBot",
-    password: random_password,
+    password: Helpers.random_password,
     email: "truck@bot.com",
   }
   truckbot = Repo.insert! changeset
@@ -29,7 +31,7 @@ Repo.transaction fn ->
 
   changeset = User.changeset %User{}, %{
     username: "TruckLord",
-    password: random_password,
+    password: Helpers.random_password,
     email: "truck@lord.com",
   }
   trucklord = Repo.insert! changeset

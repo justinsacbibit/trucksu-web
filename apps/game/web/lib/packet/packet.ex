@@ -1,6 +1,7 @@
-defmodule Trucksu.Packet do
-  alias Trucksu.Packet.Ids
-  alias Trucksu.{Repo, UserServer, UserStats}
+defmodule Game.Packet do
+  alias Game.Packet.Ids
+  alias Game.UserServer
+  alias Trucksu.{Repo, UserStats}
   import Ecto.Query, only: [from: 2]
 
   defp pack_num(int, size, signed) when is_integer(int) and is_integer(size) do

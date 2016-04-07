@@ -1,4 +1,4 @@
-defmodule Trucksu.Packet.Ids do
+defmodule Game.Packet.Ids do
   def client_changeAction, do: 0
   def client_sendPublicMessage, do: 1
   def client_logout, do: 2

@@ -1,7 +1,14 @@
-defmodule Trucksu.TrucksuController do
-  use Trucksu.Web, :controller
+defmodule Game.GameController do
+  use Game.Web, :controller
   require Logger
-  alias Trucksu.{ChannelServer, Packet, Session, Token, User, UserServer}
+  alias Game.{ChannelServer, Packet, UserServer}
+  alias Trucksu.{Repo, Session, User}
+
+  def index(conn, _params) do
+    osu_token = Plug.Conn.get_req_header(conn, "osu-token")
+    {:ok, body, conn} = Plug.Conn.read_body(conn)
+    handle_request(conn, body, osu_token)
+  end
 
   defp get_user_server(user_id, username \\ nil, token \\ nil, force_restart \\ false) do
     case UserServer.whereis(user_id) do
@@ -26,12 +33,6 @@ defmodule Trucksu.TrucksuController do
     get_user_server(user_id, username, token, true)
   end
 
-  def index(conn, _params) do
-    osu_token = Plug.Conn.get_req_header(conn, "osu-token")
-    {:ok, body, conn} = Plug.Conn.read_body(conn)
-    handle_request(conn, body, osu_token)
-  end
-
   def send_packet(packet_id, data, user) do
     handle_packet(packet_id, data, user)
   end
@@ -42,7 +43,7 @@ defmodule Trucksu.TrucksuController do
 
     Logger.warn "Handling login for #{username}"
 
-    case Trucksu.Session.authenticate(username, hashed_password, true) do
+    case Session.authenticate(username, hashed_password, true) do
       {:ok, user} ->
         {:ok, jwt, _full_claims} = user |> Guardian.encode_and_sign(:token)
 
@@ -50,7 +51,7 @@ defmodule Trucksu.TrucksuController do
 
         render prepare_conn(conn, jwt), "response.raw", data: login_packets(user)
       :error ->
-        Logger.debug Packet.login_failed
+        Logger.debug "Login failed for #{username}"
         render prepare_conn(conn), "response.raw", data: Packet.login_failed
     end
   end

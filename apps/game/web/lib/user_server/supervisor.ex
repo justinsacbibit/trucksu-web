@@ -1,7 +1,8 @@
-defmodule Trucksu.UserServer.Supervisor do
+defmodule Game.UserServer.Supervisor do
   use Supervisor
+  alias Game.UserServer
 
-  @name Trucksu.UserServer.Supervisor
+  @name Game.UserServer.Supervisor
 
   def start_link() do
     Supervisor.start_link(__MODULE__, :ok, name: @name)
@@ -10,7 +11,7 @@ defmodule Trucksu.UserServer.Supervisor do
   def start_user_server(args) do
     Supervisor.start_child(
       @name,
-      worker(Trucksu.UserServer, [args], id: args[:user_id])
+      worker(UserServer, [args], id: args[:user_id])
     )
   end
 

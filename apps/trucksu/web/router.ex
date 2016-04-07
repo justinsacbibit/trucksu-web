@@ -58,11 +58,6 @@ defmodule Trucksu.Router do
     get "/:user_id", AvatarController, :show
   end
 
-  # The following calls go to c.ppy.sh or c1.ppy.sh
-  scope "/c", Trucksu do
-    post "/", TrucksuController, :index
-  end
-
   # Internal API calls
   scope "/ops", Trucksu do
     post "restart", OpsController, :restart
