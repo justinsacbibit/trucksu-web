@@ -23,6 +23,6 @@ erl_crash.dump
 node_modules/
 **/priv/static/*
 
-/host.crt
-/host.key
+host.pem
+host.key
 

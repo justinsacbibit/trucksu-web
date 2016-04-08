@@ -6,6 +6,8 @@
 
   roles:
     - {role: "HashNuke.elixir-stack", action: "setup"}
+    - role: jdauphant.ssl-certs
+      ssl_certs_common_name: "host"
 
   tasks:
     - name: remove all nginx configs
