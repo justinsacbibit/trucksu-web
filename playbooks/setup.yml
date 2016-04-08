@@ -6,3 +6,22 @@
 
   roles:
     - {role: "HashNuke.elixir-stack", action: "setup"}
+
+  tasks:
+    - name: remove all nginx configs
+      file: name="{{ item }}" state=absent
+      with_items:
+        - /etc/nginx/sites-enabled/trucksu
+        - /etc/nginx/sites-enabled/game
+
+    - name: add nginx config
+      copy: src=files/conf/nginx.conf dest=/etc/nginx/sites-available/site.conf
+
+    - name: symlink nginx conf
+      file:
+        src: "/etc/nginx/sites-available/site.conf"
+        dest: "/etc/nginx/sites-enabled/site.conf"
+        state: link
+
+    - name: restart nginx
+      service: name=nginx enabled=yes state=restarted
