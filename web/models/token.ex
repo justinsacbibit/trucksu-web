@@ -1,9 +1,10 @@
 defmodule Trucksu.Token do
   use Trucksu.Web, :model
+  alias Trucksu.User
 
   schema "tokens" do
     field :value, :string
-    belongs_to :user, Trucksu.User
+    belongs_to :user, User
 
     timestamps
   end

@@ -1,5 +1,6 @@
 defmodule Trucksu.User do
   use Trucksu.Web, :model
+  alias Trucksu.UserStats
 
   @derive {Poison.Encoder, only: [:id, :username, :email]}
 
@@ -8,7 +9,7 @@ defmodule Trucksu.User do
     field :email, :string
     field :encrypted_password, :string
     field :password, :string, virtual: true
-    has_many :stats, Trucksu.UserStats
+    has_many :stats, UserStats
 
     timestamps
   end

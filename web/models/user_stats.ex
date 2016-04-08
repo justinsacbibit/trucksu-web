@@ -1,5 +1,6 @@
 defmodule Trucksu.UserStats do
   use Trucksu.Web, :model
+  alias Trucksu.User
 
   schema "user_stats" do
     field :game_mode, :integer
@@ -11,7 +12,7 @@ defmodule Trucksu.UserStats do
     field :replays_watched, :integer
     field :total_hits, :integer
     field :level, :integer
-    belongs_to :user, Trucksu.User
+    belongs_to :user, User
 
     timestamps
   end

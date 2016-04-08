@@ -1,6 +1,6 @@
 defmodule Trucksu.Session do
   import Ecto.Query, only: [from: 2]
-  alias Trucksu.{Repo, User}
+  alias Trucksu.{Hash, Repo, User}
 
   def authenticate(%{"username" => username, "password" => password}, already_hashed \\ false) do
     authenticate(username, password, already_hashed)
@@ -26,7 +26,7 @@ defmodule Trucksu.Session do
           true ->
             password
           false ->
-            Trucksu.Hash.md5(password)
+            Hash.md5(password)
         end
         Comeonin.Bcrypt.checkpw(hashed_password, user.encrypted_password)
     end

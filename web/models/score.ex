@@ -1,6 +1,6 @@
 defmodule Trucksu.Score do
   use Trucksu.Web, :model
-  import Ecto.Query, only: [from: 2]
+  alias Trucksu.{Beatmap, User}
 
   schema "scores" do
     field :score, :integer
@@ -17,8 +17,8 @@ defmodule Trucksu.Score do
     field :game_mode, :integer
     field :accuracy, :float
     field :completed, :integer
-    belongs_to :beatmap, Trucksu.Beatmap
-    belongs_to :user, Trucksu.User
+    belongs_to :beatmap, Beatmap
+    belongs_to :user, User
 
     timestamps
   end

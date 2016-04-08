@@ -6,27 +6,28 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :game, Game.Endpoint,
-  http: [port: 4002],
+config :trucksu, Trucksu.Endpoint,
+  http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: []
+  watchers: [
+    #{Path.expand("webpack.dev.js"), []},
+  ]
 
 # Do not include metadata nor timestamps in development logs
-# config :logger, :console, format: "[$level] $message\n"
-
-config :logger, level: :warn # Client ping packets cause too much noise
+# config :logger, :console #, format: "[$level] $message\n"
 
 # Set a higher stacktrace during development.
 # Do not configure such in production as keeping
 # and calculating stacktraces is usually expensive.
 config :phoenix, :stacktrace_depth, 20
 
+# Configure your database
 config :trucksu, Trucksu.Repo,
-adapter: Ecto.Adapters.Postgres,
-username: "postgres_db",
-password: "postgres_db",
-database: "trucksu_dev",
-hostname: "localhost",
-pool_size: 10
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres_db",
+  password: "postgres_db",
+  database: "trucksu_dev",
+  hostname: "localhost",
+  pool_size: 10
