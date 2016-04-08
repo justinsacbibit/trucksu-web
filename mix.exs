@@ -42,7 +42,6 @@ defmodule Trucksu.Mixfile do
      {:gettext, "~> 0.9"},
      {:mix_test_watch, "~> 0.2", only: :dev},
      {:exrm, "~> 0.18.1"},
-     {:trucksu_core, "0.0.1", git: "git@github.com:justinsacbibit/trucksu-core.git"},
      {:cowboy, "~> 1.0"}]
   end
 
