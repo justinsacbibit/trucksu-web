@@ -2,4 +2,5 @@
 app_name: trucksu
 repo_url: "git@github.com:justinsacbibit/trucksu.git"
 app_port: 4000
-frontend_build_command: npm install --production
+frontend_build_command: echo '' > /dev/null
+npm_config_install_production: True
