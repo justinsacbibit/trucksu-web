@@ -45,12 +45,6 @@ defmodule Trucksu.Router do
         get "/current-user", CurrentUserController, :show
       end
     end
-
-    scope "/" do
-      pipe_through :browser
-
-      get "*path", PageController, :index
-    end
   end
 
   # The following calls go to a.ppy.sh
@@ -61,5 +55,12 @@ defmodule Trucksu.Router do
   # Internal API calls
   scope "/ops", Trucksu do
     post "restart", OpsController, :restart
+  end
+
+  # Frontend
+  scope "/" do
+    pipe_through :browser
+
+    get "*path", PageController, :index
   end
 end
