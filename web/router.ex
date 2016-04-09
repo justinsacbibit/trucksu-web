@@ -34,17 +34,6 @@ defmodule Trucksu.Router do
     scope "/pages" do
       post "/include/home-ircfeed.php", OsuPagesController, :irc_feed
     end
-
-    scope "/api" do
-      pipe_through :api
-
-      scope "v1" do
-        post "/registrations", RegistrationController, :create
-        post "/sessions", SessionController, :create
-        delete "/sessions", SessionController, :delete
-        get "/current-user", CurrentUserController, :show
-      end
-    end
   end
 
   # The following calls go to a.ppy.sh
@@ -62,5 +51,16 @@ defmodule Trucksu.Router do
     pipe_through :browser
 
     get "*path", PageController, :index
+  end
+
+  scope "/api" do
+    pipe_through :api
+
+    scope "v1" do
+      post "/registrations", RegistrationController, :create
+      post "/sessions", SessionController, :create
+      delete "/sessions", SessionController, :delete
+      get "/current-user", CurrentUserController, :show
+    end
   end
 end
