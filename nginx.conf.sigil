@@ -4,12 +4,46 @@ upstream {{ .APP }} {
 {{ end }}
 }
 server {
-  listen 80;
-  listen 3000;
-  listen 443 ssl;
+  listen      80;
+  server_name trucksu.sacbibit.com;
+
+  access_log /var/log/nginx/{{ .APP }}-frontend-access.log;
+  error_log  /var/log/nginx/{{ .APP }}-frontend-error.log;
+
+  return 301 https://$host:443$request_uri;
+}
+server {
+  listen      443 ssl spdy;
+  server_name trucksu.sacbibit.com
+
+  access_log  /var/log/nginx/{{ .APP }}-frontend-access.log;
+  error_log   /var/log/nginx/{{ .APP }}-frontend-error.log;
+
+  ssl_certificate     /etc/letsencrypt/live/trucksu.sacbibit.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/trucksu.sacbibit.com/privkey.pem;
+
+  keepalive_timeout   70;
+  add_header          Alternate-Protocol  443:npn-spdy/2;
+  location / {
+    proxy_pass http://{{ .APP }};
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Port $server_port;
+    proxy_set_header X-Request-Start $msec;
+  }
+  include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
+}
+server {
+  listen      80;
+  listen      3000;
+  listen      443 ssl;
   server_name osu.ppy.sh;
 
-  ssl_certificate {{ .APP_SSL_PATH }}/server.crt;
+  ssl_certificate     {{ .APP_SSL_PATH }}/server.crt;
   ssl_certificate_key {{ .APP_SSL_PATH }}/server.key;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
@@ -36,12 +70,12 @@ server {
   include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
 }
 server {
-  listen 80;
-  listen 3001;
-  listen 443 ssl;
+  listen      80;
+  listen      3001;
+  listen      443 ssl;
   server_name a.ppy.sh;
 
-  ssl_certificate {{ .APP_SSL_PATH }}/server.crt;
+  ssl_certificate     {{ .APP_SSL_PATH }}/server.crt;
   ssl_certificate_key {{ .APP_SSL_PATH }}/server.key;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
