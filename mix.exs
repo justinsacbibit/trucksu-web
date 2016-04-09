@@ -41,7 +41,6 @@ defmodule Trucksu.Mixfile do
      {:comeonin, "~> 2.0"},
      {:gettext, "~> 0.9"},
      {:mix_test_watch, "~> 0.2", only: :dev},
-     {:exrm, "1.0.3"},
      {:cowboy, "~> 1.0"}]
   end
 
