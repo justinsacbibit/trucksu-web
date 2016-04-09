@@ -58,7 +58,7 @@ defmodule Trucksu.Router do
   end
 
   # Frontend
-  scope "/" do
+  scope "/", Trucksu do
     pipe_through :browser
 
     get "*path", PageController, :index
