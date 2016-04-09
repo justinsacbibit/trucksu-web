@@ -14,7 +14,20 @@ use Mix.Config
 config :trucksu, Trucksu.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: "example.com", port: 80],
-  cache_static_manifest: "priv/static/manifest.json"
+  cache_static_manifest: "priv/static/manifest.json",
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+
+config :trucksu, Trucksu.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  url: System.get_env("DATABASE_URL"),
+  pool_size: 20
+
+config :guardian, Guardian,
+  issuer: "Trucksu",
+  ttl: { 60, :days },
+  verify_issuer: true,
+  serializer: Trucksu.GuardianSerializer,
+  secret_key: System.get_env("GUARDIAN_SECRET_KEY")
 
 # Do not print debug messages in production
 config :logger, level: :info
@@ -60,6 +73,3 @@ config :logger, level: :info
 #
 #     config :trucksu, Trucksu.Endpoint, root: "."
 
-# Finally import the config/prod.secret.exs
-# which should be versioned separately.
-import_config "prod.secret.exs"
