@@ -3,6 +3,7 @@
 var path = require('path');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var webpack = require('webpack');
+var env = process.env.MIX_ENV || 'dev';
 
 // helpers for writing path names
 // e.g. join("web/static") => "/full/disk/path/to/hello/web/static"
@@ -60,12 +61,14 @@ var config = module.exports = {
   // we'll also tell the plugin where the final CSS file should be generated
   // (relative to config.output.path)
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(env === 'prod' ? 'production' : 'dev'),
+    }),
     new ExtractTextPlugin('css/application.css'),
   ],
 };
 
 var publicPath = 'http://0.0.0.0:4001/';
-var env = process.env.MIX_ENV || 'dev';
 
 // if running webpack in production mode, minify files with uglifyjs
 if (process.env.NODE_ENV === 'production' || env === 'prod') {
