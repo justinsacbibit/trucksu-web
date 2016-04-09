@@ -68,7 +68,7 @@ var publicPath = 'http://0.0.0.0:4001/';
 var env = process.env.MIX_ENV || 'dev';
 
 // if running webpack in production mode, minify files with uglifyjs
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' || env === 'prod') {
   config.plugins.push(
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.UglifyJsPlugin({ minimize: true })
