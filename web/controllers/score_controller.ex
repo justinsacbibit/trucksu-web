@@ -17,7 +17,7 @@ defmodule Trucksu.ScoreController do
   end
 
   defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => score_file} = params, key) do
-    {score, 0} = System.cmd("php", ["apps/trucksu/score.php", key, score, iv])
+    {score, 0} = System.cmd("php", ["score.php", key, score, iv])
     score_data = String.split(score, ":")
 
     [
