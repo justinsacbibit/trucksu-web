@@ -53,7 +53,7 @@ defmodule Trucksu.Router do
     get "*path", PageController, :index
   end
 
-  scope "/api" do
+  scope "/api", Trucksu do
     pipe_through :api
 
     scope "v1" do
