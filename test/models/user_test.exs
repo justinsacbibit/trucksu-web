@@ -3,7 +3,12 @@ defmodule Trucksu.UserTest do
 
   alias Trucksu.User
 
-  @valid_attrs %{email: "some content", encrypted_password: "some content", username: "some content"}
+  @valid_attrs %{
+    email: "a@b.com",
+    username: "Truck Driver",
+    password: "abc12",
+    password_confirmation: "abc12",
+  }
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

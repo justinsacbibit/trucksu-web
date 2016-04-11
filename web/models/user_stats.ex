@@ -45,14 +45,14 @@ defmodule Trucksu.UserStats do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
-    |> validate_number(:game_mode, greater_than_or_equal_to: 0, less_than_or_equal_to: 3)
-    |> validate_number(:ranked_score, greater_than_or_equal_to: 0)
-    |> validate_number(:total_score, greater_than_or_equal_to: 0)
     |> validate_number(:accuracy, greater_than_or_equal_to: 0)
+    |> validate_number(:game_mode, greater_than_or_equal_to: 0, less_than_or_equal_to: 3)
+    |> validate_number(:level, greater_than_or_equal_to: 0)
     |> validate_number(:playcount, greater_than_or_equal_to: 0)
     |> validate_number(:pp, greater_than_or_equal_to: 0)
+    |> validate_number(:ranked_score, greater_than_or_equal_to: 0)
     |> validate_number(:replays_watched, greater_than_or_equal_to: 0)
     |> validate_number(:total_hits, greater_than_or_equal_to: 0)
-    |> validate_number(:level, greater_than_or_equal_to: 0)
+    |> validate_number(:total_score, greater_than_or_equal_to: 0)
   end
 end
