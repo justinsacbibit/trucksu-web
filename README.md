@@ -4,6 +4,7 @@
 
 - Run all git bash shells, cmd.exe with admin privileges
 - If vagrant says port 80 is in use, try `net stop http` in an admin shell
+- If vagrant says port 443 is in use, try quitting Skype
 - `npm install --no-bin-links`, otherwise you get symlink errors
 
 ### Sniffing HTTP requests on Loopback interface
