@@ -3,7 +3,7 @@ defmodule Trucksu.Mixfile do
 
   def project do
     [app: :trucksu,
-     version: "0.0.6",
+     version: "0.0.7",
      elixir: "~> 1.0",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -20,7 +20,7 @@ defmodule Trucksu.Mixfile do
     [mod: {Trucksu, []},
      applications: [:phoenix, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex, :comeonin, :timex,
-                    :phoenix_html, :guardian]]
+                    :phoenix_html, :guardian, :httpoison]]
   end
 
   # Specifies which paths to compile per environment.
@@ -40,6 +40,7 @@ defmodule Trucksu.Mixfile do
      {:guardian, "~> 0.9.0"},
      {:comeonin, "~> 2.0"},
      {:gettext, "~> 0.9"},
+     {:httpoison, "~> 0.8.0"},
      {:mix_test_watch, "~> 0.2", only: :dev},
      {:cowboy, "~> 1.0"}]
   end

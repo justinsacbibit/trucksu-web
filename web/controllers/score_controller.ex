@@ -17,7 +17,18 @@ defmodule Trucksu.ScoreController do
   end
 
   defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => score_file} = params, key) do
-    {score, 0} = System.cmd("php", ["score.php", key, score, iv])
+
+    url = Application.get_env(:trucksu, :decryption_url)
+    score = if url do
+      HTTPoison.start()
+
+      body = {:form, [{"c", score}, {"iv", iv}, {"k", key}]}
+      %HTTPoison.Response{body: score} = HTTPoison.post!(url, body)
+      score
+    else
+      {score, 0} = System.cmd("php", ["score.php", key, score, iv])
+      score
+    end
     score_data = String.split(score, ":")
 
     [
@@ -45,7 +56,7 @@ defmodule Trucksu.ScoreController do
 
     case Session.authenticate(username, pass, true) do
       :error ->
-        raise "no"
+        raise "Invalid username or password"
       _ ->
         :ok
     end
