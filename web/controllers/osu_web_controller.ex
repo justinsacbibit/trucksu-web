@@ -96,6 +96,7 @@ defmodule Trucksu.OsuWebController do
 
       beatmap ->
         beatmap_id = beatmap.id
+        # TODO: Filter by mode
         preload_query = from s in Score.completed,
           join: u in assoc(s, :user),
           where: s.beatmap_id == ^beatmap_id,

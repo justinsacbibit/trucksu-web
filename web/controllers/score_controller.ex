@@ -55,7 +55,8 @@ defmodule Trucksu.ScoreController do
     username = String.rstrip(username)
 
     case Session.authenticate(username, pass, true) do
-      :error ->
+      {:error, _reason} ->
+        # TODO: Return a 403 instead of 500
         raise "Invalid username or password"
       _ ->
         :ok

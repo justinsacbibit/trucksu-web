@@ -9,11 +9,11 @@ defmodule Trucksu.Session do
   def authenticate(username, password, already_hashed) do
     case Repo.one User.by_username(username) do
       nil ->
-        :error
+        {:error, :username_not_found}
       user ->
         case check_password(user, password, already_hashed) do
           true -> {:ok, user}
-          _ -> :error
+          _ -> {:error, :invalid_password}
         end
     end
   end

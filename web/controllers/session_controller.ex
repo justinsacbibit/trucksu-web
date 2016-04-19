@@ -12,7 +12,7 @@ defmodule Trucksu.SessionController do
         |> put_status(:created)
         |> render("show.json", jwt: jwt, user: user)
 
-      :error ->
+      {:error, _reason} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render("error.json")
