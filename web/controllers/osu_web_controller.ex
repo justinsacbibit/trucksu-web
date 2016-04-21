@@ -95,6 +95,19 @@ defmodule Trucksu.OsuWebController do
         Repo.preload beatmap, :scores
 
       beatmap ->
+
+        if is_nil(beatmap.filename) do
+          # This beatmap was inserted as the result of a changeAction packet or
+          # a score submission. The beatmap is missing a filename and
+          # beatmapset_id, so let's fill that in now.
+          params = %{
+            filename: filename,
+            beatmapset_id: beatmapset_id,
+            file_md5: file_md5,
+          }
+          Repo.update! Beatmap.changeset(beatmap, params)
+        end
+
         beatmap_id = beatmap.id
         # TODO: Filter by mode
         preload_query = from s in Score.completed,

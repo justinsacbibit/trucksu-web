@@ -41,11 +41,6 @@ defmodule Trucksu.Router do
     get "/:user_id", AvatarController, :show
   end
 
-  # Internal API calls
-  scope "/ops", Trucksu do
-    post "restart", OpsController, :restart
-  end
-
   # Frontend
   scope "/", Trucksu do
     pipe_through :browser

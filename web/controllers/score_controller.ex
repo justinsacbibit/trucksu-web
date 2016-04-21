@@ -122,6 +122,8 @@ defmodule Trucksu.ScoreController do
             where: b.file_md5 == ^beatmap_file_md5
           beatmap = case Repo.one query do
             nil ->
+              # TODO: Now that we insert the beatmap as the result of a
+              # changeAction packet, this should never happen.
               params = %{
                 file_md5: beatmap_file_md5,
               }

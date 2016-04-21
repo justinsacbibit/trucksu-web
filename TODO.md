@@ -18,14 +18,6 @@
 - ~~When joining, the welcome message in #osu is not cased correctly~~ clientside issue?
 - Add support for more, non-hardcoded channels
 
-## Ops
-
-### Deployment/restart
-
-- Fix this v
-- POST to [localhost:4002/ops/restart](localhost:4002/ops/restart) endpoint before restarting
-  - this will send a `server_restart` packet to all connected users
-
 ## Release streams
 
 - Support HTTPS for Stable, Beta, Cutting Edge
