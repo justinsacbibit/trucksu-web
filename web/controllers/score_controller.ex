@@ -117,7 +117,7 @@ defmodule Trucksu.ScoreController do
         total_number_of_hits = count_miss + count_50 + count_100 + count_300
         accuracy = total_points_of_hits / (total_number_of_hits * 300)
 
-        Repo.transaction fn ->
+        {:ok, score} = Repo.transaction fn ->
           query = from b in Beatmap,
             where: b.file_md5 == ^beatmap_file_md5
           beatmap = case Repo.one query do
@@ -153,7 +153,7 @@ defmodule Trucksu.ScoreController do
           })
           # IO.inspect score
 
-          Repo.insert! score
+          score = Repo.insert! score
 
           user_id = user.id
           scores = Repo.all from s in Score,
@@ -171,7 +171,11 @@ defmodule Trucksu.ScoreController do
             playcount: stats.playcount + 1,
             total_hits: stats.total_hits + count_300 + count_100 + count_50,
             accuracy: new_accuracy
+
+          score
         end
+
+        render conn, "response.raw", data: build_response(score)
       true ->
         # User failed or retried
 
@@ -180,9 +184,36 @@ defmodule Trucksu.ScoreController do
           total_hits: stats.total_hits + count_300 + count_100 + count_50
 
         Repo.update! user_stats
-    end
 
-    render conn, "response.raw", data: <<>>
+        render conn, "response.raw", data: <<>>
+    end
+  end
+
+  defp build_response(score) do
+    "beatmapId:#{1}"
+    <> "|beatmapSetId:#{2}"
+    <> "|beatmapPlaycount:#{5}"
+    <> "|beatmapPasscount:#{4}"
+    <> "|approvedDate:#{"2014-05-05 20:02:30"}\n"
+    <> "chartId:#{"overall"}"
+    <> "|chartName:#{"Overall Ranking"}"
+    <> "|chartEndDate:#{""}"
+    <> "|beatmapRankingBefore:#{1}"
+    <> "|beatmapRankingAfter:#{1}"
+    <> "|rankedScoreBefore:#{1}"
+    <> "|rankedScoreAfter:#{1}"
+    <> "|totalScoreBefore:#{1}"
+    <> "|totalScoreAfter:#{1}"
+    <> "|playCountBefore:#{1}"
+    <> "|accuracyBefore:#{1}"
+    <> "|accuracyAfter:#{1}"
+    <> "|rankBefore:#{1}"
+    <> "|rankAfter:#{1}"
+    <> "|toNextRank:#{1}"
+    <> "|toNextRankUser:#{"MEME"}"
+    <> "|achievements:#{""}"
+    <> "|achievements-new:#{""}"
+    <> "|onlineScoreId:#{score.id}\n"
   end
 end
 
