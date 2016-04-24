@@ -26,8 +26,9 @@ config :guardian, Guardian,
   serializer: Trucksu.GuardianSerializer,
   secret_key: System.get_env("GUARDIAN_SECRET_KEY") || "e2z2aq3mz7GAiStke74ROQ13+nqNmNvXf6EuZNIsK8a8w00VOTLmEpGRBtdKhb5q"
 
-config :trucksu, decryption_url: System.get_env("DECRYPTION_URL")
-config :trucksu, osuparser_url: System.get_env("OSUPARSER_URL")
+config :trucksu,
+  decryption_url: System.get_env("DECRYPTION_URL"),
+  osuparser_url: System.get_env("OSUPARSER_URL")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

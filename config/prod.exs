@@ -32,6 +32,10 @@ config :guardian, Guardian,
 # Do not print debug messages in production
 config :logger, level: :info
 
+config :trucksu,
+  decryption_url: "http://decryption:#{System.get_env("DECRYPTION_ENV_PORT")}",
+  osuparser_url: "http://osuparser:#{System.get_env("OSUPARSER_ENV_PORT")}"
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key
