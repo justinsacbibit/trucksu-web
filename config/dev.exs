@@ -23,6 +23,8 @@ config :trucksu, Trucksu.Endpoint,
 # and calculating stacktraces is usually expensive.
 config :phoenix, :stacktrace_depth, 20
 
+config :trucksu, osuparser_url: "http://localhost:3000"
+
 # Configure your database
 config :trucksu, Trucksu.Repo,
   adapter: Ecto.Adapters.Postgres,
