@@ -34,7 +34,7 @@ config :logger, level: :info
 
 config :trucksu,
   decryption_url: "http://decryption:#{System.get_env("DECRYPTION_ENV_PORT")}",
-  osuparser_url: "http://osuparser:#{System.get_env("OSUPARSER_ENV_PORT")}"
+  performance_url: "http://performance:#{System.get_env("PERFORMANCE_ENV_PORT")}"
 
 # ## SSL Support
 #
