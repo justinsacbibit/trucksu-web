@@ -75,7 +75,7 @@ defmodule Trucksu.Performance do
 
       if not dry_run do
         Logger.warn "Updating #{user_stats.user.username} stats: pp=#{pp} accuracy=#{accuracy}"
-        case Repo.insert changeset do
+        case Repo.update changeset do
           {:ok, _} ->
             :ok
           {:error, changeset} ->
