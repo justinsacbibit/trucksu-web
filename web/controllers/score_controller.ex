@@ -2,6 +2,7 @@ defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.Session
+  alias Trucksu.Performance
   alias Trucksu.{Accuracy, Repo, Beatmap, User, Score, UserStats}
 
   def create(conn, %{"osuver" => osuver} = params) do
@@ -20,8 +21,6 @@ defmodule Trucksu.ScoreController do
 
     url = Application.get_env(:trucksu, :decryption_url)
     score = if url do
-      HTTPoison.start()
-
       body = {:form, [{"c", score}, {"iv", iv}, {"k", key}]}
       %HTTPoison.Response{body: score} = HTTPoison.post!(url, body)
       score
@@ -154,6 +153,19 @@ defmodule Trucksu.ScoreController do
           # IO.inspect score
 
           score = Repo.insert! score
+
+          score = case Performance.calculate(score) do
+            {:ok, pp} ->
+              changeset = Ecto.Changeset.change(score, %{pp: pp})
+              Repo.update! changeset
+            {:error, error} ->
+              Logger.error "Failed to calculate pp for score: #{inspect score}"
+              Logger.error "Error: #{inspect error}"
+
+              score
+          end
+
+          Logger.info "Inserting score: #{inspect score}"
 
           user_id = user.id
           scores = Repo.all from s in Score,

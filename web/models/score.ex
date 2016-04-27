@@ -19,12 +19,13 @@ defmodule Trucksu.Score do
     field :completed, :integer
     belongs_to :beatmap, Beatmap
     belongs_to :user, User
+    field :pp, :float
 
     timestamps
   end
 
   @required_fields ~w(score max_combo full_combo mods count_300 count_100 count_50 katu_count geki_count miss_count time game_mode accuracy completed user_id beatmap_id)
-  @optional_fields ~w()
+  @optional_fields ~w(pp)
 
   @doc """
   Creates a changeset based on the `model` and `params`.

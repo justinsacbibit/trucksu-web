@@ -26,6 +26,10 @@ config :guardian, Guardian,
   serializer: Trucksu.GuardianSerializer,
   secret_key: System.get_env("GUARDIAN_SECRET_KEY") || "e2z2aq3mz7GAiStke74ROQ13+nqNmNvXf6EuZNIsK8a8w00VOTLmEpGRBtdKhb5q"
 
+config :trucksu,
+  osu_api_key: System.get_env("OSU_API_KEY"),
+  beatmap_file_bucket: System.get_env("BEATMAP_FILE_BUCKET")
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

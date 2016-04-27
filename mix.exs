@@ -20,7 +20,7 @@ defmodule Trucksu.Mixfile do
     [mod: {Trucksu, []},
      applications: [:phoenix, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex, :comeonin, :timex,
-                    :phoenix_html, :guardian, :httpoison]]
+                    :phoenix_html, :guardian, :httpoison, :ex_aws]]
   end
 
   # Specifies which paths to compile per environment.
@@ -42,6 +42,8 @@ defmodule Trucksu.Mixfile do
      {:gettext, "~> 0.9"},
      {:httpoison, "~> 0.8.0"},
      {:poison, "~> 1.5"},
+     {:ex_aws, "~> 0.4.10"},
+     {:sweet_xml, "~> 0.5.0"},
      {:mix_test_watch, "~> 0.2", only: :dev},
      {:cowboy, "~> 1.0"}]
   end
