@@ -26,7 +26,7 @@ defmodule Trucksu.ScoreController do
     actually_create(conn, params, key)
   end
 
-  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => score_file} = params, key) do
+  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => replay} = params, key) do
 
     url = Application.get_env(:trucksu, :decryption_url)
     score = if url do
@@ -178,6 +178,11 @@ defmodule Trucksu.ScoreController do
 
               score
           end
+
+          bucket = Application.get_env(:trucksu, :replay_file_bucket)
+          replay_file_content = File.read!(replay.path)
+          ExAws.S3.put_object!(bucket, "#{score.id}", replay_file_content)
+          Logger.info "Uploaded replay for #{user.username}, score id #{score.id}"
 
           Logger.info "Inserting score: #{inspect score}"
 

@@ -29,6 +29,7 @@ config :guardian, Guardian,
 config :trucksu,
   osu_api_key: System.get_env("OSU_API_KEY"),
   beatmap_file_bucket: System.get_env("BEATMAP_FILE_BUCKET"),
+  replay_file_bucket: System.get_env("REPLAY_FILE_BUCKET"),
   server_cookie: "a"
 
 # Import environment specific config. This must remain at the bottom

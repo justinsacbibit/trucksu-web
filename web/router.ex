@@ -27,6 +27,7 @@ defmodule Trucksu.Router do
       post "/osu-metrics.php", OsuWebController, :osu_metrics
       get "/check-updates.php", OsuWebController, :check_updates
       get "/lastfm.php", OsuWebController, :lastfm
+      get "/osu-getreplay.php", ReplayController, :show
 
       post "/osu-submit-modular.php", ScoreController, :create
     end
