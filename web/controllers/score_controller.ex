@@ -1,9 +1,18 @@
 defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
   require Logger
-  alias Trucksu.Session
-  alias Trucksu.Performance
-  alias Trucksu.{Accuracy, Repo, Beatmap, OsuBeatmap, User, Score, UserStats}
+  alias Trucksu.{
+    Accuracy,
+    Performance,
+    Session,
+
+    Repo,
+    Beatmap,
+    OsuBeatmap,
+    User,
+    Score,
+    UserStats,
+  }
 
   def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
@@ -173,21 +182,16 @@ defmodule Trucksu.ScoreController do
           Logger.info "Inserting score: #{inspect score}"
 
           user_id = user.id
-          scores = Repo.all from s in Score,
-            where: s.user_id == ^user_id
-              and s.game_mode == ^game_mode
-              and s.completed == 2 or s.completed == 3,
-            order_by: [desc: s.score],
-            distinct: s.beatmap_id
 
-          new_accuracy = Accuracy.from_accuracies(Enum.map scores, fn %Score{accuracy: accuracy} -> accuracy end)
+          [pp: new_pp, accuracy: new_accuracy] = Performance.calculate_stats_for_user(user_id, game_mode)
 
           Repo.update! Ecto.Changeset.change stats,
             ranked_score: new_score,
             total_score: new_score,
             playcount: stats.playcount + 1,
             total_hits: stats.total_hits + count_300 + count_100 + count_50,
-            accuracy: new_accuracy
+            accuracy: new_accuracy,
+            pp: new_pp
 
           score = Repo.preload score, :beatmap
 
