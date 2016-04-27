@@ -3,7 +3,7 @@ defmodule Trucksu.ScoreController do
   require Logger
   alias Trucksu.Session
   alias Trucksu.Performance
-  alias Trucksu.{Accuracy, Repo, Beatmap, User, Score, UserStats}
+  alias Trucksu.{Accuracy, Repo, Beatmap, OsuBeatmap, User, Score, UserStats}
 
   def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
@@ -107,7 +107,12 @@ defmodule Trucksu.ScoreController do
           nil ->
             score
           top_score ->
-            score - top_score.score
+            cond do
+              score > top_score ->
+                score - top_score.score
+              true ->
+                0
+            end
         end
 
         new_score = stats.ranked_score + score_difference
@@ -184,7 +189,37 @@ defmodule Trucksu.ScoreController do
             total_hits: stats.total_hits + count_300 + count_100 + count_50,
             accuracy: new_accuracy
 
+          score = Repo.preload score, :beatmap
+
           score
+        end
+
+        bancho_url = Application.get_env(:trucksu, :bancho_url)
+        cookie = Application.get_env(:trucksu, :server_cookie)
+        if score.pp do
+          osu_beatmap = Repo.get_by OsuBeatmap, file_md5: score.beatmap.file_md5
+          # TODO: Error logging
+          data = %{
+            "cookie" => cookie,
+            "event_type" => "pp",
+            "pp" => "#{round score.pp}",
+            "username" => user.username,
+            "beatmap_id" => "#{osu_beatmap.beatmap_id}",
+            "version" => osu_beatmap.version,
+            "artist" => osu_beatmap.artist,
+            "title" => osu_beatmap.title,
+            "creator" => osu_beatmap.creator,
+          }
+          json = Poison.encode! data
+          response = HTTPoison.post bancho_url <> "/event", json, [{"Content-Type", "application/json"}]
+
+          case response do
+            {:ok, response} ->
+              :ok
+              Logger.warn "Sent pp event to Bancho: #{inspect data}"
+            {:error, response} ->
+              Logger.error "Failed to send pp event to Bancho: #{inspect response}"
+          end
         end
 
         render conn, "response.raw", data: build_response(score)

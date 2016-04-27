@@ -34,7 +34,9 @@ config :logger, level: :info
 
 config :trucksu,
   decryption_url: "http://decryption:#{System.get_env("DECRYPTION_ENV_PORT")}",
-  performance_url: "http://performance:#{System.get_env("PERFORMANCE_ENV_PORT")}"
+  performance_url: "http://performance:#{System.get_env("PERFORMANCE_ENV_PORT")}",
+  bancho_url: "http://bancho:#{System.get_env("BANCHO_ENV_PORT")}",
+  server_cookie: System.get_env("SERVER_COOKIE")
 
 # ## SSL Support
 #

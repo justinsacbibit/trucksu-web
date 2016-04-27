@@ -23,7 +23,9 @@ config :trucksu, Trucksu.Endpoint,
 # and calculating stacktraces is usually expensive.
 config :phoenix, :stacktrace_depth, 20
 
-config :trucksu, performance_url: "http://localhost:5000"
+config :trucksu,
+  performance_url: "http://localhost:5000",
+  bancho_url: "http://localhost:4002"
 
 # Configure your database
 config :trucksu, Trucksu.Repo,
