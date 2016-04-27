@@ -22,11 +22,12 @@ defmodule Trucksu.Performance do
     scores = Repo.all from s in Score,
       where: s.user_id == ^user_id
         and s.game_mode == ^game_mode
-        and s.completed == 2 or s.completed == 3
+        and (s.completed == 2 or s.completed == 3)
         and not is_nil(s.pp),
-      order_by: [desc: s.pp],
       distinct: s.beatmap_id
 
+    # TODO: Sort in SQL using a subquery
+    scores = Enum.sort(scores, &(&1.pp > &2.pp))
     calculate_stats_for_scores(scores)
   end
 
