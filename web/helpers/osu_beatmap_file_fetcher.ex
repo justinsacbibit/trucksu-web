@@ -18,6 +18,12 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
       {:error, {:http_error, 404, _}} ->
         case download_osu_file(beatmap.beatmap_id) do
           {:ok, osu_file_content} ->
+            case ExAws.S3.put_object(bucket, beatmap.file_md5, osu_file_content) do
+              {:ok, _} ->
+                :ok
+              error ->
+                Logger.error "Failed to put beatmap #{beatmap.file_md5} to S3: #{inspect error}"
+            end
             {:ok, osu_file_content}
 
           error ->
