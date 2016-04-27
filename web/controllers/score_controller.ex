@@ -182,7 +182,7 @@ defmodule Trucksu.ScoreController do
           bucket = Application.get_env(:trucksu, :replay_file_bucket)
           replay_file_content = File.read!(replay.path)
           ExAws.S3.put_object!(bucket, "#{score.id}", replay_file_content)
-          Logger.info "Uploaded replay for #{user.username}, score id #{score.id}"
+          Logger.info "Uploaded replay for #{user.username}, score id #{score.id}, byte size: #{replay_file_content |> byte_size}"
 
           Logger.info "Inserting score: #{inspect score}"
 
