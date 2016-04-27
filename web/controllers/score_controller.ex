@@ -211,7 +211,7 @@ defmodule Trucksu.ScoreController do
             "creator" => osu_beatmap.creator,
           }
           json = Poison.encode! data
-          response = HTTPoison.post bancho_url <> "/event", json, [{"Content-Type", "application/json"}]
+          response = HTTPoison.post bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000
 
           case response do
             {:ok, response} ->
