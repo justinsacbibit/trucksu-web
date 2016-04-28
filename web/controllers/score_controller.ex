@@ -2,7 +2,6 @@ defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
-    Accuracy,
     Performance,
     Session,
 
@@ -11,7 +10,6 @@ defmodule Trucksu.ScoreController do
     OsuBeatmap,
     User,
     Score,
-    UserStats,
   }
 
   def create(conn, %{"osuver" => osuver} = params) do
@@ -75,10 +73,10 @@ defmodule Trucksu.ScoreController do
       _ -> 0
     end
 
-    passed = case passed do
-      "True" -> 1
-      _ -> 0
-    end
+    #passed = case passed do
+      #"True" -> 1
+      #_ -> 0
+    #end
 
     completed = case params["x"] do
       nil -> 2
@@ -164,6 +162,7 @@ defmodule Trucksu.ScoreController do
             accuracy: accuracy,
             completed: completed,
             has_replay: true,
+            rank: rank,
           })
           # IO.inspect score
 
@@ -225,7 +224,7 @@ defmodule Trucksu.ScoreController do
           response = HTTPoison.post bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000
 
           case response do
-            {:ok, response} ->
+            {:ok, _response} ->
               :ok
               Logger.warn "Sent pp event to Bancho: #{inspect data}"
             {:error, response} ->
