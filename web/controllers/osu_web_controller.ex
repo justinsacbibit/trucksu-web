@@ -28,8 +28,10 @@ defmodule Trucksu.OsuWebController do
     <> "\n"
   end
 
-  defp format_personal_best(beatmap, username) do
+  defp format_personal_best(beatmap, username, game_mode) do
     beatmap_id = beatmap.id
+
+    {game_mode, _} = Integer.parse(game_mode)
 
     query = from s in Score,
       join: s_ in fragment("
@@ -44,11 +46,11 @@ defmodule Trucksu.OsuWebController do
              (SELECT DISTINCT ON (sc.user_id) sc.id, score, username
               FROM scores sc
                 JOIN users u ON u.id = sc.user_id
-              WHERE sc.beatmap_id = (?) AND completed = 2 OR completed = 3
+              WHERE sc.beatmap_id = (?) AND (completed = 2 OR completed = 3) AND sc.game_mode = (?)
               ORDER BY sc.user_id, sc.score DESC
              ) sc) sc
         WHERE username = (?)
-      ", ^beatmap_id, ^username),
+      ", ^beatmap_id, ^game_mode, ^username),
         on: s.id == s_.id,
       join: u in assoc(s, :user),
       preload: [user: u],
@@ -72,12 +74,12 @@ defmodule Trucksu.OsuWebController do
     acc
   end
 
-  defp format_beatmap(ranked_status, beatmapset_id, beatmap, username) do
+  defp format_beatmap(ranked_status, beatmapset_id, beatmap, username, game_mode) do
     format_beatmap_header(ranked_status, beatmapset_id, beatmap)
     <> "0\n" # nothing?
     <> format_beatmap_song_info
     <> "0\n" # beatmap appreciation
-    <> format_personal_best(beatmap, username)
+    <> format_personal_best(beatmap, username, game_mode)
     <> format_beatmap_top_scores(beatmap)
   end
 
@@ -111,18 +113,22 @@ defmodule Trucksu.OsuWebController do
         end
 
         beatmap_id = beatmap.id
-        # TODO: Filter by mode
         preload_query = from s in Score.completed,
           join: u in assoc(s, :user),
-          where: s.beatmap_id == ^beatmap_id,
+          where: s.beatmap_id == ^beatmap_id and s.game_mode == ^mode,
           order_by: [desc: s.score],
           distinct: s.user_id,
           preload: [user: u]
 
-        Repo.preload beatmap, scores: preload_query
+        beatmap = Repo.preload beatmap, scores: preload_query
+
+        # TODO: Sort in SQL with subquery
+        scores = Enum.sort beatmap.scores, &(&1.score > &2.score)
+
+        %{beatmap | scores: scores}
     end
 
-    data = format_beatmap(2, beatmapset_id, beatmap, username)
+    data = format_beatmap(2, beatmapset_id, beatmap, username, mode)
     render conn, "response.raw", data: data
   end
 
