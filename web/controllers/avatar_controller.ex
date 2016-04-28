@@ -10,6 +10,7 @@ defmodule Trucksu.AvatarController do
     # TODO: Use S3 for storing the images
     filename = case user_id do
       "8" -> "unsaturated.jpg"
+      "6" -> "wow.png"
       _ -> "default_avatar.jpg"
     end
     path = avatar_path(filename)
