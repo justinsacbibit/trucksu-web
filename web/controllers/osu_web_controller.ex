@@ -23,7 +23,17 @@ defmodule Trucksu.OsuWebController do
     "#{score.id}|#{score.user.username}|#{score.score}|#{score.max_combo}"
     <> "|#{score.count_50}|#{score.count_100}|#{score.count_300}|#{score.miss_count}"
     <> "|#{score.katu_count}|#{score.geki_count}|#{score.full_combo}"
-    <> "|#{score.mods}|#{score.user.id}|#{place}|#{osu_date_to_unix_timestamp(score.time)}|0\n" # the 0 is has_replay
+    <> "|#{score.mods}|#{score.user.id}|#{place}|#{osu_date_to_unix_timestamp(score.time)}|#{has_replay(score.id)}\n"
+  end
+
+  defp has_replay(score_id) do
+    bucket = Application.get_env(:trucksu, :replay_file_bucket)
+    case ExAws.S3.head_object(bucket, score_id) do
+      {:error, {:http_error, 404, _}} ->
+        0
+      {:ok, _} ->
+        1
+    end
   end
 
   defp format_personal_best(beatmap, username) do
