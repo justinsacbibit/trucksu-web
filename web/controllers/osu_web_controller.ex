@@ -28,7 +28,7 @@ defmodule Trucksu.OsuWebController do
 
   defp has_replay(score_id) do
     bucket = Application.get_env(:trucksu, :replay_file_bucket)
-    case ExAws.S3.head_object(bucket, score_id) do
+    case ExAws.S3.head_object(bucket, "#{score_id}") do
       {:error, {:http_error, 404, _}} ->
         0
       {:ok, _} ->
