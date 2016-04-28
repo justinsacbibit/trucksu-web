@@ -171,6 +171,7 @@ defmodule Trucksu.ScoreController do
 
           score = case Performance.calculate(score) do
             {:ok, pp} ->
+              Logger.info "Calculated a pp of #{pp} for #{user.username} for score id #{score.id}"
               changeset = Ecto.Changeset.change(score, %{pp: pp})
               Repo.update! changeset
             {:error, error} ->
