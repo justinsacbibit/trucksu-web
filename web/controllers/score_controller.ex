@@ -163,6 +163,7 @@ defmodule Trucksu.ScoreController do
             game_mode: game_mode,
             accuracy: accuracy,
             completed: completed,
+            has_replay: true,
           })
           # IO.inspect score
 

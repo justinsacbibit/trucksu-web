@@ -46,9 +46,20 @@ defmodule Trucksu.ReplayController do
     bucket = Application.get_env(:trucksu, :replay_file_bucket)
     case ExAws.S3.get_object(bucket, "#{score.id}") do
       {:error, {:http_error, 404, _}} ->
+
+        changeset = Ecto.Changeset.change score, %{has_replay: false}
+        Repo.update! changeset
+
         stop_plug(conn, 404)
+
       {:ok, %{body: replay_file_content}} ->
-        assign(conn, :replay_file_content, replay_file_content)
+
+        changeset = Ecto.Changeset.change score, %{has_replay: true}
+        score = Repo.update! changeset
+
+        conn
+        |> assign(:replay_file_content, replay_file_content)
+        |> assign(:score, score)
     end
   end
 
