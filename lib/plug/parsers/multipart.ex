@@ -12,18 +12,13 @@ defmodule TruckPlug.Parsers.MULTIPART do
       TruckPlug.Adapters.Cowboy.Conn.parse_req_multipart(state, opts, &handle_headers/1)
     rescue
       e in Plug.UploadError -> # Do not ignore upload errors
-        IO.inspect "a"
         reraise e, System.stacktrace
       e -> # All others are wrapped
-        IO.inspect "b"
-        IO.inspect e
         reraise Plug.Parsers.ParseError.exception(exception: e), System.stacktrace
     else
       {:ok, params, state} ->
-        IO.inspect "c"
         {:ok, params, %{conn | adapter: {adapter, state}}}
       {:more, _params, state} ->
-        IO.inspect "d"
         {:error, :too_large, %{conn | adapter: {adapter, state}}}
     end
   end
