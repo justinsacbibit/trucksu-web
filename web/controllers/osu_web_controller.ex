@@ -27,6 +27,7 @@ defmodule Trucksu.OsuWebController do
   end
 
   defp has_replay(score_id) do
+    # TODO: This will cause a lot of S3 requests, and it's already slow
     bucket = Application.get_env(:trucksu, :replay_file_bucket)
     case ExAws.S3.head_object(bucket, "#{score_id}") do
       {:error, {:http_error, 404, _}} ->
