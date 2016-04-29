@@ -14,6 +14,7 @@ defmodule Trucksu.User do
     field :password, :string, virtual: true
     has_many :stats, UserStats
     has_many :scores, Score
+    field :country, :string
 
     timestamps
   end
