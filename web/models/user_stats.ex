@@ -5,6 +5,8 @@ defmodule Trucksu.UserStats do
     User,
   }
 
+  @derive {Poison.Encoder, only: [:pp, :user]}
+
   schema "user_stats" do
     field :game_mode, :integer
     field :ranked_score, :integer

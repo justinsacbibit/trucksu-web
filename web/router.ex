@@ -57,6 +57,8 @@ defmodule Trucksu.Router do
       post "/sessions", SessionController, :create
       delete "/sessions", SessionController, :delete
       get "/current-user", CurrentUserController, :show
+
+      get "/ranks", RanksController, :index
     end
   end
 end
