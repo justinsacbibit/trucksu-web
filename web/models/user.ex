@@ -1,6 +1,7 @@
 defmodule Trucksu.User do
   use Trucksu.Web, :model
   alias Trucksu.{
+    Friendship,
     Score,
     UserStats,
   }
@@ -15,6 +16,9 @@ defmodule Trucksu.User do
     has_many :stats, UserStats
     has_many :scores, Score
     field :country, :string
+
+    has_many :friendships, Friendship, foreign_key: :requester_id
+    has_many :friends, through: [:friendships, :receiver]
 
     timestamps
   end
