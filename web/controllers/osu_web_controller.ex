@@ -1,10 +1,158 @@
 defmodule Trucksu.OsuWebController do
   use Trucksu.Web, :controller
-  alias Trucksu.{Repo, Beatmap, Score}
+  require Logger
+  alias Trucksu.{
+    Session,
+
+    Repo,
+    Beatmap,
+    Friendship,
+    Score,
+    User,
+  }
+
+  plug :authenticate
+
+  defp authenticate(conn, _) do
+    case conn.request_path do
+      "/osu/web/osu-osz2-getscores.php" ->
+        username = conn.params["us"]
+        password_md5 = conn.params["ha"]
+        case Session.authenticate(username, password_md5, true) do
+          {:error, reason} ->
+            Logger.warn "#{username} attempted to get scores, but was unable to authenticate: #{reason}"
+            stop_plug(conn, 403)
+          {:ok, user} ->
+            assign(conn, :user, user)
+        end
+      _ ->
+        conn
+    end
+  end
+
+  def get_scores(conn, %{"c" => file_md5, "i" => beatmapset_id, "f" => filename, "m" => mode, "v" => type, "mods" => mods} = params) do
+
+    user = conn.assigns[:user]
+
+    query = from b in Beatmap,
+      where: b.file_md5 == ^file_md5
+
+    beatmap = case Repo.one query do
+      nil ->
+        params = %{
+          filename: filename,
+          beatmapset_id: beatmapset_id,
+          file_md5: file_md5,
+        }
+        beatmap = Repo.insert! Beatmap.changeset(%Beatmap{}, params)
+        Repo.preload beatmap, :scores
+
+      beatmap ->
+
+        if is_nil(beatmap.filename) do
+          # This beatmap was inserted as the result of a changeAction packet or
+          # a score submission. The beatmap is missing a filename and
+          # beatmapset_id, so let's fill that in now.
+          params = %{
+            filename: filename,
+            beatmapset_id: beatmapset_id,
+            file_md5: file_md5,
+          }
+          Repo.update! Beatmap.changeset(beatmap, params)
+        end
+
+        # type
+        # 4 - country ranking
+        # 1 - global ranking
+        # 2 - global ranking (selected mods)
+        # 3 - friend ranking
+
+        beatmap_id = beatmap.id
+        preload_query = case type do
+          "2" ->
+            # global ranking (selected mods)
+
+            {mods, _} = Integer.parse(mods)
+
+            from s in Score.completed,
+              join: u in assoc(s, :user),
+              where: s.beatmap_id == ^beatmap_id
+                and s.game_mode == ^mode
+                and s.mods == ^mods,
+              order_by: [desc: s.score],
+              distinct: s.user_id,
+              preload: [user: u]
+
+          "3" ->
+            # friend ranking
+
+            user_id = user.id
+            from s in Score.completed,
+              join: f in Friendship,
+              on: (f.requester_id == ^user_id
+                and s.user_id == f.receiver_id)
+                or s.user_id == ^user_id,
+              join: u in assoc(s, :user),
+              where: s.beatmap_id == ^beatmap_id
+                and s.game_mode == ^mode,
+              order_by: [desc: s.score],
+              distinct: s.user_id,
+              preload: [user: u]
+
+          "4" ->
+            # country ranking
+
+            country = user.country
+            from s in Score.completed,
+              join: u in assoc(s, :user),
+              where: s.beatmap_id == ^beatmap_id
+                and s.game_mode == ^mode
+                and u.country == ^country,
+              order_by: [desc: s.score],
+              distinct: s.user_id,
+              preload: [user: u]
+
+          _ ->
+            from s in Score.completed,
+              join: u in assoc(s, :user),
+              where: s.beatmap_id == ^beatmap_id and s.game_mode == ^mode,
+              order_by: [desc: s.score],
+              distinct: s.user_id,
+              preload: [user: u]
+        end
+
+        beatmap = Repo.preload beatmap, scores: preload_query
+
+        # TODO: Sort in SQL with subquery
+        scores = Enum.sort beatmap.scores, &(&1.score > &2.score)
+
+        %{beatmap | scores: scores}
+    end
+
+    data = format_beatmap(2, beatmapset_id, beatmap, user.username, mode)
+    render conn, "response.raw", data: data
+  end
 
   def bancho_connect(conn, _params) do
     render conn, "response.raw", data: "ca"
   end
+
+  def osu_metrics(conn, _params) do
+    render conn, "response.raw", data: <<>>
+  end
+
+  def check_updates(conn, _params) do
+    data = """
+    [{"file_version":"3","filename":"avcodec-51.dll","file_hash":"b22bf1e4ecd4be3d909dc68ccab74eec","filesize":"4409856","timestamp":"2014-08-18 16:16:59","patch_id":"1349","url_full":"http://m1.ppy.sh/r/avcodec-51.dll/f_b22bf1e4ecd4be3d909dc68ccab74eec","url_patch":"http://m1.ppy.sh/r/avcodec-51.dll/p_b22bf1e4ecd4be3d909dc68ccab74eec_734e450dd85c16d62c1844f10c6203c0"}]
+    """
+    render conn, "response.raw", data: data
+  end
+
+  def lastfm(conn, _params) do
+    render conn, "response.raw", data: <<>>
+  end
+
+  ## Score helpers
 
   defp format_beatmap_header(ranked_status, beatmapset_id, beatmap) do
     "#{ranked_status}|false|#{beatmapset_id}|#{beatmapset_id}|#{length beatmap.scores}\n"
@@ -83,68 +231,15 @@ defmodule Trucksu.OsuWebController do
     <> format_beatmap_top_scores(beatmap)
   end
 
-  def get_scores(conn, %{"c" => file_md5, "i" => beatmapset_id, "f" => filename, "us" => username, "m" => mode, "v" => type} = params) do
-
-    query = from b in Beatmap,
-      where: b.file_md5 == ^file_md5
-
-    beatmap = case Repo.one query do
-      nil ->
-        params = %{
-          filename: filename,
-          beatmapset_id: beatmapset_id,
-          file_md5: file_md5,
-        }
-        beatmap = Repo.insert! Beatmap.changeset(%Beatmap{}, params)
-        Repo.preload beatmap, :scores
-
-      beatmap ->
-
-        if is_nil(beatmap.filename) do
-          # This beatmap was inserted as the result of a changeAction packet or
-          # a score submission. The beatmap is missing a filename and
-          # beatmapset_id, so let's fill that in now.
-          params = %{
-            filename: filename,
-            beatmapset_id: beatmapset_id,
-            file_md5: file_md5,
-          }
-          Repo.update! Beatmap.changeset(beatmap, params)
-        end
-
-        beatmap_id = beatmap.id
-        preload_query = from s in Score.completed,
-          join: u in assoc(s, :user),
-          where: s.beatmap_id == ^beatmap_id and s.game_mode == ^mode,
-          order_by: [desc: s.score],
-          distinct: s.user_id,
-          preload: [user: u]
-
-        beatmap = Repo.preload beatmap, scores: preload_query
-
-        # TODO: Sort in SQL with subquery
-        scores = Enum.sort beatmap.scores, &(&1.score > &2.score)
-
-        %{beatmap | scores: scores}
-    end
-
-    data = format_beatmap(2, beatmapset_id, beatmap, username, mode)
-    render conn, "response.raw", data: data
+  defp stop(conn, status_code) do
+    conn
+    |> put_status(status_code)
+    |> html("")
   end
 
-  def osu_metrics(conn, _params) do
-    render conn, "response.raw", data: <<>>
-  end
-
-  def check_updates(conn, _params) do
-    data = """
-    [{"file_version":"3","filename":"avcodec-51.dll","file_hash":"b22bf1e4ecd4be3d909dc68ccab74eec","filesize":"4409856","timestamp":"2014-08-18 16:16:59","patch_id":"1349","url_full":"http://m1.ppy.sh/r/avcodec-51.dll/f_b22bf1e4ecd4be3d909dc68ccab74eec","url_patch":"http://m1.ppy.sh/r/avcodec-51.dll/p_b22bf1e4ecd4be3d909dc68ccab74eec_734e450dd85c16d62c1844f10c6203c0"}]
-    """
-    render conn, "response.raw", data: data
-  end
-
-  def lastfm(conn, _params) do
-    render conn, "response.raw", data: <<>>
+  defp stop_plug(conn, status_code) do
+    stop(conn, status_code)
+    |> halt
   end
 end
 
