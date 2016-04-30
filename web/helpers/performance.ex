@@ -99,6 +99,41 @@ defmodule Trucksu.Performance do
     # TODO
   end
 
+  @doc """
+  Recalculate scores which already have a pp calculated.
+
+  update_total_for_all_users/1 should be called after, to update each user's
+  user_stats.
+  """
+  def recalculate_all(dry_run \\ false) do
+    if dry_run do
+      Logger.warn "recalculate_all/1 dry-run"
+    else
+      Logger.warn "recalculate_all/1 non-dry-run"
+    end
+
+    scores = Repo.all from s in Score,
+      join: u in assoc(s, :user),
+      where: not is_nil(s.pp),
+      preload: [user: u]
+
+    for score <- scores do
+      case calculate(score) do
+        {:ok, pp} ->
+          changeset = Ecto.Changeset.change(score, %{pp: pp})
+          if not dry_run do
+            Logger.info "Updating pp from #{score.pp} to #{pp} for #{score.user.username} for score id #{score.id}"
+            Repo.update! changeset
+          else
+            Logger.info "Would update pp from #{score.pp} to #{pp} for #{score.user.username} for score id #{score.id}"
+          end
+        {:error, error} ->
+          Logger.error "Failed to calculate pp for score: #{inspect score}"
+          Logger.error "Error: #{inspect error}"
+      end
+    end
+  end
+
   def calculate(score) do
     score = Repo.preload score, :beatmap
     with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(score.beatmap.file_md5),
