@@ -42,13 +42,6 @@ defmodule Trucksu.Router do
     get "/:user_id", AvatarController, :show
   end
 
-  # Frontend
-  scope "/", Trucksu do
-    pipe_through :browser
-
-    get "*path", PageController, :index
-  end
-
   scope "/api", Trucksu do
     pipe_through :api
 
@@ -60,5 +53,12 @@ defmodule Trucksu.Router do
 
       get "/ranks", RanksController, :index
     end
+  end
+
+  # Frontend
+  scope "/", Trucksu do
+    pipe_through :browser
+
+    get "*path", PageController, :index
   end
 end
