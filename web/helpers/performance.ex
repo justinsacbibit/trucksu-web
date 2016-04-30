@@ -106,6 +106,8 @@ defmodule Trucksu.Performance do
   end
 
   defp calculate_with_osu_file_content(score, osu_file_content) do
+    beatmap = Repo.preload score.beatmap, :osu_beatmap
+
     form_data = [
       {"b", osu_file_content},
       {"Count300", score.count_300},
@@ -115,6 +117,7 @@ defmodule Trucksu.Performance do
       {"MaxCombo", score.max_combo},
       {"EnabledMods", score.mods},
       {"GameMode", score.game_mode},
+      {"MapMaxCombo", beatmap.osu_beatmap.max_combo},
     ]
 
     performance_url = Application.get_env(:trucksu, :performance_url)

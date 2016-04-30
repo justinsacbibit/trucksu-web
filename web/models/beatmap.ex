@@ -1,12 +1,16 @@
 defmodule Trucksu.Beatmap do
   use Trucksu.Web, :model
-  alias Trucksu.Score
+  alias Trucksu.{
+    OsuBeatmap,
+    Score,
+  }
 
   schema "beatmaps" do
     field :filename, :string
     field :beatmapset_id, :integer
     field :file_md5, :string
     has_many :scores, Score
+    has_one :osu_beatmap, OsuBeatmap, foreign_key: :file_md5, references: :file_md5
 
     timestamps
   end
