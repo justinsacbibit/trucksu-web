@@ -6,6 +6,7 @@ defmodule Trucksu.Performance do
     OsuBeatmapFileFetcher,
 
     Repo,
+    Beatmap,
     Score,
     UserStats,
   }
@@ -20,14 +21,19 @@ defmodule Trucksu.Performance do
   """
   def calculate_stats_for_user(user_id, game_mode) do
     scores = Repo.all from s in Score,
+      join: b in assoc(s, :beatmap),
       where: s.user_id == ^user_id
         and s.game_mode == ^game_mode
         and (s.completed == 2 or s.completed == 3)
         and not is_nil(s.pp),
-      distinct: s.beatmap_id
+      order_by: [desc: s.pp],
+      preload: [beatmap: b]
 
-    # TODO: Sort in SQL using a subquery
-    scores = Enum.sort(scores, &(&1.pp > &2.pp))
+    # TODO: Filter in SQL using a subquery
+    unique_by_md5 = fn %Score{beatmap: %Beatmap{file_md5: file_md5}} ->
+      file_md5
+    end
+    scores = Enum.uniq_by(scores, &(unique_by_md5.(&1)))
     calculate_stats_for_scores(scores)
   end
 
@@ -51,21 +57,15 @@ defmodule Trucksu.Performance do
   @doc """
   Updates each user's pp and accuracy according to the current state of their scores.
   """
-  def update_total_for_all_users(dry_run \\ false) do
+  def update_total_for_all_users(game_mode \\ 0, dry_run \\ false) do
     user_stats = Repo.all from us in UserStats,
       join: u in assoc(us, :user),
-      join: s in assoc(u, :scores),
-      where: us.game_mode == s.game_mode
-        and (s.completed == 2 or s.completed == 3)
-        and not is_nil(s.pp),
-      order_by: [desc: s.pp],
-      distinct: [u.id, s.beatmap_id, s.game_mode],
-      preload: [scores: s, user: u]
+      where: us.game_mode == ^game_mode,
+      preload: [user: u]
 
     Enum.each user_stats, fn user_stats ->
       # TODO: Sort in SQL using a subquery
-      scores = Enum.sort(user_stats.scores, &(&1.pp > &2.pp))
-      calculated = calculate_stats_for_scores(scores)
+      calculated = calculate_stats_for_user(user_stats.user_id, user_stats.game_mode)
       [pp: pp, accuracy: accuracy] = calculated
 
       changeset = Ecto.Changeset.change(user_stats, %{
@@ -74,16 +74,16 @@ defmodule Trucksu.Performance do
       })
 
       if not dry_run do
-        Logger.warn "Updating #{user_stats.user.username} stats: pp=#{pp} accuracy=#{accuracy}"
+        Logger.warn "Updating #{user_stats.user.username}:#{user_stats.game_mode} pp:old=#{user_stats.pp} accuracy:old=#{user_stats.accuracy} pp=#{pp} accuracy=#{accuracy}"
         case Repo.update changeset do
           {:ok, _} ->
             :ok
           {:error, changeset} ->
-            Logger.error "Failed to insert updated user_stats for #{user_stats.user.username}"
+            Logger.error "Failed to insert updated user_stats for #{user_stats.user.username}:#{user_stats.game_mode}"
             Logger.error inspect changeset
         end
       else
-        Logger.warn "Would update #{user_stats.user.username} stats: pp=#{pp} accuracy=#{accuracy}"
+        Logger.warn "Would update #{user_stats.user.username}:#{user_stats.game_mode} pp:old=#{user_stats.pp} accuracy:old=#{user_stats.accuracy} pp=#{pp} accuracy=#{accuracy}"
       end
     end
   end

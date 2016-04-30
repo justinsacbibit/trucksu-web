@@ -4,7 +4,6 @@ defmodule Trucksu.OsuWebController do
   alias Trucksu.{
     Session,
 
-    Repo,
     Beatmap,
     Friendship,
     Score,
@@ -80,7 +79,6 @@ defmodule Trucksu.OsuWebController do
                 and s.game_mode == ^mode
                 and s.mods == ^mods,
               order_by: [desc: s.score],
-              distinct: s.user_id,
               preload: [user: u]
 
           "3" ->
@@ -96,7 +94,6 @@ defmodule Trucksu.OsuWebController do
               where: s.beatmap_id == ^beatmap_id
                 and s.game_mode == ^mode,
               order_by: [desc: s.score],
-              distinct: s.user_id,
               preload: [user: u]
 
           "4" ->
@@ -109,7 +106,6 @@ defmodule Trucksu.OsuWebController do
                 and s.game_mode == ^mode
                 and u.country == ^country,
               order_by: [desc: s.score],
-              distinct: s.user_id,
               preload: [user: u]
 
           _ ->
@@ -117,14 +113,13 @@ defmodule Trucksu.OsuWebController do
               join: u in assoc(s, :user),
               where: s.beatmap_id == ^beatmap_id and s.game_mode == ^mode,
               order_by: [desc: s.score],
-              distinct: s.user_id,
               preload: [user: u]
         end
 
         beatmap = Repo.preload beatmap, scores: preload_query
 
-        # TODO: Sort in SQL with subquery
-        scores = Enum.sort beatmap.scores, &(&1.score > &2.score)
+        # TODO: Filter in SQL with subquery
+        scores = Enum.uniq_by(beatmap.scores, &(&1.user_id))
 
         %{beatmap | scores: scores}
     end
