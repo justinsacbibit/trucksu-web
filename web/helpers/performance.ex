@@ -70,7 +70,7 @@ defmodule Trucksu.Performance do
 
       changeset = Ecto.Changeset.change(user_stats, %{
         pp: pp,
-        accuracy: accuracy,
+        accuracy: accuracy / 1,
       })
 
       if not dry_run do
