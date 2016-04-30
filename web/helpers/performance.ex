@@ -69,7 +69,7 @@ defmodule Trucksu.Performance do
       [pp: pp, accuracy: accuracy] = calculated
 
       changeset = Ecto.Changeset.change(user_stats, %{
-        pp: pp,
+        pp: pp / 1,
         accuracy: accuracy / 1,
       })
 
