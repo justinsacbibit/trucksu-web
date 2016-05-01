@@ -205,6 +205,7 @@ defmodule Trucksu.ScoreController do
         end
 
         bancho_url = Application.get_env(:trucksu, :bancho_url)
+        bot_url = Application.get_env(:trucksu, :bot_url)
         cookie = Application.get_env(:trucksu, :server_cookie)
         if score.pp do
           osu_beatmap = Repo.get_by OsuBeatmap, file_md5: score.beatmap.file_md5
@@ -229,6 +230,16 @@ defmodule Trucksu.ScoreController do
               Logger.warn "Sent pp event to Bancho: #{inspect data}"
             {:error, response} ->
               Logger.error "Failed to send pp event to Bancho: #{inspect response}"
+          end
+
+          response = HTTPoison.post bot_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000
+
+          case response do
+            {:ok, _response} ->
+              :ok
+              Logger.warn "Sent pp event to Bot: #{inspect data}"
+            {:error, response} ->
+              Logger.error "Failed to send pp event to Bot: #{inspect response}"
           end
         end
 
