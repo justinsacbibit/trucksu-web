@@ -11,6 +11,7 @@ defmodule Trucksu.ScoreController do
     User,
     Score,
   }
+  use Bitwise
 
   def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
@@ -97,7 +98,20 @@ defmodule Trucksu.ScoreController do
     {count_50, _} = Integer.parse(count_50)
     {count_miss, _} = Integer.parse(count_miss)
 
+    {mods, _} = Integer.parse(mods)
+
     cond do
+      # TODO: Refactor mod checking
+      band(mods, 128) != 0 || band(mods, 2048) != 0 || band(mods, 8192) != 0 ->
+        # RX, Auto, or AP
+        # TODO: If Auto was used, log that somewhere. My client doesn't send
+        # a score when Auto is used.
+
+        # TODO: Don't call render func
+        Logger.warn "#{user.username} submitted a score with RX, Auto, or AP, ignoring."
+        render conn, "response.raw", data: <<>>
+
+
       completed >= 2 ->
         top_score = Repo.one from s in Score,
           join: b in assoc(s, :beatmap),
@@ -248,6 +262,7 @@ defmodule Trucksu.ScoreController do
           end
         end
 
+        # TODO: Don't call render func
         render conn, "response.raw", data: build_response(score)
       true ->
         # User failed or retried
@@ -258,6 +273,7 @@ defmodule Trucksu.ScoreController do
 
         Repo.update! user_stats
 
+        # TODO: Don't call render func
         render conn, "response.raw", data: <<>>
     end
   end
