@@ -220,6 +220,11 @@ defmodule Trucksu.ScoreController do
             "artist" => osu_beatmap.artist,
             "title" => osu_beatmap.title,
             "creator" => osu_beatmap.creator,
+            "mods" => score.mods,
+            "rank" => score.rank,
+            "accuracy" => score.accuracy,
+            "max_combo" => score.max_combo,
+            "time" => score.time,
           }
           json = Poison.encode! data
           response = HTTPoison.post bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000
