@@ -10,7 +10,7 @@ defmodule Trucksu.OsuWebController do
     User,
   }
 
-  plug :authenticate
+  plug :authenticate when not action in [:status]
 
   defp authenticate(conn, _) do
     case conn.request_path do
@@ -27,6 +27,14 @@ defmodule Trucksu.OsuWebController do
       _ ->
         conn
     end
+  end
+
+  def status(conn, _) do
+    query = from s in Score,
+      limit: 1
+    Repo.one query
+
+    json(conn, %{})
   end
 
   def get_scores(conn, %{"c" => file_md5, "i" => beatmapset_id, "f" => filename, "m" => mode, "v" => type, "mods" => mods} = params) do

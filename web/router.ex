@@ -30,6 +30,8 @@ defmodule Trucksu.Router do
       get "/osu-getreplay.php", ReplayController, :show
 
       post "/osu-submit-modular.php", ScoreController, :create
+
+      get "/status", OsuWebController, :status
     end
 
     scope "/pages" do
