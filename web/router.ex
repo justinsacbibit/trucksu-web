@@ -54,6 +54,7 @@ defmodule Trucksu.Router do
       get "/current-user", CurrentUserController, :show
 
       get "/ranks", RanksController, :index
+      get "/pp-calc", PerformanceController, :calculate
     end
   end
 

@@ -140,6 +140,11 @@ defmodule Trucksu.Performance do
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
+  def calculate(beatmap_id, mods, game_mode) when is_integer(beatmap_id) do
+    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(beatmap_id),
+         do: calculate_max_with_osu_file_content(mods, game_mode, osu_file_content)
+  end
+
   defp calculate_with_osu_file_content(score, osu_file_content) do
     beatmap = Repo.preload score.beatmap, :osu_beatmap
 
@@ -166,6 +171,30 @@ defmodule Trucksu.Performance do
         end
       {:error, response} ->
         Logger.error "Failed to calculate pp for score: #{inspect score}"
+        Logger.error "Response: #{inspect response}"
+        {:error, :performance_error}
+    end
+  end
+
+  defp calculate_max_with_osu_file_content(mods, game_mode, osu_file_content) do
+
+    form_data = [
+      {"b", osu_file_content},
+      {"EnabledMods", mods},
+      {"GameMode", game_mode},
+    ]
+
+    performance_url = Application.get_env(:trucksu, :performance_url)
+    case HTTPoison.post performance_url <> "/max", {:form, form_data} do
+      {:ok, %HTTPoison.Response{body: body}} ->
+        case Poison.decode(body) do
+          {:ok, %{"pp" => pp}} ->
+            {:ok, pp}
+          _ ->
+            {:error, :json_error}
+        end
+      {:error, response} ->
+        Logger.error "Failed to calculate max pp"
         Logger.error "Response: #{inspect response}"
         {:error, :performance_error}
     end

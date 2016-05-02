@@ -1,6 +1,22 @@
 defmodule Trucksu.OsuBeatmap do
   use Trucksu.Web, :model
 
+  @derive {Poison.Encoder, only: [
+    :version,
+    :diff_size,
+    :diff_overall,
+    :diff_approach,
+    :diff_drain,
+    :game_mode,
+    :approved_date,
+    :last_update,
+    :artist,
+    :title,
+    :creator,
+    :bpm,
+    :difficultyrating,
+  ]}
+
   schema "osu_beatmaps" do
     field :beatmapset_id, :integer
     field :beatmap_id, :integer
