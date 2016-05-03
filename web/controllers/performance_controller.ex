@@ -17,14 +17,11 @@ defmodule Trucksu.PerformanceController do
     end
   end
 
-  def calculate(conn, %{"b" => beatmap_id, "mods" => mods, "m" => game_mode, "c" => cookie}) do
-    # TODO: Verify cookie
+  def calculate(conn, %{"b" => beatmap_id, "mods" => mods, "m" => game_mode}) do
     {beatmap_id, _} = Integer.parse(beatmap_id)
     {mods, _} = Integer.parse(mods)
     {game_mode, _} = Integer.parse(game_mode)
 
-    cookie = Application.get_env(:trucksu, :server_cookie)
-    bancho_url = Application.get_env(:trucksu, :bancho_url)
     case Performance.calculate(beatmap_id, mods, game_mode) do
       {:ok, pp} ->
         {:ok, osu_beatmap} = OsuBeatmapFetcher.fetch(beatmap_id)
