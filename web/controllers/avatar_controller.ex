@@ -11,6 +11,7 @@ defmodule Trucksu.AvatarController do
     filename = case user_id do
       "8" -> "unsaturated.jpg"
       "6" -> "wow.png"
+      "38" -> "visitor.png"
       _ -> "default_avatar.jpg"
     end
     path = avatar_path(filename)
