@@ -34,12 +34,20 @@ defmodule Trucksu.Performance do
       file_md5
     end
     scores = Enum.uniq_by(scores, &(unique_by_md5.(&1)))
+
+    # if the score's pp is above 600, turn it into a negative
+    scores = for score <- scores, do: %{score | pp: (if score.pp > 600.0 do -score.pp else score.pp end)}
+    # re-sort in descending order by pp
+    scores = Enum.sort_by(scores, fn(score) -> score.pp end, &>=/2)
+
     calculate_stats_for_scores(scores)
   end
 
   defp calculate_stats_for_scores(scores) do
     accuracy = Accuracy.from_accuracies(Enum.map scores, fn %Score{accuracy: accuracy} -> accuracy end)
     pp = from_pps(Enum.map scores, fn %Score{pp: pp} -> pp end)
+
+    pp = max(pp, 0.0)
 
     [pp: pp, accuracy: accuracy]
   end
