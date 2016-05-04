@@ -16,7 +16,7 @@ var config = module.exports = {
   // css and js
   entry: {
     application: [
-      web('css/application.sass'),
+      web('css/application.scss'),
       web('js/application.js'),
     ],
   },
@@ -51,8 +51,21 @@ var config = module.exports = {
         },
       },
       {
+        test: /\.scss$/,
+        loaders: [
+          'style-loader',
+          'css-loader?-autoprefixer&-minimize',
+          'postcss-loader',
+          'sass-loader'
+        ]
+      },
+      {
         test: /\.sass$/,
         loader: ExtractTextPlugin.extract('style', 'css!sass?indentedSyntax&includePaths[]=' + __dirname +  '/node_modules'),
+      },
+      {
+        test: [/\.png$/, /\.gif$/, /\.jpg$/,  /\.xcf$/],
+        loader: 'file-loader?name=images/[name].[ext]'
       },
     ],
   },

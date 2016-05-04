@@ -1,71 +1,72 @@
-import React, {PropTypes}   from 'react';
-import { connect }          from 'react-redux';
-import { Link }             from 'react-router';
+import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+import { Link } from 'react-router';
 
+import Actions from '../../actions/sessions';
 import { setDocumentTitle } from '../../utils';
-import Actions              from '../../actions/sessions';
+import logoImage from '../../../images/logo-transparent.png';
 
-class SessionsNew extends React.Component {
+const SessionsNew = React.createClass({
   componentDidMount() {
     setDocumentTitle('Sign in');
-  }
+  },
 
-  _handleSubmit(e) {
+  handleClickSubmit(e) {
     e.preventDefault();
 
     const { username, password } = this.refs;
     const { dispatch } = this.props;
 
     dispatch(Actions.signIn(username.value, password.value));
-  }
+  },
 
-  _renderError() {
+  renderError() {
     let { error } = this.props;
 
     if (!error) return false;
 
     return (
-      <div className='error'>
+      <div className='general-error'>
         {error}
       </div>
     );
-  }
+  },
 
   render() {
     return (
-      <div className='view-container sessions new'>
-        <main>
-          <header>
-            <div className='logo' />
-          </header>
-          <form id='sign_in_form' onSubmit={::this._handleSubmit}>
-            {::this._renderError()}
-            <div className='field'>
-              <input
-                ref='username'
-                type='text'
-                id='user_username'
-                placeholder='Username'
-                required='true'
-                defaultValue='' />
-            </div>
-            <div className='field'>
-              <input
-                ref='password'
-                type='password'
-                id='user_password'
-                placeholder='Password'
-                required='true'
-                defaultValue=''/>
-            </div>
-            <button type='submit'>Sign in</button>
-          </form>
-          <Link to='/sign_up'>Create new account</Link>
-        </main>
+      <div className='auth_container'>
+        <div className='logo'>
+          <img src={logoImage} />
+        </div>
+        <form id='sign_in_form' onSubmit={this.handleClickSubmit}>
+          { this.renderError() }
+          <div className='field'>
+            <input
+              ref='username'
+              type='text'
+              id='user_username'
+              placeholder='Username'
+              defaultValue=''
+              required={true}
+            />
+          </div>
+          <div className='field'>
+            <input
+              ref='password'
+              type='password'
+              id='user_password'
+              placeholder='Password'
+              defaultValue=''
+              required={true}
+            />
+          </div>
+          <button type='submit'>Sign in</button>
+        </form>
+        <Link to='/sign_up'>Create new account</Link>
       </div>
     );
   }
-}
+});
 
 const mapStateToProps = (state) => (
   state.session

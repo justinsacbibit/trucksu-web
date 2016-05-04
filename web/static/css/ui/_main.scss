@@ -1,0 +1,23 @@
+* {
+	font-family: $base-font-family;
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+}
+
+button {
+	cursor: pointer;
+}
+
+#main_container, #main_layout {
+	overflow: hidden;
+	height: 100%;
+	width: 100%;
+	position: fixed;
+}
+
+#main_layout {
+	background-color: $primary-color;
+}
