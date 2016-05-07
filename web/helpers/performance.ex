@@ -148,8 +148,8 @@ defmodule Trucksu.Performance do
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
-  def calculate(beatmap_id, mods, game_mode) when is_integer(beatmap_id) do
-    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(beatmap_id),
+  def calculate(file_md5, mods, game_mode) when is_binary(file_md5) do
+    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(file_md5),
          do: calculate_max_with_osu_file_content(mods, game_mode, osu_file_content)
   end
 
@@ -186,6 +186,9 @@ defmodule Trucksu.Performance do
 
   defp calculate_max_with_osu_file_content(mods, game_mode, osu_file_content) do
 
+    Logger.error "Going to send osu file content to max perf:"
+    Logger.error inspect(osu_file_content, limit: :infinity)
+
     form_data = [
       {"b", osu_file_content},
       {"EnabledMods", mods},
@@ -198,7 +201,10 @@ defmodule Trucksu.Performance do
         case Poison.decode(body) do
           {:ok, %{"pp" => pp}} ->
             {:ok, pp}
-          _ ->
+          something ->
+            Logger.error "Failed to decode max performance json"
+            Logger.error inspect(body, limit: :infinity)
+            Logger.error inspect something
             {:error, :json_error}
         end
       {:error, response} ->

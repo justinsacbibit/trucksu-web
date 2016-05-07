@@ -2,6 +2,7 @@ defmodule Trucksu.OsuWebController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    Osu,
     Session,
 
     Beatmap,
@@ -44,6 +45,7 @@ defmodule Trucksu.OsuWebController do
         case osu_beatmaps do
           [first_map | _] ->
             # We have some version of the beatmapset
+            Logger.error "We have some version of the beatmapset"
 
             first_map = Enum.at(osu_beatmaps, 0)
             cond do
@@ -70,7 +72,24 @@ defmodule Trucksu.OsuWebController do
                 # not approved and not ranked, may need to hit the osu! API first
 
                 if conn.assigns[:fetched_set] do
-                  assign(conn, :beatmap_status, :not_submitted)
+                  osu_beatmap = Enum.find(osu_beatmaps, fn(osu_beatmap) ->
+                    version = osu_beatmap.version
+                    # osu doesn't include colons in filename difficulty
+                    version = String.replace(version, ":", "")
+                    case Regex.named_captures(~r/ \[(?<version>)\]\.osu$/, filename) do
+                      %{"version" => ^version} ->
+                        true
+
+                      _ ->
+                        false
+                    end
+                  end)
+                  case osu_beatmap do
+                    nil ->
+                      assign(conn, :beatmap_status, :not_submitted)
+                    _ ->
+                      assign(conn, :beatmap_status, :update_available)
+                  end
                 else
                   if fetch_set_from_osu_api(beatmapset_id) do
                     conn = assign(conn, :fetched_set, true)
@@ -132,10 +151,42 @@ defmodule Trucksu.OsuWebController do
 
   defp fetch_set_from_osu_api(beatmapset_id) do
     # TODO: Return a value that indicates if the fetching succeeded?
-    # rate limit
+    # TODO: Rate limit
     Logger.error "Fetch beatmapset #{beatmapset_id}"
-    succeeded = false
-    succeeded
+
+    case Osu.get_beatmaps(s: beatmapset_id) do
+      {:ok, %HTTPoison.Response{body: beatmap_maps}} ->
+        Repo.transaction(fn ->
+          for beatmap_map <- beatmap_maps do
+            case Repo.get_by OsuBeatmap, file_md5: beatmap_map["file_md5"] do
+              nil ->
+                changeset = OsuBeatmap.changeset_from_api(%OsuBeatmap{}, beatmap_map)
+                case Repo.insert changeset do
+                  {:ok, osu_beatmap} ->
+                    :ok
+                  {:error, error} ->
+                    Logger.error "Error occurred when trying to insert a beatmap from osu! API"
+                    Logger.error inspect error
+                    :ok
+                end
+              osu_beatmap ->
+                # This beatmap is already in the db
+                :ok
+            end
+          end
+        end)
+
+        # succeeded
+        true
+
+      {:error, error} ->
+        Logger.error "Failed to get beatmapset #{beatmapset_id} from the osu! API"
+        Logger.error inspect error
+
+        # failed
+        false
+
+    end
   end
 
   def get_scores(conn, %{"c" => file_md5, "i" => beatmapset_id, "f" => filename, "m" => mode, "v" => type, "mods" => mods} = params) do

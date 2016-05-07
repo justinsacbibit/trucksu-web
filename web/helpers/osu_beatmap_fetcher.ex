@@ -57,11 +57,9 @@ defmodule Trucksu.OsuBeatmapFetcher do
   defp insert(beatmap_data) do
     beatmap_data = beatmap_data
     |> Map.put("game_mode", beatmap_data["mode"])
-    |> Map.put("game_mode", beatmap_data["mode"])
     |> Map.delete("mode")
     changeset = OsuBeatmap.changeset(%OsuBeatmap{}, beatmap_data)
 
     Repo.insert changeset
   end
 end
-

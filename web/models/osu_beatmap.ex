@@ -64,4 +64,10 @@ defmodule Trucksu.OsuBeatmap do
     model
     |> cast(params, @required_fields, @optional_fields)
   end
+
+  def changeset_from_api(model, params) do
+    params = Map.put(params, "game_mode", Map.get(params, "mode"))
+
+    changeset(model, params)
+  end
 end
