@@ -32,7 +32,7 @@ defmodule Trucksu.PerformanceController do
         Logger.warn "Calculated #{round pp}pp for #{file_md5} #{osu_beatmap.artist} - #{osu_beatmap.title} (#{osu_beatmap.creator}) [#{osu_beatmap.version}]"
         json(conn, data)
 
-      {:error, error} ->
+      error ->
         Logger.error "Failed to calculate pp for file_md5=#{file_md5}"
         Logger.error inspect error
 
