@@ -39,7 +39,6 @@ defmodule Trucksu.ScreenshotController do
   end
 
   def show(%Plug.Conn{host: "osu.ppy.sh"} = conn, %{"id" => id}) do
-    IO.inspect conn
     host = if Mix.env == :dev do "localhost" else "trucksu.com" end
     redirect conn, external: "https://#{host}/ss/#{id}"
   end
