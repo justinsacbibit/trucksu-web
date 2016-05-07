@@ -75,13 +75,14 @@ defmodule Trucksu.Osu do
   defp inner_get(path, params, bang) do
     params = Keyword.put(params, :k, Application.get_env(:trucksu, :osu_api_key))
     one_minute = 60000
+    opts = [params: params, timeout: one_minute, recv_timeout: one_minute]
 
     Logger.error "Executing osu! API call: path=#{path} params=#{inspect params} bang=#{bang}"
 
     if bang do
-      get!(path, [], params: params, timeout: one_minute, recv_timeout: one_minute)
+      get!(path, [], opts)
     else
-      get(path, [], params: params, timeout: one_minute, recv_timeout: one_minute)
+      get(path, [], opts)
     end
   end
 end
