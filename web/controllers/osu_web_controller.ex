@@ -13,7 +13,8 @@ defmodule Trucksu.OsuWebController do
   }
 
   plug :authenticate when not action in [:status]
-  plug :fetch_osu_beatmap when action == :get_scores
+  # TODO: Uncomment when rate limiting is implemented
+  # plug :fetch_osu_beatmap when action == :get_scores
 
   defp authenticate(conn, _) do
     case conn.request_path do
@@ -288,6 +289,7 @@ defmodule Trucksu.OsuWebController do
       :not_submitted -> -1
       :up_to_date -> 2
       :update_available -> 1
+      _ -> 2
     end
 
     data = format_beatmap(ranked_status, beatmapset_id, beatmap, user.username, mode)

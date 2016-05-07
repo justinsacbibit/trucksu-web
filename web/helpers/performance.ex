@@ -186,9 +186,6 @@ defmodule Trucksu.Performance do
 
   defp calculate_max_with_osu_file_content(mods, game_mode, osu_file_content) do
 
-    Logger.error "Going to send osu file content to max perf:"
-    Logger.error inspect(osu_file_content, limit: :infinity)
-
     form_data = [
       {"b", osu_file_content},
       {"EnabledMods", mods},
