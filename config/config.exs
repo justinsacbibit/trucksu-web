@@ -31,6 +31,7 @@ config :trucksu,
   beatmap_file_bucket: System.get_env("BEATMAP_FILE_BUCKET"),
   replay_file_bucket: System.get_env("REPLAY_FILE_BUCKET"),
   avatar_file_bucket: System.get_env("AVATAR_FILE_BUCKET"),
+  screenshot_file_bucket: System.get_env("SCREENSHOT_FILE_BUCKET"),
   server_cookie: "a",
   bot_url: System.get_env("BOT_URL") || ""
 
