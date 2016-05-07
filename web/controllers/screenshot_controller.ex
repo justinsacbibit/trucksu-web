@@ -38,6 +38,12 @@ defmodule Trucksu.ScreenshotController do
     html(conn, "#{screenshot_id}")
   end
 
+  def show(%Plug.Conn{host: "osu.ppy.sh"} = conn, %{"id" => id}) do
+    IO.inspect conn
+    host = if Mix.env == :dev do "localhost" else "trucksu.com" end
+    redirect conn, external: "https://#{host}/ss/#{id}"
+  end
+
   def show(conn, %{"id" => id}) do
     bucket = Application.get_env(:trucksu, :screenshot_file_bucket)
     case ExAws.S3.get_object(bucket, id) do
@@ -50,6 +56,8 @@ defmodule Trucksu.ScreenshotController do
       {:ok, %{body: screenshot_file_content}} ->
 
         conn
+        |> Plug.Conn.put_resp_header("content-type", "image/jpeg")
+        |> Plug.Conn.put_resp_header("content-transfer-encoding", "binary")
         |> Plug.Conn.send_resp(200, screenshot_file_content)
     end
   end
