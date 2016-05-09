@@ -1,4 +1,4 @@
-defmodule Trucksu.KnownIps do
+defmodule Trucksu.KnownIp do
   use Trucksu.Web, :model
   alias Trucksu.User
 
