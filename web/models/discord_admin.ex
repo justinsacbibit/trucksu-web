@@ -2,7 +2,7 @@ defmodule Trucksu.DiscordAdmin do
   use Trucksu.Web, :model
 
   schema "discord_admins" do
-    field :discord_id, :integer
+    field :discord_id, :string
 
     timestamps
   end
