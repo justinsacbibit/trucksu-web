@@ -6,6 +6,10 @@ defmodule Trucksu.RegistrationController do
   plug :scrub_params, "user" when action in [:create]
 
   def create(conn, %{"user" => user_params}) do
+
+    # TODO: This is obviously a problem
+    user_params = Map.put(user_params, "banned", false)
+
     changeset = User.changeset(%User{}, user_params)
 
     {:ok, rendered} = Repo.transaction(fn ->
