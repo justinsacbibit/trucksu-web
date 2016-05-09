@@ -236,7 +236,8 @@ defmodule Trucksu.OsuWebController do
 
             from s in Score.completed,
               join: u in assoc(s, :user),
-              where: s.beatmap_id == ^beatmap_id
+              where: u.banned == false
+                and s.beatmap_id == ^beatmap_id
                 and s.game_mode == ^mode
                 and s.mods == ^mods,
               order_by: [desc: s.score],
@@ -252,7 +253,8 @@ defmodule Trucksu.OsuWebController do
                 and s.user_id == f.receiver_id)
                 or s.user_id == ^user_id,
               join: u in assoc(s, :user),
-              where: s.beatmap_id == ^beatmap_id
+              where: u.banned == false
+                and s.beatmap_id == ^beatmap_id
                 and s.game_mode == ^mode,
               order_by: [desc: s.score],
               preload: [user: u]
@@ -263,7 +265,8 @@ defmodule Trucksu.OsuWebController do
             country = user.country
             from s in Score.completed,
               join: u in assoc(s, :user),
-              where: s.beatmap_id == ^beatmap_id
+              where: u.banned == false
+                and s.beatmap_id == ^beatmap_id
                 and s.game_mode == ^mode
                 and u.country == ^country,
               order_by: [desc: s.score],
@@ -272,7 +275,9 @@ defmodule Trucksu.OsuWebController do
           _ ->
             from s in Score.completed,
               join: u in assoc(s, :user),
-              where: s.beatmap_id == ^beatmap_id and s.game_mode == ^mode,
+              where: u.banned == false
+                and s.beatmap_id == ^beatmap_id
+                and s.game_mode == ^mode,
               order_by: [desc: s.score],
               preload: [user: u]
         end
@@ -357,7 +362,11 @@ defmodule Trucksu.OsuWebController do
              (SELECT DISTINCT ON (sc.user_id) sc.id, score, username
               FROM scores sc
                 JOIN users u ON u.id = sc.user_id
-              WHERE sc.beatmap_id = (?) AND (completed = 2 OR completed = 3) AND sc.game_mode = (?)
+              WHERE
+                u.banned = FALSE
+                AND sc.beatmap_id = (?)
+                AND (completed = 2 OR completed = 3)
+                AND sc.game_mode = (?)
               ORDER BY sc.user_id, sc.score DESC
              ) sc) sc
         WHERE username = (?)
