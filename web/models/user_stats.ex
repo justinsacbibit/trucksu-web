@@ -5,7 +5,17 @@ defmodule Trucksu.UserStats do
     User,
   }
 
-  @derive {Poison.Encoder, only: [:pp, :user]}
+  defimpl Poison.Encoder, for: Trucksu.UserStats do
+    def encode(user_stats, _options) do
+      %{
+        pp: user_stats.pp,
+        user: %{
+          id: user_stats.user.id,
+          username: user_stats.user.username,
+        },
+      } |> Poison.Encoder.encode([])
+    end
+  end
 
   schema "user_stats" do
     field :game_mode, :integer
