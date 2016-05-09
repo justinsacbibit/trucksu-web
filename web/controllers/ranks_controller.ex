@@ -6,7 +6,8 @@ defmodule Trucksu.RanksController do
     # TODO: Check params cookie
     stats = Repo.all from us in UserStats,
       join: u in assoc(us, :user),
-      where: us.game_mode == 0,
+      where: u.banned == false
+        and us.game_mode == 0,
       order_by: [desc: us.pp],
       preload: [user: u]
     conn
