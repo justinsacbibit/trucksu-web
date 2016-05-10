@@ -156,6 +156,7 @@ defmodule Trucksu.Performance do
   defp calculate_with_osu_file_content(score, osu_file_content) do
     beatmap = Repo.preload score.beatmap, :osu_beatmap
 
+    cookie = Application.get_env(:trucksu, :performance_cookie)
     form_data = [
       {"b", osu_file_content},
       {"Count300", score.count_300},
@@ -166,6 +167,7 @@ defmodule Trucksu.Performance do
       {"EnabledMods", score.mods},
       {"GameMode", score.game_mode},
       {"MapMaxCombo", beatmap.osu_beatmap.max_combo},
+      {"Cookie", cookie},
     ]
 
     performance_url = Application.get_env(:trucksu, :performance_url)
@@ -186,10 +188,12 @@ defmodule Trucksu.Performance do
 
   defp calculate_max_with_osu_file_content(mods, game_mode, osu_file_content) do
 
+    cookie = Application.get_env(:trucksu, :performance_cookie)
     form_data = [
       {"b", osu_file_content},
       {"EnabledMods", mods},
       {"GameMode", game_mode},
+      {"Cookie", cookie},
     ]
 
     performance_url = Application.get_env(:trucksu, :performance_url)
