@@ -6,20 +6,22 @@ import Actions from '../../actions/sessions';
 import { setDocumentTitle } from '../../utils';
 import logoImage from '../../../images/logo-transparent.png';
 
+import Form from '../../forms/Form';
+import SigninFormSchema from '../../forms/schemas/SigninFormSchema';
+
 const SessionsNew = React.createClass({
   componentDidMount() {
     setDocumentTitle('Sign in');
   },
-
   handleClickSubmit(e) {
     e.preventDefault();
 
-    const { username, password } = this.refs;
+    const { form } = this.refs;
+    const { username, password } = form.getValue();
     const { dispatch } = this.props;
 
-    dispatch(Actions.signIn(username.value, password.value));
+    dispatch(Actions.signIn(username, password));
   },
-
   renderError() {
     let { error } = this.props;
 
@@ -31,7 +33,6 @@ const SessionsNew = React.createClass({
       </div>
     );
   },
-
   render() {
     return (
       <div className='auth_container'>
@@ -40,26 +41,10 @@ const SessionsNew = React.createClass({
         </div>
         <form id='sign_in_form' onSubmit={this.handleClickSubmit}>
           { this.renderError() }
-          <div className='field'>
-            <input
-              ref='username'
-              type='text'
-              id='user_username'
-              placeholder='Username'
-              defaultValue=''
-              required={true}
-            />
-          </div>
-          <div className='field'>
-            <input
-              ref='password'
-              type='password'
-              id='user_password'
-              placeholder='Password'
-              defaultValue=''
-              required={true}
-            />
-          </div>
+          <Form
+            ref='form'
+            schema={SigninFormSchema}
+          />
           <button type='submit'>Sign in</button>
         </form>
         <Link to='/sign_up'>Create new account</Link>
