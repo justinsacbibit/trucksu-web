@@ -11,6 +11,12 @@ function join(dest) { return path.resolve(__dirname, dest); }
 
 function web(dest) { return join('web/static/' + dest); }
 
+var babelSettings = {
+  cacheDirectory: true,
+  plugins: ['transform-decorators-legacy'],
+  presets: ['react', 'es2015', 'stage-0'],
+};
+
 var config = module.exports = {
   // our application's entry points - for this example we'll use a single each for
   // css and js
@@ -43,12 +49,7 @@ var config = module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        loader: 'babel',
-        query: {
-          cacheDirectory: true,
-          plugins: ['transform-decorators-legacy'],
-          presets: ['react', 'es2015', 'stage-2', 'stage-0'],
-        },
+        loaders: ['react-hot', 'babel?' + JSON.stringify(babelSettings)],
       },
       {
         test: /\.sass$/,

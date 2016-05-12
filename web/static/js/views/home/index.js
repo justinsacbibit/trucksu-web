@@ -1,123 +1,70 @@
-import React                from 'react';
-import { connect }          from 'react-redux';
-import classnames           from 'classnames';
+import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+import classnames from 'classnames';
 
 import { setDocumentTitle } from '../../utils';
-import Actions              from '../../actions/boards';
-import BoardCard            from '../../components/boards/card';
-import BoardForm            from '../../components/boards/form';
+import Actions from '../../actions/boards';
+import LeaderboardActions from '../../actions/leaderboard';
+
+import Paper from 'material-ui/Paper';
+import FlatButton from 'material-ui/FlatButton';
+import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
+import CircularProgress from 'material-ui/CircularProgress';
 
 class HomeIndexView extends React.Component {
+  static propTypes = {
+    fetching: PropTypes.bool.isRequired,
+    leaderboard: PropTypes.array,
+  };
+
   componentDidMount() {
-    setDocumentTitle('Boards');
+    setDocumentTitle('Leaderboard');
+
+    const { dispatch } = this.props;
+    dispatch(LeaderboardActions.fetchLeaderboard());
   }
 
-  componentWillUnmount() {
-    this.props.dispatch(Actions.reset());
-  }
-
-  _renderOwnedBoards() {
-    const { fetching } = this.props;
-
-    let content = false;
-
-    const iconClasses = classnames({
-      fa: true,
-      'fa-user': !fetching,
-      'fa-spinner': fetching,
-      'fa-spin':    fetching,
-    });
-
-    if (!fetching) {
-      content = (
-        <div className="boards-wrapper">
-          {::this._renderBoards(this.props.ownedBoards)}
-          {::this._renderAddNewBoard()}
-        </div>
-      );
-    }
-
+  _renderTable() {
     return (
-      <section>
-        <header className="view-header">
-          <h3><i className={iconClasses} /> My boards</h3>
-        </header>
-        {content}
-      </section>
+      <Table>
+        <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
+          <TableRow>
+            <TableHeaderColumn width={30}>Rank</TableHeaderColumn>
+            <TableHeaderColumn width={160}>Username</TableHeaderColumn>
+            <TableHeaderColumn>PP</TableHeaderColumn>
+          </TableRow>
+        </TableHeader>
+        <TableBody displayRowCheckbox={false}>
+          {this.props.leaderboard.map((user, index) => {
+            return (
+              <TableRow key={index}>
+                <TableRowColumn width={30}>#{index + 1}</TableRowColumn>
+                <TableRowColumn width={160}>{user.user.username}</TableRowColumn>
+                <TableRowColumn><strong>{user.pp.toFixed(2)}pp</strong></TableRowColumn>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     );
-  }
-
-  _renderBoards(boards) {
-    return boards.map((board) => {
-      return <BoardCard
-                key={board.id}
-                dispatch={this.props.dispatch}
-                {...board} />;
-    });
-  }
-
-  _renderAddNewBoard() {
-    let { showForm, dispatch, formErrors } = this.props;
-
-    if (!showForm) return this._renderAddButton();
-
-    return (
-      <BoardForm
-        dispatch={dispatch}
-        errors={formErrors}
-        onCancelClick={::this._handleCancelClick}/>
-    );
-  }
-
-  _renderOtherBoards() {
-    const { invitedBoards } = this.props;
-
-    if (invitedBoards.length === 0) return false;
-
-    return (
-      <section>
-        <header className="view-header">
-          <h3><i className="fa fa-users" /> Other boards</h3>
-        </header>
-        <div className="boards-wrapper">
-          {::this._renderBoards(invitedBoards)}
-        </div>
-      </section>
-    );
-  }
-
-  _renderAddButton() {
-    return (
-      <div className="board add-new" onClick={::this._handleAddNewClick}>
-        <div className="inner">
-          <a id="add_new_board">Add new board...</a>
-        </div>
-      </div>
-    );
-  }
-
-  _handleAddNewClick() {
-    let { dispatch } = this.props;
-
-    dispatch(Actions.showForm(true));
-  }
-
-  _handleCancelClick() {
-    this.props.dispatch(Actions.showForm(false));
   }
 
   render() {
     return (
-      <div className="view-container boards index">
-        {::this._renderOwnedBoards()}
-        {::this._renderOtherBoards()}
+      <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}} className=''>
+        <div style={{width: 965}}>
+          <h2 style={{fontFamily: 'Roboto,sans-serif', borderBottom: '1px solid #eee', paddingBottom: '.3em', fontWeight: 400}}>Global Performance Leaderboard</h2>
+          <Paper style={{width: '100%', justifyContent: 'center', display: 'flex'}} zDepth={1}>
+            {this.props.fetching ? <CircularProgress size={2} /> : this._renderTable()}
+          </Paper>
+        </div>
       </div>
     );
   }
 }
 
 const mapStateToProps = (state) => (
-  state.boards
+  state.leaderboard
 );
 
 export default connect(mapStateToProps)(HomeIndexView);
