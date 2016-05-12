@@ -6,6 +6,7 @@ import Fields from './fields';
 const Form = React.createClass({
 	getDefaultProps() {
 		return {
+			validationEnabled: false,
 			schema: {}
 		};
 	},

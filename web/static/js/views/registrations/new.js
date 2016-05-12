@@ -6,27 +6,27 @@ import Actions from '../../actions/registrations';
 import logoImage from '../../../images/logo-transparent.png';
 import { setDocumentTitle, renderErrorsFor } from '../../utils';
 
+import Form from '../../forms/Form';
+import SignupFormSchema from '../../forms/schemas/SignupFormSchema';
+
 const RegistrationsNew = React.createClass({
+  getInitialState() {
+    return {
+      validationEnabled: false
+    };
+  },
   componentDidMount() {
     setDocumentTitle('Sign up');
   },
-
   handleClickSubmit(e) {
     e.preventDefault();
 
-    const { username, email, password, passwordConfirmation } = this.refs;
+    const { form } = this.refs;
     const { dispatch } = this.props;
-
-    const data = {
-      username: username.value,
-      email: email.value,
-      password: password.value,
-      password_confirmation: passwordConfirmation.value,
-    };
+    const data = form.getValue();
 
     dispatch(Actions.signUp(data));
   },
-
   render() {
     const errors = this.props.errors || [];
     const errKeys = errors.reduce((result, error) => {
@@ -42,50 +42,10 @@ const RegistrationsNew = React.createClass({
           <img src={logoImage} />
         </div>
         <form id='sign_up_form' onSubmit={this.handleClickSubmit}>
-          <div className='field'>
-            <input
-              ref='username'
-              id='user_username'
-              className={errKeys.includes('username') ? 'invalid' : ''}
-              type='text'
-              placeholder='Username'
-              required={true}
-            />
-            { renderErrorsFor(errors, 'username') }
-          </div>
-          <div className='field'>
-            <input
-              ref='email'
-              id='user_email'
-              className={errKeys.includes('email') ? 'invalid' : ''}
-              type='email'
-              placeholder='Email'
-              required={true}
-            />
-            { renderErrorsFor(errors, 'email') }
-          </div>
-          <div className='field'>
-            <input
-              ref='password'
-              id='user_password'
-              className={errKeys.includes('password') ? 'invalid' : ''}
-              type='password'
-              placeholder='Password'
-              required={true}
-            />
-            { renderErrorsFor(errors, 'password') }
-          </div>
-          <div className='field'>
-            <input
-              ref='passwordConfirmation'
-              id='user_password_confirmation'
-              className={errKeys.includes('password_confirmation') ? 'invalid' : ''}
-              type='password'
-              placeholder='Confirm password'
-              required={true}
-            />
-            { renderErrorsFor(errors, 'password_confirmation') }
-          </div>
+          <Form
+            ref='form'
+            schema={SignupFormSchema}
+          />
           <button type='submit'>Sign up</button>
         </form>
         <Link to='/sign_in'>Sign in</Link>

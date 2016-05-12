@@ -10,6 +10,11 @@ import Form from '../../forms/Form';
 import SigninFormSchema from '../../forms/schemas/SigninFormSchema';
 
 const SessionsNew = React.createClass({
+  getInitialState() {
+    return {
+      validationEnabled: false
+    };
+  },
   componentDidMount() {
     setDocumentTitle('Sign in');
   },
@@ -21,6 +26,9 @@ const SessionsNew = React.createClass({
     const { dispatch } = this.props;
 
     dispatch(Actions.signIn(username, password));
+    this.setState({
+      validationEnabled: true
+    });
   },
   renderError() {
     let { error } = this.props;
