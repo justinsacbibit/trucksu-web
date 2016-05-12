@@ -22,16 +22,12 @@ class AuthenticatedContainer extends React.Component {
     if (!currentUser) return false;
 
     return (
-      <div id="authentication_container" className="application-container">
-        YER LOGGED IN
-        <a href="#" onClick={::this._handleSignOutClick}><i className="fa fa-sign-out"/> Sign out</a>
-        {/*
+      <div id='authentication_container' className='application-container'>
         <Header />
 
         <div className='main-container'>
           {this.props.children}
         </div>
-        */}
       </div>
     );
   }
