@@ -6,7 +6,7 @@ const Actions = {
     return dispatch => {
       dispatch({ type: Constants.USER_FETCHING });
 
-      httpGet(`/api/v1/user/${userId}`)
+      httpGet(`/api/v1/users/${userId}`)
       .then((data) => {
         dispatch({
           type: Constants.USER_RECEIVED,

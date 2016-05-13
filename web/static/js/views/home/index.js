@@ -25,7 +25,8 @@ class HomeIndexView extends React.Component {
     dispatch(LeaderboardActions.fetchLeaderboard());
   }
 
-  _handleUserClick(userId) {
+  _handleUserClick(userId, e) {
+    e.preventDefault();
     this.props.dispatch(push(`/users/${userId}`));
   }
 
@@ -42,9 +43,9 @@ class HomeIndexView extends React.Component {
         <TableBody displayRowCheckbox={false}>
           {this.props.leaderboard.map((user, index) => {
             return (
-              <TableRow key={index}>
+              <TableRow key={index} selectable={false}>
                 <TableRowColumn width={30}>#{index + 1}</TableRowColumn>
-                <TableRowColumn width={160}><a onClick={this._handleUserClick.bind(this, user.user.id)} style={{color: '#0000FF', cursor: 'pointer', textDecoration: 'none'}}>{user.user.username}</a></TableRowColumn>
+                <TableRowColumn width={160}><a href={`/users/${user.user.id}`} onClick={this._handleUserClick.bind(this, user.user.id)} style={{color: '#0000FF', cursor: 'pointer', textDecoration: 'none'}}>{user.user.username}</a></TableRowColumn>
                 <TableRowColumn><strong>{user.pp.toFixed(2)}pp</strong></TableRowColumn>
               </TableRow>
             );

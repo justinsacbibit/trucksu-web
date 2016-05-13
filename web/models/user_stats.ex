@@ -38,6 +38,7 @@ defmodule Trucksu.UserStats do
     belongs_to :user, User
     has_many :scores, through: [:user, :scores]
     field :rank, :integer, virtual: true
+    field :first_place_scores, :any, virtual: true
 
     timestamps
   end

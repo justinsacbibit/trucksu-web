@@ -135,7 +135,9 @@ defmodule Trucksu.UserController do
       file_md5
     end
     stats = for stats <- user.stats do
-      scores = Enum.uniq_by(stats.scores, &(unique_by_md5.(&1)))
+      scores = stats.scores
+      |> Enum.uniq_by(&(unique_by_md5.(&1)))
+      |> Enum.take(100)
 
       game_mode = stats.game_mode
       user_id = user.id
@@ -160,7 +162,37 @@ defmodule Trucksu.UserController do
       ", ^game_mode, ^user_id),
         on: s.id == us.id,
         select: s.game_rank
-      %{stats | scores: scores, rank: rank}
+
+      query = from sc in Trucksu.Score,
+        join: sc_ in fragment("
+          SELECT id
+          FROM (
+                  SELECT
+                     sc.id,
+                     user_id,
+                     sc.game_mode,
+                     row_number()
+                     OVER (PARTITION BY sc.beatmap_id, sc.game_mode
+                        ORDER BY score DESC) score_rank
+                  FROM scores sc
+                  JOIN beatmaps b
+                    on sc.beatmap_id = b.id
+                  JOIN osu_beatmaps ob
+                    on b.file_md5 = ob.file_md5
+                  WHERE completed = 2 OR completed = 3
+               ) x
+          WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
+        ", ^user_id, ^game_mode),
+          on: sc_.id == sc.id,
+        join: u in assoc(sc, :user),
+        join: us in assoc(u, :stats),
+        join: b in assoc(sc, :beatmap),
+        join: ob in assoc(b, :osu_beatmap),
+        preload: [beatmap: {b, osu_beatmap: ob}],
+        order_by: [desc: sc.score]
+      first_place_scores = Repo.all query
+
+      %{stats | scores: scores, rank: rank, first_place_scores: first_place_scores}
     end
     user = %{user | stats: stats}
 

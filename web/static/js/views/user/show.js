@@ -56,9 +56,12 @@ class UserShowView extends React.Component {
                 </a>
                 &nbsp;{`${mods}(${score.rank ? score.rank + ' rank, ' : ''}${(score.accuracy * 100).toFixed(2)}%, ${score.max_combo}x)`}
                 <div style={{flex: 1}} />
-                <strong>
-                  {score.pp.toFixed(2)}pp
-                </strong>
+                {score.pp ?
+                  <strong>
+                    {score.pp.toFixed(2)}pp
+                  </strong>
+                  : 'N/A'
+                }
               </div>
               <Divider />
             </div>
@@ -68,11 +71,19 @@ class UserShowView extends React.Component {
     );
   }
 
+  _renderFirstPlaceScoresTable(scores) {
+    return (
+      <div>
+        <h2 style={{fontFamily: 'Roboto,sans-serif', borderBottom: '1px solid #eee', paddingBottom: '.3em', fontWeight: 400}}>First Place Ranks</h2>
+        {this._renderScoresTable(scores)}
+      </div>
+    );
+  }
+
   render() {
     const { fetching, user } = this.props.currentUser;
 
     if (fetching) {
-      // TODO: Deduplicate container markup
       return (
         <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row', paddingTop: 30}}>
           <CircularProgress size={2} />
@@ -94,6 +105,7 @@ class UserShowView extends React.Component {
             </div>
           </div>
           {this._renderScoresTable(stats.scores)}
+          {this._renderFirstPlaceScoresTable(stats.first_place_scores)}
         </div>
       </div>
     );
