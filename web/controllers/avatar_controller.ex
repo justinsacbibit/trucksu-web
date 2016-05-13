@@ -1,20 +1,22 @@
 defmodule Trucksu.AvatarController do
   use Trucksu.Web, :controller
 
-  defp avatar_path(filename) do
-    "web/static/images/" <> filename
-  end
-
   def show(conn, %{"user_id" => user_id}) do
-    # TODO: Return the correct avatar based on params["user_id"]
-    # TODO: Use S3 for storing the images
-    filename = case user_id do
-      "8" -> "unsaturated.jpg"
-      "6" -> "wow.png"
-      _ -> "default_avatar.jpg"
+    default_path = "web/static/images/default_avatar.jpg"
+    case user_id do
+      "-1" ->
+        Plug.Conn.send_file(conn, 200, default_path)
+      _ ->
+        bucket = Application.get_env(:trucksu, :avatar_file_bucket)
+        case ExAws.S3.get_object(bucket, user_id) do
+          {:error, {:http_error, 404, _}} ->
+
+            Plug.Conn.send_file(conn, 200, default_path)
+
+          {:ok, %{body: avatar_file_content}} ->
+            Plug.Conn.send_resp(conn, 200, avatar_file_content)
+        end
     end
-    path = avatar_path(filename)
-    Plug.Conn.send_file(conn, 200, path)
   end
 end
 

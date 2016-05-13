@@ -16,6 +16,7 @@ defmodule Trucksu.User do
     has_many :stats, UserStats
     has_many :scores, Score
     field :country, :string
+    field :banned, :boolean
 
     has_many :friendships, Friendship, foreign_key: :requester_id
     has_many :friends, through: [:friendships, :receiver]
@@ -24,7 +25,7 @@ defmodule Trucksu.User do
   end
 
   @required_fields ~w(username email password)
-  @optional_fields ~w(encrypted_password)
+  @optional_fields ~w(encrypted_password banned)
 
   @doc """
   Creates a query which can fetch a User by username, case insensitive.

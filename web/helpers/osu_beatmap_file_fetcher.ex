@@ -18,6 +18,7 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
       {:error, {:http_error, 404, _}} ->
         case download_osu_file(beatmap.beatmap_id) do
           {:ok, osu_file_content} ->
+            # TODO: Need to verify beatmap.file_md5 is the same as osu_file_content hash
             case ExAws.S3.put_object(bucket, beatmap.file_md5, osu_file_content) do
               {:ok, _} ->
                 :ok
@@ -31,6 +32,8 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
         end
       {:ok, %{body: osu_file_content}} ->
         {:ok, osu_file_content}
+      error ->
+        error
     end
   end
 

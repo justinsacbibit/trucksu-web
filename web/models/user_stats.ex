@@ -5,7 +5,25 @@ defmodule Trucksu.UserStats do
     User,
   }
 
-  @derive {Poison.Encoder, only: [:pp, :user]}
+  defimpl Poison.Encoder, for: Trucksu.UserStats do
+    def encode(user_stats, _options) do
+      %{
+        pp: user_stats.pp,
+        user: %{
+          id: user_stats.user.id,
+          username: user_stats.user.username,
+        },
+        game_mode: user_stats.game_mode,
+        ranked_score: user_stats.ranked_score,
+        total_score: user_stats.total_score,
+        accuracy: user_stats.accuracy,
+        playcount: user_stats.playcount,
+        replays_watched: user_stats.replays_watched,
+        total_hits: user_stats.total_hits,
+        level: user_stats.level,
+      } |> Poison.Encoder.encode([])
+    end
+  end
 
   schema "user_stats" do
     field :game_mode, :integer
@@ -19,6 +37,7 @@ defmodule Trucksu.UserStats do
     field :level, :integer
     belongs_to :user, User
     has_many :scores, through: [:user, :scores]
+    field :rank, :integer, virtual: true
 
     timestamps
   end

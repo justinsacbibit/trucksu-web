@@ -2,6 +2,29 @@ defmodule Trucksu.Score do
   use Trucksu.Web, :model
   alias Trucksu.{Beatmap, User}
 
+  @derive {Poison.Encoder, only: [
+    :id,
+    :score,
+    :max_combo,
+    :full_combo,
+    :mods,
+    :count_300,
+    :count_100,
+    :count_50,
+    :katu_count,
+    :geki_count,
+    :miss_count,
+    :time,
+    :game_mode,
+    :accuracy,
+    :completed,
+    :beatmap,
+    :user,
+    :pp,
+    :has_replay,
+    :rank,
+  ]}
+
   schema "scores" do
     field :score, :integer
     field :max_combo, :integer

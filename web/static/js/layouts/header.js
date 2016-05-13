@@ -8,6 +8,17 @@ import { push }         from 'react-router-redux';
 import SessionActions   from '../actions/sessions';
 import HeaderActions    from '../actions/header';
 
+import Paper from 'material-ui/Paper';
+import AppBar from 'material-ui/AppBar';
+import IconButton from 'material-ui/IconButton';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import NavigationClose from 'material-ui/svg-icons/navigation/close';
+import {Tabs, Tab} from 'material-ui/Tabs';
+import FlatButton from 'material-ui/FlatButton';
+import RaisedButton from 'material-ui/RaisedButton';
+
 class Header extends React.Component {
   _handleBoardsClick(e) {
     e.preventDefault();
@@ -33,17 +44,17 @@ class Header extends React.Component {
       return this._createBoardItem(dispatch, currentBoard, socket, board);
     });
 
-    const ownedBoardsItemsHeader = ownedBoardsItems.length > 0 ? <header className="title"><i className="fa fa-user"/> Owned boards</header> : null;
+    const ownedBoardsItemsHeader = ownedBoardsItems.length > 0 ? <header className='title'><i className='fa fa-user'/> Owned boards</header> : null;
 
     const invitedBoardsItems = invitedBoards.map((board) => {
       return this._createBoardItem(dispatch, currentBoard, socket, board);
     });
 
-    const invitedBoardsItemsHeaders = invitedBoardsItems.length > 0 ? <header className="title"><i className="fa fa-users"/> Other boards</header> : null;
+    const invitedBoardsItemsHeaders = invitedBoardsItems.length > 0 ? <header className='title'><i className='fa fa-users'/> Other boards</header> : null;
 
     return (
       <PageClick onClick={::this._hideBoards}>
-        <div className="dropdown">
+        <div className='dropdown'>
           {ownedBoardsItemsHeader}
           <ul>
             {ownedBoardsItems}
@@ -52,9 +63,9 @@ class Header extends React.Component {
           <ul>
             {invitedBoardsItems}
           </ul>
-          <ul className="options">
+          <ul className='options'>
             <li>
-              <Link to="/" onClick={::this._hideBoards}>View all boards</Link>
+              <Link to='/' onClick={::this._hideBoards}>View all boards</Link>
             </li>
           </ul>
         </div>
@@ -81,7 +92,7 @@ class Header extends React.Component {
 
     return (
       <li key={board.id}>
-        <a href="#" onClick={onClick}>{board.name}</a>
+        <a href='#' onClick={onClick}>{board.name}</a>
       </li>
     );
   }
@@ -93,12 +104,8 @@ class Header extends React.Component {
       return false;
     }
 
-    const fullName = [currentUser.first_name, currentUser.last_name].join(' ');
-
     return (
-      <a className="current-user">
-        <ReactGravatar className="react-gravatar" email={currentUser.email} https /> {fullName}
-      </a>
+      <div style={{alignSelf: 'center'}}>{currentUser.username}</div>
     );
   }
 
@@ -108,7 +115,11 @@ class Header extends React.Component {
     }
 
     return (
-      <a href="#" onClick={::this._handleSignOutClick}><i className="fa fa-sign-out"/> Sign out</a>
+      <FlatButton
+        label='Sign out'
+        labelStyle={{color: '#fff'}}
+        style={{margin: 12, marginRight: 0}}
+        onMouseUp={::this._handleSignOutClick} />
     );
   }
 
@@ -119,40 +130,47 @@ class Header extends React.Component {
   }
 
   render() {
+    const tabsValue = this.props.location.pathname.startsWith('/users/')
+      ? -1
+      : 0;
     return (
-      <header className="main-header">
-        <nav id="boards_nav">
-          <ul>
-            <li>
-              <a href="#" onClick={::this._handleBoardsClick}><i className="fa fa-columns"/> Boards</a>
-              {::this._renderBoards()}
-            </li>
-          </ul>
-        </nav>
-        <Link to='/'>
-          <span className='logo'/>
-        </Link>
-        <nav className="right">
-          <ul>
-            <li>
-              {this._renderCurrentUser()}
-            </li>
-            <li>
-              {this._renderSignOutLink()}
-            </li>
-          </ul>
-        </nav>
-      </header>
+      <AppBar
+        showMenuIconButton={false}
+        title='Trucksu'
+        titleStyle={{marginRight: 24, flex: 'none'}}>
+        <Tabs
+          onChange={(value) => {
+            if (value === 0) {
+              this.props.dispatch(push('/'));
+            }
+          }}
+          style={{flex: 'none', height: 64}}
+          value={tabsValue}>
+          {/*<Tab
+            label='Home'
+            style={{height: 64}}
+            value={0} />*/}
+          <Tab
+            label='Leaderboard'
+            style={{height: 64, width: 140}}
+            value={0} />
+        </Tabs>
+        <div style={{flex: 1}} />
+        <div style={{display: 'flex', flexDirection: 'row-reverse'}}>
+          {this._renderSignOutLink()}
+          {this._renderCurrentUser()}
+        </div>
+      </AppBar>
     );
   }
 }
 
 const mapStateToProps = (state) => ({
   currentUser: state.session.currentUser,
-  socket: state.session.socket,
-  boards: state.boards,
-  currentBoard: state.currentBoard,
-  header: state.header,
+  //socket: state.session.socket,
+  //boards: state.boards,
+  //currentBoard: state.currentBoard,
+  //header: state.header,
 });
 
 export default connect(mapStateToProps)(Header);

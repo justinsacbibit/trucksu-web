@@ -10,8 +10,7 @@ const Form = React.createClass({
 	getDefaultProps() {
 		return {
 			validationEnabled: false,
-			schema: {},
-			submit: () => {}
+			schema: {}
 		};
 	},
 	getInitialState() {
@@ -56,18 +55,17 @@ const Form = React.createClass({
 			let element = Fields[field.field];
 
 			if(element) {
-				let props = {
+				let fieldProps = {
 					...field,
 					name: key,
-					value: this.state.value[key],
+					errorText: this.state.errors[key],
 					onChange: this.changeHandler
 				};
 
 				result.push(
 					<FieldContainer
 						field={element}
-						fieldProps={props}
-						errors={this.state.errors[key]}
+						fieldProps={fieldProps}
 					/>
 				);
 			}

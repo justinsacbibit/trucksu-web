@@ -12,7 +12,7 @@ const SignupFormSchema = {
 		placeholder: 'Email',
 		defaultValue: '',
 		required: true,
-		$email: true
+		email: true
 	},
 	password: {
 		field: 'text',

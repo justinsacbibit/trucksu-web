@@ -2,6 +2,7 @@ defmodule Trucksu.OsuBeatmap do
   use Trucksu.Web, :model
 
   @derive {Poison.Encoder, only: [
+    :beatmap_id,
     :version,
     :diff_size,
     :diff_overall,
@@ -51,8 +52,8 @@ defmodule Trucksu.OsuBeatmap do
     timestamps
   end
 
-  @required_fields ~w(beatmapset_id beatmap_id approved total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode last_update artist title creator bpm source tags genre_id language_id favourite_count playcount passcount max_combo difficultyrating)
-  @optional_fields ~w(approved_date)
+  @required_fields ~w(beatmapset_id beatmap_id approved total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode last_update artist title creator bpm source tags genre_id language_id favourite_count playcount passcount difficultyrating)
+  @optional_fields ~w(max_combo approved_date)
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -63,5 +64,11 @@ defmodule Trucksu.OsuBeatmap do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
+  end
+
+  def changeset_from_api(model, params) do
+    params = Map.put(params, "game_mode", Map.get(params, "mode"))
+
+    changeset(model, params)
   end
 end

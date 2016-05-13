@@ -30,6 +30,7 @@ defmodule Trucksu.Router do
       get "/osu-getreplay.php", ReplayController, :show
 
       post "/osu-submit-modular.php", ScoreController, :create
+      post "/osu-screenshot.php", ScreenshotController, :create
 
       get "/status", OsuWebController, :status
     end
@@ -37,6 +38,8 @@ defmodule Trucksu.Router do
     scope "/pages" do
       post "/include/home-ircfeed.php", OsuPagesController, :irc_feed
     end
+
+    get "/ss/:id", ScreenshotController, :show
   end
 
   # The following calls go to a.ppy.sh
@@ -55,7 +58,14 @@ defmodule Trucksu.Router do
 
       get "/ranks", RanksController, :index
       get "/pp-calc", PerformanceController, :calculate
+      post "/ban", UserController, :ban
+      post "/unban", UserController, :unban
+      get "/user/:id", UserController, :show
     end
+  end
+
+  scope "/", Trucksu do
+    get "/ss/:id", ScreenshotController, :show
   end
 
   # Frontend

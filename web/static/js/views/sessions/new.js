@@ -1,13 +1,14 @@
+import { Paper, RaisedButton } from 'material-ui';
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 
 import Actions from '../../actions/sessions';
 import { setDocumentTitle } from '../../utils';
-import logoImage from '../../../images/logo-transparent.png';
 
 import Form from '../../forms/Form';
 import SigninFormSchema from '../../forms/schemas/SigninFormSchema';
+import logoImage from '../../../images/logo-transparent.png';
 
 const SessionsNew = React.createClass({
   getInitialState() {
@@ -38,29 +39,34 @@ const SessionsNew = React.createClass({
     let { error } = this.props;
 
     if (!error) return false;
-
     return (
-      <div className='general-error'>
+      <div className='error'>
         {error}
       </div>
     );
   },
   render() {
     return (
-      <div className='auth_container'>
+      <div id='auth_screen'>
         <div className='logo'>
           <img src={logoImage} />
         </div>
-        <div id='sign_in_form'>
+        <form id='auth_container'>
+          <h2>Sign In</h2>
           { this.renderError() }
           <Form
             ref='form'
             schema={SigninFormSchema}
             validationEnabled={this.state.validationEnabled}
           />
-          <button onClick={this.handleClickSubmit}>Sign in</button>
-        </div>
-        <Link to='/sign_up'>Create new account</Link>
+          <RaisedButton
+            label='Sign In'
+            type='submit'
+            primary={true}
+            onClick={this.handleClickSubmit}
+          />
+          <Link to='/sign_up'>Create new account</Link>
+        </form>
       </div>
     );
   }

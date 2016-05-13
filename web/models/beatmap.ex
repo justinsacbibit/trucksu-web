@@ -5,6 +5,10 @@ defmodule Trucksu.Beatmap do
     Score,
   }
 
+  @derive {Poison.Encoder, only: [
+    :osu_beatmap,
+  ]}
+
   schema "beatmaps" do
     field :filename, :string
     field :beatmapset_id, :integer

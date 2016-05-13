@@ -22,23 +22,20 @@ class AuthenticatedContainer extends React.Component {
     if (!currentUser) return false;
 
     return (
-      <div id="authentication_container" className="application-container">
-        YER LOGGED IN
-        <a href="#" onClick={::this._handleSignOutClick}><i className="fa fa-sign-out"/> Sign out</a>
-        {/*
-        <Header />
+      <div id='authentication_container' className='application-container'>
+        <Header location={this.props.location} />
 
         <div className='main-container'>
           {this.props.children}
         </div>
-        */}
       </div>
     );
   }
 }
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state, props) => ({
   currentUser: state.session.currentUser,
+  location: props.location,
   //socket: state.session.socket,
   //channel: state.session.channel,
   //boards: state.boards,

@@ -34,12 +34,20 @@ defmodule Trucksu.Performance do
       file_md5
     end
     scores = Enum.uniq_by(scores, &(unique_by_md5.(&1)))
+
+    # if the score's pp is above 600, turn it into a negative
+    scores = for score <- scores, do: %{score | pp: (if score.pp > 600.0 do -score.pp else score.pp end)}
+    # re-sort in descending order by pp
+    scores = Enum.sort_by(scores, fn(score) -> score.pp end, &>=/2)
+
     calculate_stats_for_scores(scores)
   end
 
   defp calculate_stats_for_scores(scores) do
     accuracy = Accuracy.from_accuracies(Enum.map scores, fn %Score{accuracy: accuracy} -> accuracy end)
     pp = from_pps(Enum.map scores, fn %Score{pp: pp} -> pp end)
+
+    pp = max(pp, 0.0)
 
     [pp: pp, accuracy: accuracy]
   end
@@ -140,14 +148,15 @@ defmodule Trucksu.Performance do
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
-  def calculate(beatmap_id, mods, game_mode) when is_integer(beatmap_id) do
-    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(beatmap_id),
+  def calculate(file_md5, mods, game_mode) when is_binary(file_md5) do
+    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(file_md5),
          do: calculate_max_with_osu_file_content(mods, game_mode, osu_file_content)
   end
 
   defp calculate_with_osu_file_content(score, osu_file_content) do
     beatmap = Repo.preload score.beatmap, :osu_beatmap
 
+    cookie = Application.get_env(:trucksu, :performance_cookie)
     form_data = [
       {"b", osu_file_content},
       {"Count300", score.count_300},
@@ -158,6 +167,7 @@ defmodule Trucksu.Performance do
       {"EnabledMods", score.mods},
       {"GameMode", score.game_mode},
       {"MapMaxCombo", beatmap.osu_beatmap.max_combo},
+      {"Cookie", cookie},
     ]
 
     performance_url = Application.get_env(:trucksu, :performance_url)
@@ -178,10 +188,12 @@ defmodule Trucksu.Performance do
 
   defp calculate_max_with_osu_file_content(mods, game_mode, osu_file_content) do
 
+    cookie = Application.get_env(:trucksu, :performance_cookie)
     form_data = [
       {"b", osu_file_content},
       {"EnabledMods", mods},
       {"GameMode", game_mode},
+      {"Cookie", cookie},
     ]
 
     performance_url = Application.get_env(:trucksu, :performance_url)
@@ -190,7 +202,10 @@ defmodule Trucksu.Performance do
         case Poison.decode(body) do
           {:ok, %{"pp" => pp}} ->
             {:ok, pp}
-          _ ->
+          something ->
+            Logger.error "Failed to decode max performance json"
+            Logger.error inspect(body, limit: :infinity)
+            Logger.error inspect something
             {:error, :json_error}
         end
       {:error, response} ->

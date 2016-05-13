@@ -1,5 +1,6 @@
 defmodule Trucksu.Osu do
   use HTTPoison.Base
+  require Logger
 
   defp process_url(url) do
     "https://osu.ppy.sh/api" <> url
@@ -59,11 +60,29 @@ defmodule Trucksu.Osu do
   def get_beatmaps!(params \\ []) do
     _get!("/get_beatmaps", params)
   end
+  def get_beatmaps(params \\ []) do
+    _get("/get_beatmaps", params)
+  end
+
+  defp _get(path, params) do
+    inner_get(path, params, false)
+  end
 
   defp _get!(path, params) do
+    inner_get(path, params, true)
+  end
+
+  defp inner_get(path, params, bang) do
     params = Keyword.put(params, :k, Application.get_env(:trucksu, :osu_api_key))
     one_minute = 60000
-    get!(path, [], params: params, timeout: one_minute, recv_timeout: one_minute)
+    opts = [params: params, timeout: one_minute, recv_timeout: one_minute]
+
+    Logger.error "Executing osu! API call: path=#{path} params=#{inspect params} bang=#{bang}"
+
+    if bang do
+      get!(path, [], opts)
+    else
+      get(path, [], opts)
+    end
   end
 end
-

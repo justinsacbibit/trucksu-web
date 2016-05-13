@@ -17,27 +17,23 @@ defmodule Trucksu.PerformanceController do
     end
   end
 
-  def calculate(conn, %{"b" => beatmap_id, "mods" => mods, "m" => game_mode, "c" => cookie}) do
-    # TODO: Verify cookie
-    {beatmap_id, _} = Integer.parse(beatmap_id)
+  def calculate(conn, %{"file_md5" => file_md5, "mods" => mods, "m" => game_mode}) do
     {mods, _} = Integer.parse(mods)
     {game_mode, _} = Integer.parse(game_mode)
 
-    cookie = Application.get_env(:trucksu, :server_cookie)
-    bancho_url = Application.get_env(:trucksu, :bancho_url)
-    case Performance.calculate(beatmap_id, mods, game_mode) do
+    case Performance.calculate(file_md5, mods, game_mode) do
       {:ok, pp} ->
-        {:ok, osu_beatmap} = OsuBeatmapFetcher.fetch(beatmap_id)
+        {:ok, osu_beatmap} = OsuBeatmapFetcher.fetch(file_md5)
         data = %{
           "event_type" => "max-pp-calc",
           "pp" => "#{round pp}",
           "osu_beatmap" => osu_beatmap,
         }
-        Logger.warn "Calculated #{round pp}pp for #{beatmap_id} #{osu_beatmap.artist} - #{osu_beatmap.title} (#{osu_beatmap.creator}) [#{osu_beatmap.version}]"
+        Logger.warn "Calculated #{round pp}pp for #{file_md5} #{osu_beatmap.artist} - #{osu_beatmap.title} (#{osu_beatmap.creator}) [#{osu_beatmap.version}]"
         json(conn, data)
 
-      {:error, error} ->
-        Logger.error "Failed to calculate pp for beatmap id: #{beatmap_id}"
+      error ->
+        Logger.error "Failed to calculate pp for file_md5=#{file_md5}"
         Logger.error inspect error
 
         conn

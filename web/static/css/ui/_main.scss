@@ -3,17 +3,12 @@
 	box-sizing: border-box;
 }
 
-button {
-	cursor: pointer;
+body {
+	margin: 0;
 }
 
-#main_container, #main_layout {
-	overflow: hidden;
-	height: 100%;
-	width: 100%;
-	// position: fixed;
-}
-
-#main_layout {
-	// background-color: #FFFFFF;
+h2 {
+	border-bottom: 1px solid #eee;
+	padding-bottom: 0.3em;
+	font-weight: 400;
 }

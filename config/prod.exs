@@ -13,7 +13,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :trucksu, Trucksu.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "trucksu.sacbibit.com", port: 443],
+  url: [host: "trucksu.com", port: 443],
   cache_static_manifest: "priv/static/manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
@@ -33,9 +33,11 @@ config :guardian, Guardian,
 config :logger, level: :info
 
 config :trucksu,
-  decryption_url: "http://decryption:#{System.get_env("DECRYPTION_ENV_PORT")}",
-  performance_url: "http://performance:#{System.get_env("PERFORMANCE_ENV_PORT")}",
-  bancho_url: "http://bancho:#{System.get_env("BANCHO_ENV_PORT")}",
+  decryption_url: System.get_env("DECRYPTION_URL"),
+  decryption_cookie: System.get_env("DECRYPTION_COOKIE"),
+  performance_url: System.get_env("PERFORMANCE_URL"),
+  performance_cookie: System.get_env("PERFORMANCE_COOKIE"),
+  bancho_url: System.get_env("BANCHO_URL"),
   server_cookie: System.get_env("SERVER_COOKIE")
 
 # ## SSL Support

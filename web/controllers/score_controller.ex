@@ -28,8 +28,9 @@ defmodule Trucksu.ScoreController do
   defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => replay} = params, key) do
 
     url = Application.get_env(:trucksu, :decryption_url)
+    cookie = Application.get_env(:trucksu, :decryption_cookie)
     score = if url do
-      body = {:form, [{"c", score}, {"iv", iv}, {"k", key}]}
+      body = {:form, [{"c", score}, {"iv", iv}, {"k", key}, {"cookie", cookie}]}
       %HTTPoison.Response{body: score} = HTTPoison.post!(url, body)
       score
     else
