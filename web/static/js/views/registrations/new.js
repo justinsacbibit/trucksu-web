@@ -22,10 +22,17 @@ const RegistrationsNew = React.createClass({
     e.preventDefault();
 
     const { form } = this.refs;
-    const { dispatch } = this.props;
-    const data = form.getValue();
 
-    dispatch(Actions.signUp(data));
+    if(form.validate()) {
+      const { dispatch } = this.props;
+      const data = form.getValue();
+
+      dispatch(Actions.signUp(data));
+    }
+
+    this.setState({
+      validationEnabled: true
+    });
   },
   render() {
     const errors = this.props.errors || [];
@@ -41,13 +48,14 @@ const RegistrationsNew = React.createClass({
         <div className='logo'>
           <img src={logoImage} />
         </div>
-        <form id='sign_up_form' onSubmit={this.handleClickSubmit}>
+        <div id='sign_up_form'>
           <Form
             ref='form'
             schema={SignupFormSchema}
+            validationEnabled={this.state.validationEnabled}
           />
-          <button type='submit'>Sign up</button>
-        </form>
+          <button onClick={this.handleClickSubmit}>Sign up</button>
+        </div>
         <Link to='/sign_in'>Sign in</Link>
       </div>
     );

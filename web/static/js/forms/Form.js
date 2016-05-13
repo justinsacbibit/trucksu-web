@@ -2,26 +2,51 @@ import _ from 'lodash';
 import React from 'react';
 
 import Fields from './fields';
+import FieldContainer from './FieldContainer';
+
+const EMAIL_REGEXP = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 const Form = React.createClass({
 	getDefaultProps() {
 		return {
 			validationEnabled: false,
-			schema: {}
+			schema: {},
+			submit: () => {}
 		};
 	},
 	getInitialState() {
 		return {
-			value: {}
+			value: {},
+			errors: {}
 		};
 	},
 	changeHandler(e) {
 		var value = this.state.value;
 
 		value[e.target.name] = e.target.value;
+
+		if(this.props.validationEnabled) {
+			this.validate(value);
+		}
 		this.setState({
 			value: value
 		});
+	},
+	validate(value = this.state.value) {
+		const errors = _.reduce(this.props.schema, (result, field, key) => {
+			if(field.required && _.isEmpty(value[key])) {
+				result[key] = 'This is a required field.'
+			}
+			else if(field.email && !EMAIL_REGEXP.test(value[key])) {
+				result[key] = 'Enter a valid email.'
+			}
+			return result;
+		}, {});
+
+		this.setState({
+			errors: errors
+		});
+		return _.isEmpty(errors);
 	},
 	getValue() {
 		return this.state.value;
@@ -39,9 +64,11 @@ const Form = React.createClass({
 				};
 
 				result.push(
-					<div className='field' key={`field_${key}`}>
-						{ React.createElement(element, props) }
-					</div>
+					<FieldContainer
+						field={element}
+						fieldProps={props}
+						errors={this.state.errors[key]}
+					/>
 				);
 			}
 			return result;

@@ -22,10 +22,14 @@ const SessionsNew = React.createClass({
     e.preventDefault();
 
     const { form } = this.refs;
-    const { username, password } = form.getValue();
-    const { dispatch } = this.props;
 
-    dispatch(Actions.signIn(username, password));
+    if(form.validate()) {
+      const { username, password } = form.getValue();
+      const { dispatch } = this.props;
+
+      dispatch(Actions.signIn(username, password));
+    }
+
     this.setState({
       validationEnabled: true
     });
@@ -47,14 +51,15 @@ const SessionsNew = React.createClass({
         <div className='logo'>
           <img src={logoImage} />
         </div>
-        <form id='sign_in_form' onSubmit={this.handleClickSubmit}>
+        <div id='sign_in_form'>
           { this.renderError() }
           <Form
             ref='form'
             schema={SigninFormSchema}
+            validationEnabled={this.state.validationEnabled}
           />
-          <button type='submit'>Sign in</button>
-        </form>
+          <button onClick={this.handleClickSubmit}>Sign in</button>
+        </div>
         <Link to='/sign_up'>Create new account</Link>
       </div>
     );
