@@ -37,24 +37,19 @@ const RegistrationsNew = React.createClass({
   },
   render() {
     const errors = this.props.errors || [];
-    const errKeys = errors.reduce((result, error) => {
-      for(let key in error) {
-        result.push(key);
-      }
-      return result;
-    }, []);
 
     return (
-      <div id='auth_screen'>
+      <div id='auth_container'>
         <div className='logo'>
           <img src={logoImage} />
         </div>
-        <form id='auth_container'>
+        <form id='auth_form'>
           <h2>Sign Up</h2>
           <Form
             ref='form'
             schema={SignupFormSchema}
             validationEnabled={this.state.validationEnabled}
+            errors={errors}
           />
           <RaisedButton
             label='Sign Up'
@@ -62,8 +57,8 @@ const RegistrationsNew = React.createClass({
             primary={true}
             onClick={this.handleClickSubmit}
           />
-          <Link to='/sign_in'>Sign in</Link>
         </form>
+        <Link to='/sign_in'>Sign in</Link>
       </div>
     );
   }

@@ -19,7 +19,8 @@ const SignupFormSchema = {
 		type: 'password',
 		placeholder: 'Password',
 		defaultValue: '',
-		required: true
+		required: true,
+		minlength: 5
 	},
 	password_confirmation: {
 		field: 'text',

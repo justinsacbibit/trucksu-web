@@ -56,7 +56,6 @@ var config = module.exports = {
         loaders: [
           'style-loader',
           'css-loader?-autoprefixer&-minimize',
-          'postcss-loader',
           'sass-loader'
         ]
       },
@@ -65,7 +64,7 @@ var config = module.exports = {
         loader: ExtractTextPlugin.extract('style', 'css!sass?indentedSyntax&includePaths[]=' + __dirname +  '/node_modules'),
       },
       {
-        test: [/\.png$/, /\.gif$/, /\.jpg$/,  /\.xcf$/],
+        test: [/\.png$/, /\.gif$/, /\.jpg$/],
         loader: 'file-loader?name=images/[name].[ext]'
       },
     ],

@@ -10,7 +10,8 @@ const Form = React.createClass({
 	getDefaultProps() {
 		return {
 			validationEnabled: false,
-			schema: {}
+			schema: {},
+			errors: []
 		};
 	},
 	getInitialState() {
@@ -39,6 +40,9 @@ const Form = React.createClass({
 			else if(field.email && !EMAIL_REGEXP.test(value[key])) {
 				result[key] = 'Enter a valid email.'
 			}
+			else if(field.minlength && value[key].length < field.minlength) {
+				result[key] = `Must be at least ${field.minlength} character(s).`
+			}
 			return result;
 		}, {});
 
@@ -55,10 +59,17 @@ const Form = React.createClass({
 			let element = Fields[field.field];
 
 			if(element) {
+				let errors = _.reduce(this.props.errors, (result, error) => {
+					return {
+						...result,
+						...error
+					};
+				}, this.state.errors);
+
 				let fieldProps = {
 					...field,
 					name: key,
-					errorText: this.state.errors[key],
+					errorText: errors[key],
 					onChange: this.changeHandler
 				};
 

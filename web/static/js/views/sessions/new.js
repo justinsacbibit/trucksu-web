@@ -47,11 +47,11 @@ const SessionsNew = React.createClass({
   },
   render() {
     return (
-      <div id='auth_screen'>
+      <div id='auth_container'>
         <div className='logo'>
           <img src={logoImage} />
         </div>
-        <form id='auth_container'>
+        <form id='auth_form'>
           <h2>Sign In</h2>
           { this.renderError() }
           <Form
@@ -65,8 +65,8 @@ const SessionsNew = React.createClass({
             primary={true}
             onClick={this.handleClickSubmit}
           />
-          <Link to='/sign_up'>Create new account</Link>
         </form>
+        <Link to='/sign_up'>Create new account</Link>
       </div>
     );
   }
