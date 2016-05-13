@@ -60,6 +60,7 @@ defmodule Trucksu.Router do
       get "/pp-calc", PerformanceController, :calculate
       post "/ban", UserController, :ban
       post "/unban", UserController, :unban
+      get "/user/:id", UserController, :show
     end
   end
 

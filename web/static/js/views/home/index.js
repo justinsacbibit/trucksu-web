@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { push } from 'react-router-redux';
 import classnames from 'classnames';
 
 import { setDocumentTitle } from '../../utils';
@@ -24,6 +25,10 @@ class HomeIndexView extends React.Component {
     dispatch(LeaderboardActions.fetchLeaderboard());
   }
 
+  _handleUserClick(userId) {
+    this.props.dispatch(push(`/users/${userId}`));
+  }
+
   _renderTable() {
     return (
       <Table>
@@ -39,7 +44,7 @@ class HomeIndexView extends React.Component {
             return (
               <TableRow key={index}>
                 <TableRowColumn width={30}>#{index + 1}</TableRowColumn>
-                <TableRowColumn width={160}>{user.user.username}</TableRowColumn>
+                <TableRowColumn width={160}><a href='' onClick={this._handleUserClick.bind(this, user.user.id)} style={{textDecoration: 'none'}}>{user.user.username}</a></TableRowColumn>
                 <TableRowColumn><strong>{user.pp.toFixed(2)}pp</strong></TableRowColumn>
               </TableRow>
             );
@@ -51,7 +56,7 @@ class HomeIndexView extends React.Component {
 
   render() {
     return (
-      <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}} className=''>
+      <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}}>
         <div style={{width: 965}}>
           <h2 style={{fontFamily: 'Roboto,sans-serif', borderBottom: '1px solid #eee', paddingBottom: '.3em', fontWeight: 400}}>Global Performance Leaderboard</h2>
           <Paper style={{width: '100%', justifyContent: 'center', display: 'flex'}} zDepth={1}>

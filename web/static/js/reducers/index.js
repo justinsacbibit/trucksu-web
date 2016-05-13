@@ -7,6 +7,7 @@ import currentBoard         from './current_board';
 import currentCard          from './current_card';
 import header               from './header';
 import leaderboard from './leaderboard';
+import currentUser from './current_user';
 
 export default combineReducers({
   routing: routerReducer,
@@ -17,4 +18,5 @@ export default combineReducers({
   currentCard: currentCard,
   header: header,
   leaderboard: leaderboard,
+  currentUser: currentUser,
 });

@@ -2,6 +2,7 @@ defmodule Trucksu.OsuBeatmap do
   use Trucksu.Web, :model
 
   @derive {Poison.Encoder, only: [
+    :beatmap_id,
     :version,
     :diff_size,
     :diff_overall,
