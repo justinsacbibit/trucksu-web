@@ -44,7 +44,7 @@ class HomeIndexView extends React.Component {
             return (
               <TableRow key={index}>
                 <TableRowColumn width={30}>#{index + 1}</TableRowColumn>
-                <TableRowColumn width={160}><a href='' onClick={this._handleUserClick.bind(this, user.user.id)} style={{textDecoration: 'none'}}>{user.user.username}</a></TableRowColumn>
+                <TableRowColumn width={160}><a onClick={this._handleUserClick.bind(this, user.user.id)} style={{color: '#0000FF', cursor: 'pointer', textDecoration: 'none'}}>{user.user.username}</a></TableRowColumn>
                 <TableRowColumn><strong>{user.pp.toFixed(2)}pp</strong></TableRowColumn>
               </TableRow>
             );

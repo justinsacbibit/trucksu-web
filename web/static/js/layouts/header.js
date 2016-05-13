@@ -130,14 +130,22 @@ class Header extends React.Component {
   }
 
   render() {
+    const tabsValue = this.props.location.pathname.startsWith('/users/')
+      ? -1
+      : 0;
     return (
       <AppBar
         showMenuIconButton={false}
         title='Trucksu'
         titleStyle={{marginRight: 24, flex: 'none'}}>
         <Tabs
+          onChange={(value) => {
+            if (value === 0) {
+              this.props.dispatch(push('/'));
+            }
+          }}
           style={{flex: 'none', height: 64}}
-          value={0}>
+          value={tabsValue}>
           {/*<Tab
             label='Home'
             style={{height: 64}}

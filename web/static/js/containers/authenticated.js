@@ -23,7 +23,7 @@ class AuthenticatedContainer extends React.Component {
 
     return (
       <div id='authentication_container' className='application-container'>
-        <Header />
+        <Header location={this.props.location} />
 
         <div className='main-container'>
           {this.props.children}
@@ -33,8 +33,9 @@ class AuthenticatedContainer extends React.Component {
   }
 }
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state, props) => ({
   currentUser: state.session.currentUser,
+  location: props.location,
   //socket: state.session.socket,
   //channel: state.session.channel,
   //boards: state.boards,

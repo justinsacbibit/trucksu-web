@@ -66,26 +66,6 @@ class UserShowView extends React.Component {
         })}
       </Paper>
     );
-      //<Table>
-        //<TableHeader adjustForCheckbox={false} displaySelectAll={false}>
-          //<TableRow>
-            //<TableHeaderColumn width={30}>Beatmap</TableHeaderColumn>
-            //<TableHeaderColumn width={160}>lala</TableHeaderColumn>
-            //<TableHeaderColumn>PP</TableHeaderColumn>
-          //</TableRow>
-        //</TableHeader>
-        //<TableBody displayRowCheckbox={false}>
-          //{scores.map((score, index) => {
-            //return (
-              //<TableRow key={index}>
-                //<TableRowColumn width={30}>{score.beatmap.artist} - {score.beatmap.title} ({score.beatmap.creator}) [{score.beatmap.version}]</TableRowColumn>
-                //<TableRowColumn width={160}>lala</TableRowColumn>
-                //<TableRowColumn>lala</TableRowColumn>
-              //</TableRow>
-            //);
-          //})}
-        //</TableBody>
-      //</Table>
   }
 
   render() {
