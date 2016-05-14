@@ -22,7 +22,7 @@ var config = module.exports = {
   // css and js
   entry: {
     application: [
-      web('css/application.sass'),
+      web('css/application.scss'),
       web('js/application.js'),
     ],
   },
@@ -52,8 +52,20 @@ var config = module.exports = {
         loaders: ['react-hot', 'babel?' + JSON.stringify(babelSettings)],
       },
       {
+        test: /\.scss$/,
+        loaders: [
+          'style-loader',
+          'css-loader?-autoprefixer&-minimize',
+          'sass-loader'
+        ]
+      },
+      {
         test: /\.sass$/,
         loader: ExtractTextPlugin.extract('style', 'css!sass?indentedSyntax&includePaths[]=' + __dirname +  '/node_modules'),
+      },
+      {
+        test: [/\.png$/, /\.gif$/, /\.jpg$/],
+        loader: 'file-loader?name=images/[name].[ext]'
       },
     ],
   },
