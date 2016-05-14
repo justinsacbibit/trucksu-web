@@ -10,16 +10,19 @@ import Form from '../../forms/Form';
 import SignupFormSchema from '../../forms/schemas/SignupFormSchema';
 import logoImage from '../../../images/logo-transparent.png';
 
-const RegistrationsNew = React.createClass({
-  getInitialState() {
-    return {
-      validationEnabled: false
+class RegistrationsNew extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      validationEnabled: false,
     };
-  },
+  }
+
   componentDidMount() {
     setDocumentTitle('Sign up');
-  },
-  handleClickSubmit(e) {
+  }
+
+  _handleClickSubmit(e) {
     e.preventDefault();
 
     const { form } = this.refs;
@@ -32,9 +35,10 @@ const RegistrationsNew = React.createClass({
     }
 
     this.setState({
-      validationEnabled: true
+      validationEnabled: true,
     });
-  },
+  }
+
   render() {
     const errors = this.props.errors || [];
 
@@ -55,17 +59,17 @@ const RegistrationsNew = React.createClass({
             label='Sign Up'
             type='submit'
             primary={true}
-            onClick={this.handleClickSubmit}
+            onClick={this._handleClickSubmit.bind(this)}
           />
         </form>
         <Link to='/sign_in'>Sign in</Link>
       </div>
     );
   }
-});
+}
 
 const mapStateToProps = (state) => ({
-  errors: state.registration.errors
+  errors: state.registration.errors,
 });
 
 export default connect(mapStateToProps)(RegistrationsNew);

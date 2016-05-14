@@ -10,16 +10,19 @@ import Form from '../../forms/Form';
 import SigninFormSchema from '../../forms/schemas/SigninFormSchema';
 import logoImage from '../../../images/logo-transparent.png';
 
-const SessionsNew = React.createClass({
-  getInitialState() {
-    return {
-      validationEnabled: false
+class SessionsNew extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      validationEnabled: false,
     };
-  },
+  }
+
   componentDidMount() {
     setDocumentTitle('Sign in');
-  },
-  handleClickSubmit(e) {
+  }
+
+  _handleClickSubmit(e) {
     e.preventDefault();
 
     const { form } = this.refs;
@@ -32,19 +35,21 @@ const SessionsNew = React.createClass({
     }
 
     this.setState({
-      validationEnabled: true
+      validationEnabled: true,
     });
-  },
-  renderError() {
+  }
+
+  _renderError() {
     let { error } = this.props;
 
     if (!error) return false;
     return (
       <div className='error'>
-        {error}
+        { error }
       </div>
     );
-  },
+  }
+
   render() {
     return (
       <div id='auth_container'>
@@ -53,7 +58,7 @@ const SessionsNew = React.createClass({
         </div>
         <form id='auth_form'>
           <h2>Sign In</h2>
-          { this.renderError() }
+          { this._renderError() }
           <Form
             ref='form'
             schema={SigninFormSchema}
@@ -63,14 +68,14 @@ const SessionsNew = React.createClass({
             label='Sign In'
             type='submit'
             primary={true}
-            onClick={this.handleClickSubmit}
+            onClick={this._handleClickSubmit.bind(this)}
           />
         </form>
         <Link to='/sign_up'>Create new account</Link>
       </div>
     );
   }
-});
+}
 
 const mapStateToProps = (state) => (
   state.session
