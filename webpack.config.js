@@ -5,6 +5,16 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var webpack = require('webpack');
 var env = process.env.MIX_ENV || 'dev';
 
+var publicPath;
+switch (env) {
+case 'dev':
+  publicPath = 'http://localhost:4001/';
+  break;
+case 'prod':
+  publicPath = 'https://trucksu.com/';
+  break;
+}
+
 // helpers for writing path names
 // e.g. join("web/static") => "/full/disk/path/to/hello/web/static"
 function join(dest) { return path.resolve(__dirname, dest); }
@@ -31,7 +41,7 @@ var config = module.exports = {
   output: {
     path: join('priv/static'),
     filename: 'js/application.js',
-    publicPath: 'http://localhost:4001/',
+    publicPath: publicPath,
   },
 
   resolve: {
@@ -80,8 +90,6 @@ var config = module.exports = {
     new ExtractTextPlugin('css/application.css'),
   ],
 };
-
-var publicPath = 'http://0.0.0.0:4001/';
 
 // if running webpack in production mode, minify files with uglifyjs
 if (process.env.NODE_ENV === 'production' || env === 'prod') {
