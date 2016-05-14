@@ -79,6 +79,7 @@ class Form extends React.Component {
 
         result.push(
           <FieldContainer
+            key={`field_${key}`}
             field={element}
             fieldProps={fieldProps}
           />

@@ -5,7 +5,7 @@ class FieldContainer extends React.Component {
     const { field, fieldProps } = this.props;
 
     return (
-      <div className='field' key={`field_${fieldProps.name}`}>
+      <div className='field'>
         { React.createElement(field, fieldProps) }
       </div>
     );
