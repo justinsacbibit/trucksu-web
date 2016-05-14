@@ -7,6 +7,12 @@ import FieldContainer from './FieldContainer';
 const EMAIL_REGEXP = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 class Form extends React.Component {
+  static defaultProps = {
+    validationEnabled: false,
+    schema: {},
+    errors: [],
+  };
+
   constructor() {
     super();
     this.state = {
@@ -88,11 +94,5 @@ class Form extends React.Component {
     );
   }
 }
-
-Form.defaultProps = {
-  validationEnabled: false,
-  schema: {},
-  errors: [],
-};
 
 export default Form;
