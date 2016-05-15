@@ -35,7 +35,7 @@ $ cd src/trucksu-web
 $ mix deps.get # run this again if you update dependencies in mix.exs
 # Set up the database
 $ mix ecto.create
-$ mix ecto.migrate
+$ mix ecto.migrate # fails unless you comment/remove these lines https://github.com/justinsacbibit/trucksu-web/blob/58c0bc4fd5c6d8805d61749c00a6ad1e8f8ebdb2/priv/repo/migrations/20160428173735_add_has_replay_to_scores.exs#L15-32
 $ mix run priv/repo/seeds.exs
 
 $ mix phoenix.server
