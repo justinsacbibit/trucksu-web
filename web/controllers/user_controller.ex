@@ -120,18 +120,17 @@ defmodule Trucksu.UserController do
     query = from u in User,
       join: us in assoc(u, :stats),
       join: sc in assoc(u, :scores),
-      join: b in assoc(sc, :beatmap),
-      join: ob in assoc(b, :osu_beatmap),
+      join: ob in assoc(sc, :osu_beatmap),
       where: us.user_id == ^id
         and not is_nil(sc.pp)
         and (sc.completed == 2 or sc.completed == 3)
         and us.game_mode == sc.game_mode,
-      preload: [stats: {us, scores: {sc, beatmap: {b, osu_beatmap: ob}}}],
+      preload: [stats: {us, scores: {sc, osu_beatmap: ob}}],
       order_by: [desc: sc.pp]
     user = Repo.one! query
 
     # TODO: Filter in SQL using a subquery
-    unique_by_md5 = fn %Trucksu.Score{beatmap: %Trucksu.Beatmap{file_md5: file_md5}} ->
+    unique_by_md5 = fn %Trucksu.Score{file_md5: file_md5} ->
       file_md5
     end
     stats = for stats <- user.stats do
@@ -172,13 +171,11 @@ defmodule Trucksu.UserController do
                      user_id,
                      sc.game_mode,
                      row_number()
-                     OVER (PARTITION BY sc.beatmap_id, sc.game_mode
+                     OVER (PARTITION BY sc.file_md5, sc.game_mode
                         ORDER BY score DESC) score_rank
                   FROM scores sc
-                  JOIN beatmaps b
-                    on sc.beatmap_id = b.id
                   JOIN osu_beatmaps ob
-                    on b.file_md5 = ob.file_md5
+                    on sc.file_md5 = b.file_md5
                   WHERE completed = 2 OR completed = 3
                ) x
           WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
@@ -186,9 +183,8 @@ defmodule Trucksu.UserController do
           on: sc_.id == sc.id,
         join: u in assoc(sc, :user),
         join: us in assoc(u, :stats),
-        join: b in assoc(sc, :beatmap),
-        join: ob in assoc(b, :osu_beatmap),
-        preload: [beatmap: {b, osu_beatmap: ob}],
+        join: ob in assoc(sc, :osu_beatmap),
+        preload: [osu_beatmap: ob],
         order_by: [desc: sc.score]
       first_place_scores = Repo.all query
 

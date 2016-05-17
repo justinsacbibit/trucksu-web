@@ -6,7 +6,6 @@ defmodule Trucksu.ScoreController do
     Session,
 
     Repo,
-    Beatmap,
     OsuBeatmap,
     User,
     Score,
@@ -115,9 +114,9 @@ defmodule Trucksu.ScoreController do
 
       completed >= 2 ->
         top_score = Repo.one from s in Score,
-          join: b in assoc(s, :beatmap),
+          join: ob in assoc(s, :osu_beatmap),
           join: u in assoc(s, :user),
-          where: b.file_md5 == ^beatmap_file_md5
+          where: ob.file_md5 == ^beatmap_file_md5
             and u.username == ^username
             and s.game_mode == ^game_mode,
           order_by: [desc: s.score],
@@ -144,23 +143,9 @@ defmodule Trucksu.ScoreController do
         accuracy = total_points_of_hits / (total_number_of_hits * 300)
 
         {:ok, score} = Repo.transaction fn ->
-          query = from b in Beatmap,
-            where: b.file_md5 == ^beatmap_file_md5
-          beatmap = case Repo.one query do
-            nil ->
-              # TODO: Now that we insert the beatmap as the result of a
-              # changeAction packet, this should never happen.
-              params = %{
-                file_md5: beatmap_file_md5,
-              }
-              Repo.insert! Beatmap.changeset(%Beatmap{}, params)
-
-            beatmap ->
-              beatmap
-          end
 
           score = Score.changeset(%Score{}, %{
-            beatmap_id: beatmap.id,
+            file_md5: beatmap_file_md5,
             user_id: user.id,
             score: score,
             max_combo: max_combo,
@@ -214,7 +199,7 @@ defmodule Trucksu.ScoreController do
             accuracy: new_accuracy,
             pp: new_pp
 
-          score = Repo.preload score, :beatmap
+          score = Repo.preload score, :osu_beatmap
 
           score
         end
@@ -230,7 +215,7 @@ defmodule Trucksu.ScoreController do
             "event_type" => "pp",
             "pp" => "#{round score.pp}",
             "username" => user.username,
-            "beatmap_id" => "#{osu_beatmap.beatmap_id}",
+            "beatmap_id" => "#{osu_beatmap.id}",
             "version" => osu_beatmap.version,
             "artist" => osu_beatmap.artist,
             "title" => osu_beatmap.title,

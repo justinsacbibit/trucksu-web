@@ -39,13 +39,12 @@ defmodule Trucksu.Score do
     field :game_mode, :integer
     field :accuracy, :float
     field :completed, :integer
-    belongs_to :beatmap, Trucksu.Beatmap
     belongs_to :user, Trucksu.User
     field :pp, :float
     field :has_replay, :boolean
     field :rank, :string
 
-    field :file_md5, :string # TODO: Change to reference OsuBeatmap
+    belongs_to :osu_beatmap, Trucksu.OsuBeatmap, foreign_key: :file_md5, references: :file_md5
 
     timestamps
   end

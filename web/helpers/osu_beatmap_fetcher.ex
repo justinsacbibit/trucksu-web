@@ -8,7 +8,7 @@ defmodule Trucksu.OsuBeatmapFetcher do
   database, then return it.
   """
   def fetch(beatmap_id) when is_integer(beatmap_id) do
-    case Repo.get_by OsuBeatmap, beatmap_id: beatmap_id do
+    case Repo.get OsuBeatmap, beatmap_id do
       nil ->
         fetch_and_insert(b: beatmap_id)
       osu_beatmap ->

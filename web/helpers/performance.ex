@@ -6,7 +6,7 @@ defmodule Trucksu.Performance do
     OsuBeatmapFileFetcher,
 
     Repo,
-    Beatmap,
+    OsuBeatmap,
     Score,
     UserStats,
   }
@@ -21,16 +21,16 @@ defmodule Trucksu.Performance do
   """
   def calculate_stats_for_user(user_id, game_mode) do
     scores = Repo.all from s in Score,
-      join: b in assoc(s, :beatmap),
+      join: ob in assoc(s, :osu_beatmap),
       where: s.user_id == ^user_id
         and s.game_mode == ^game_mode
         and (s.completed == 2 or s.completed == 3)
         and not is_nil(s.pp),
       order_by: [desc: s.pp],
-      preload: [beatmap: b]
+      preload: [osu_beatmap: ob]
 
     # TODO: Filter in SQL using a subquery
-    unique_by_md5 = fn %Score{beatmap: %Beatmap{file_md5: file_md5}} ->
+    unique_by_md5 = fn %Score{file_md5: file_md5} ->
       file_md5
     end
     scores = Enum.uniq_by(scores, &(unique_by_md5.(&1)))
@@ -143,8 +143,7 @@ defmodule Trucksu.Performance do
   end
 
   def calculate(score) do
-    score = Repo.preload score, :beatmap
-    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(score.beatmap.file_md5),
+    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(score.file_md5),
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
@@ -154,7 +153,7 @@ defmodule Trucksu.Performance do
   end
 
   defp calculate_with_osu_file_content(score, osu_file_content) do
-    beatmap = Repo.preload score.beatmap, :osu_beatmap
+    score = Repo.preload score, :osu_beatmap
 
     cookie = Application.get_env(:trucksu, :performance_cookie)
     form_data = [
@@ -166,7 +165,7 @@ defmodule Trucksu.Performance do
       {"MaxCombo", score.max_combo},
       {"EnabledMods", score.mods},
       {"GameMode", score.game_mode},
-      {"MapMaxCombo", beatmap.osu_beatmap.max_combo},
+      {"MapMaxCombo", score.osu_beatmap.max_combo},
       {"Cookie", cookie},
     ]
 

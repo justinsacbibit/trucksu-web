@@ -31,23 +31,14 @@ defmodule Trucksu.OsuBeatmap do
     field :diff_approach, :float
     field :diff_drain, :float
     field :game_mode, :integer
-    field :approved_date, Ecto.DateTime
-    field :last_update, Ecto.DateTime
-    field :artist, :string
-    field :title, :string
-    field :creator, :string
-    field :bpm, :float
-    field :source, :string
-    field :tags, :string
-    field :genre_id, :integer
-    field :language_id, :integer
-    field :favourite_count, :integer
     field :playcount, :integer
     field :passcount, :integer
     field :max_combo, :integer
     field :difficultyrating, :float
 
     field :file_data, :binary, virtual: true
+
+    has_many :scores, Score, foreign_key: :file_md5, references: :file_md5
 
     timestamps
   end
@@ -67,7 +58,9 @@ defmodule Trucksu.OsuBeatmap do
   end
 
   def changeset_from_api(model, params) do
-    params = Map.put(params, "game_mode", Map.get(params, "mode"))
+    params = params
+    |> Map.put("game_mode", Map.get(params, "mode"))
+    |> Map.put("id", Map.get(params, "beatmap_id"))
 
     changeset(model, params)
   end
