@@ -18,22 +18,31 @@ defmodule Trucksu.PerformanceController do
   end
 
   def calculate(conn, %{"file_md5" => file_md5, "mods" => mods, "m" => game_mode}) do
+    calculate_with_identifier(conn, file_md5, mods, game_mode)
+  end
+
+  def calculate(conn, %{"b" => b, "mods" => mods, "m" => game_mode}) do
+    {b, _} = Integer.parse(b)
+    calculate_with_identifier(conn, b, mods, game_mode)
+  end
+
+  defp calculate_with_identifier(conn, identifier, mods, game_mode) do
     {mods, _} = Integer.parse(mods)
     {game_mode, _} = Integer.parse(game_mode)
 
-    case Performance.calculate(file_md5, mods, game_mode) do
+    case Performance.calculate(identifier, mods, game_mode) do
       {:ok, pp} ->
-        {:ok, osu_beatmap} = OsuBeatmapFetcher.fetch(file_md5)
+        {:ok, osu_beatmap} = OsuBeatmapFetcher.fetch(identifier)
         data = %{
           "event_type" => "max-pp-calc",
           "pp" => "#{round pp}",
           "osu_beatmap" => osu_beatmap,
         }
-        Logger.warn "Calculated #{round pp}pp for #{file_md5} #{osu_beatmap.artist} - #{osu_beatmap.title} (#{osu_beatmap.creator}) [#{osu_beatmap.version}]"
+        Logger.warn "Calculated #{round pp}pp for #{identifier} #{osu_beatmap.artist} - #{osu_beatmap.title} (#{osu_beatmap.creator}) [#{osu_beatmap.version}]"
         json(conn, data)
 
       error ->
-        Logger.error "Failed to calculate pp for file_md5=#{file_md5}"
+        Logger.error "Failed to calculate pp for identifier=#{identifier}"
         Logger.error inspect error
 
         conn
