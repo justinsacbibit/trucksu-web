@@ -148,8 +148,8 @@ defmodule Trucksu.Performance do
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
-  def calculate(file_md5, mods, game_mode) when is_binary(file_md5) do
-    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(file_md5),
+  def calculate(identifier, mods, game_mode) do
+    with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(identifier),
          do: calculate_max_with_osu_file_content(mods, game_mode, osu_file_content)
   end
 
