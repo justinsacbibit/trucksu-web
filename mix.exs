@@ -3,7 +3,7 @@ defmodule Trucksu.Mixfile do
 
   def project do
     [app: :trucksu,
-     version: "0.0.9",
+     version: "0.0.11",
      elixir: "~> 1.0",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -20,7 +20,8 @@ defmodule Trucksu.Mixfile do
     [mod: {Trucksu, []},
      applications: [:phoenix, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex, :comeonin, :timex,
-                    :phoenix_html, :guardian, :httpoison, :ex_aws]]
+                    :phoenix_html, :guardian, :httpoison, :ex_aws,
+                    :edeliver, :sweet_xml]]
   end
 
   # Specifies which paths to compile per environment.
@@ -35,7 +36,7 @@ defmodule Trucksu.Mixfile do
      {:phoenix_html, "~> 2.3"},
      {:postgrex, ">= 0.0.0"},
      {:timex, "~> 2.1.4"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
+     # {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:phoenix_ecto, "~> 2.0"},
      {:guardian, "~> 0.9.0"},
      {:comeonin, "~> 2.0"},
@@ -44,7 +45,9 @@ defmodule Trucksu.Mixfile do
      {:poison, "~> 1.5"},
      {:ex_aws, "~> 0.4.10"},
      {:sweet_xml, "~> 0.5.0"},
-     {:mix_test_watch, "~> 0.2", only: :dev},
+     {:exrm, "~> 1.0.4"},
+     # {:mix_test_watch, "~> 0.2", only: :dev},
+     {:edeliver, "~> 1.2.5"},
      {:cowboy, "~> 1.0"}]
   end
 

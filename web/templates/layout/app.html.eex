@@ -25,10 +25,10 @@
 
   <body>
     <main id="main_container" role="main"></main>
-    <%= if Mix.env == :dev do %>
-      <script src="http://localhost:4001/js/application.js"></script>
-    <% else %>
+    <%= if Application.get_env(:trucksu, :environment) == :prod do %>
       <script src="<%= static_path(@conn, "/js/application.js") %>"></script>
+    <% else %>
+      <script src="http://localhost:4001/js/application.js"></script>
     <% end %>
   </body>
 </html>
