@@ -35,7 +35,7 @@ class HomeIndexView extends React.Component {
       <Table>
         <TableHeader adjustForCheckbox={false} displaySelectAll={false}>
           <TableRow>
-            <TableHeaderColumn width={30}>Rank</TableHeaderColumn>
+            <TableHeaderColumn width={90}>Rank</TableHeaderColumn>
             <TableHeaderColumn width={160}>Username</TableHeaderColumn>
             <TableHeaderColumn>PP</TableHeaderColumn>
           </TableRow>
@@ -44,7 +44,7 @@ class HomeIndexView extends React.Component {
           {this.props.leaderboard.map((user, index) => {
             return (
               <TableRow key={index} selectable={false}>
-                <TableRowColumn width={30}>#{index + 1}</TableRowColumn>
+                <TableRowColumn width={90}>#{index + 1}</TableRowColumn>
                 <TableRowColumn width={160}><a href={`/users/${user.user.id}`} onClick={this._handleUserClick.bind(this, user.user.id)} style={{color: '#0000FF', cursor: 'pointer', textDecoration: 'none'}}>{user.user.username}</a></TableRowColumn>
                 <TableRowColumn><strong>{user.pp.toFixed(2)}pp</strong></TableRowColumn>
               </TableRow>
