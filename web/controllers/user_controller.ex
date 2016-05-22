@@ -121,11 +121,12 @@ defmodule Trucksu.UserController do
       join: us in assoc(u, :stats),
       join: sc in assoc(u, :scores),
       join: ob in assoc(sc, :osu_beatmap),
+      join: obs in assoc(ob, :beatmapset),
       where: us.user_id == ^id
         and not is_nil(sc.pp)
         and (sc.completed == 2 or sc.completed == 3)
         and us.game_mode == sc.game_mode,
-      preload: [stats: {us, scores: {sc, osu_beatmap: ob}}],
+      preload: [stats: {us, scores: {sc, osu_beatmap: {ob, [beatmapset: obs]}}}],
       order_by: [desc: sc.pp]
     user = Repo.one! query
 
@@ -175,7 +176,7 @@ defmodule Trucksu.UserController do
                         ORDER BY score DESC) score_rank
                   FROM scores sc
                   JOIN osu_beatmaps ob
-                    on sc.file_md5 = b.file_md5
+                    on sc.file_md5 = ob.file_md5
                   WHERE completed = 2 OR completed = 3
                ) x
           WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
@@ -184,7 +185,8 @@ defmodule Trucksu.UserController do
         join: u in assoc(sc, :user),
         join: us in assoc(u, :stats),
         join: ob in assoc(sc, :osu_beatmap),
-        preload: [osu_beatmap: ob],
+        join: obs in assoc(ob, :beatmapset),
+        preload: [osu_beatmap: {ob, [beatmapset: obs]}],
         order_by: [desc: sc.score]
       first_place_scores = Repo.all query
 
@@ -195,4 +197,3 @@ defmodule Trucksu.UserController do
     render conn, "user_detail.json", user
   end
 end
-

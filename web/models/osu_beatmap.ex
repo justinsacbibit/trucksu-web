@@ -1,27 +1,19 @@
 defmodule Trucksu.OsuBeatmap do
   use Trucksu.Web, :model
-  alias Trucksu.OsuBeatmapset
 
   @derive {Poison.Encoder, only: [
-    :beatmap_id,
     :version,
     :diff_size,
     :diff_overall,
     :diff_approach,
     :diff_drain,
     :game_mode,
-    :approved_date,
-    :last_update,
-    :artist,
-    :title,
-    :creator,
-    :bpm,
     :difficultyrating,
+    :beatmapset,
   ]}
 
   schema "osu_beatmaps" do
-    belongs_to :beatmapset, OsuBeatmapset
-    field :approved, :integer
+    belongs_to :beatmapset, Trucksu.OsuBeatmapset
     field :total_length, :integer
     field :hit_length, :integer
     field :version, :string
@@ -43,7 +35,7 @@ defmodule Trucksu.OsuBeatmap do
     timestamps
   end
 
-  @required_fields ~w(id beatmapset_id approved total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode favourite_count playcount passcount difficultyrating)
+  @required_fields ~w(id beatmapset_id total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode playcount passcount difficultyrating)
   @optional_fields ~w(max_combo)
 
   @doc """
@@ -55,6 +47,7 @@ defmodule Trucksu.OsuBeatmap do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
+    |> unique_constraint(:file_md5)
   end
 
   def changeset_from_api(model, params) do

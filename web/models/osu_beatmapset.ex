@@ -2,7 +2,19 @@ defmodule Trucksu.OsuBeatmapset do
   use Trucksu.Web, :model
   use Timex
 
+  @derive {Poison.Encoder, only: [
+    :approved,
+    :approved_date,
+    :last_update,
+    :artist,
+    :title,
+    :creator,
+    :bpm,
+  ]}
+
   schema "osu_beatmapsets" do
+    has_many :beatmaps, Trucksu.OsuBeatmap, foreign_key: :beatmapset_id
+    field :approved, :integer
     field :approved_date, Ecto.DateTime
     field :last_update, Ecto.DateTime
     field :artist, :string
@@ -20,7 +32,7 @@ defmodule Trucksu.OsuBeatmapset do
     timestamps
   end
 
-  @required_fields ~w(id last_update artist title creator bpm source tags favorite_count last_check)
+  @required_fields ~w(id last_update artist title creator bpm source tags favorite_count last_check approved)
   @optional_fields ~w(approved_date genre_id language_id)
 
   @doc """
@@ -32,14 +44,14 @@ defmodule Trucksu.OsuBeatmapset do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
-    |> change(last_check: Time.now) # TODO: figure out last_check
+    |> unique_constraint(:id, name: :osu_beatmapsets_pkey)
   end
 
   def changeset_from_api(model, params) do
     params = params
     |> Map.put("id", Map.get(params, "beatmapset_id"))
     |> Map.put("favorite_count", Map.get(params, "favourite_count"))
-    |> Map.put("last_check", Time.now)
+    |> Map.put("last_check", Ecto.DateTime.utc)
 
     changeset(model, params)
   end

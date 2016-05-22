@@ -50,9 +50,9 @@ class UserShowView extends React.Component {
             <div key={index}>
               <div style={{display: 'flex', flexDirection: 'row'}}>
                 <a
-                  href={`https://osu.ppy.sh/b/${score.beatmap.beatmap_id}`}
+                  href={`https://osu.ppy.sh/b/${score.beatmap.id}`}
                   style={{textDecoration: 'none'}}>
-                  {`${score.beatmap.artist} - ${score.beatmap.title} (${score.beatmap.creator}) [${score.beatmap.version}]`}
+                  {`${score.beatmap.beatmapset.artist} - ${score.beatmap.beatmapset.title} (${score.beatmap.beatmapset.creator}) [${score.beatmap.version}]`}
                 </a>
                 &nbsp;{`${mods}(${score.rank ? score.rank + ' rank, ' : ''}${(score.accuracy * 100).toFixed(2)}%, ${score.max_combo}x)`}
                 <div style={{flex: 1}} />

@@ -59,6 +59,8 @@ defmodule Trucksu.ScoreController do
       | _osu_version
     ] = score_data
 
+    # TODO: Fetch beatmap
+
     username = String.rstrip(username)
 
     case Session.authenticate(username, pass, true) do
@@ -291,4 +293,3 @@ defmodule Trucksu.ScoreController do
     <> "|onlineScoreId:#{score.id}\n"
   end
 end
-

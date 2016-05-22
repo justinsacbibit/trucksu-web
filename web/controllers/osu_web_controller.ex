@@ -2,71 +2,100 @@ defmodule Trucksu.OsuWebController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
-    Osu,
+    OsuBeatmapsetFetcher,
     Session,
 
     Friendship,
     OsuBeatmap,
     OsuBeatmapset,
     Score,
-    User,
   }
 
   @ranked_status_not_submitted -1
   @ranked_status_up_to_date 2
   @ranked_status_update_available 1
 
-  plug :authenticate when not action in [:status]
+  @everything_is_ranked true
+
+  plug :authenticate when action in [:get_scores, :search_set]
   # TODO: Uncomment when rate limiting is implemented
   plug :fetch_osu_beatmap when action == :get_scores
 
   defp authenticate(conn, _) do
-    case conn.request_path do
-      "/osu/web/osu-osz2-getscores.php" ->
-        username = conn.params["us"]
-        password_md5 = conn.params["ha"]
-        case Session.authenticate(username, password_md5, true) do
-          {:error, reason} ->
-            Logger.warn "#{username} attempted to get scores, but was unable to authenticate: #{reason}"
-            stop_plug(conn, 403)
-          {:ok, user} ->
-            assign(conn, :user, user)
-        end
-      _ ->
-        conn
+    username = conn.params["us"] || conn.params["u"]
+    password_md5 = conn.params["ha"] || conn.params["h"]
+    case Session.authenticate(username, password_md5, true) do
+      {:error, reason} ->
+        Logger.warn "#{username} attempted to get scores, but was unable to authenticate: #{reason}"
+        stop_plug(conn, 403)
+      {:ok, user} ->
+        assign(conn, :user, user)
     end
+  end
+
+  defp find_beatmap_with_filename_in_set(osu_beatmapset, filename) do
+    Logger.debug "Checking if same difficulty exists in freshly fetched set"
+
+    Enum.find(osu_beatmapset.beatmaps, fn(osu_beatmap) ->
+      version = osu_beatmap.version
+      # osu! doesn't include colons in filename difficulty
+      # TODO: Find what other characters osu! strips out from the filename
+      version = String.replace(version, ":", "")
+      Logger.debug "comparing '#{filename}' and #{version}"
+      case Regex.named_captures(~r/ \[(?<version>.*)\]\.osu$/, filename) do
+        %{"version" => ^version} ->
+          true
+
+        _ ->
+          false
+      end
+    end)
   end
 
   defp fetch_osu_beatmap(%Plug.Conn{params: %{"f" => filename, "c" => file_md5, "i" => beatmapset_id}} = conn, opts) do
     osu_beatmap = Repo.one from ob in OsuBeatmap,
-      where: ob.file_md5 == ^file_md5
+      join: obs in assoc(ob, :beatmapset),
+      where: ob.file_md5 == ^file_md5,
+      preload: [beatmapset: obs]
     case osu_beatmap do
       nil ->
         # Check the database then the API if necessary
 
-        osu_beatmaps = Repo.all from ob in OsuBeatmap,
-          where: ob.beatmapset_id == ^beatmapset_id
+        query = from obs in OsuBeatmapset,
+          left_join: ob in assoc(obs, :beatmaps),
+          where: obs.id == ^beatmapset_id,
+          preload: [beatmaps: ob]
+        case Repo.one query do
+          nil ->
+            # We don't have the beatmapset
+            # Call osu! API
+            if conn.assigns[:fetched_set] do
+              conn
+              |> assign(:beatmap_status, :not_submitted)
+              |> assign(:osu_beatmap, nil)
+            else
+              if OsuBeatmapsetFetcher.fetch(beatmapset_id) do
+                conn = assign(conn, :fetched_set, true)
 
-        case osu_beatmaps do
-          [first_map | _] ->
+                # recurse
+                fetch_osu_beatmap(conn, opts)
+              else
+                # can't access osu! API
+                conn
+                |> assign(:beatmap_status, :not_submitted)
+                |> assign(:osu_beatmap, nil)
+              end
+            end
+
+          osu_beatmapset ->
             # We have some version of the beatmapset
-            Logger.error "We have some version of the beatmapset"
+            Logger.debug "We have some version of the beatmapset"
 
-            first_map = Enum.at(osu_beatmaps, 0)
             cond do
               # 3 = qualified, 2 = approved, 1 = ranked, 0 = pending, -1 = WIP, -2 = graveyard
-              first_map.approved == 2 or first_map.approved == 1 ->
+              osu_beatmapset.approved == 2 or osu_beatmapset.approved == 1 ->
                 # approved or ranked, client version either needs to be updated or is not submitted
-                osu_beatmap = Enum.find(osu_beatmaps, fn(osu_beatmap) ->
-                  version = osu_beatmap.version
-                  case Regex.named_captures(~r/\[(?<version>)\]\.osu$/, filename) do
-                    %{"version" => ^version} ->
-                      true
-
-                    _ ->
-                      false
-                  end
-                end)
+                osu_beatmap = find_beatmap_with_filename_in_set(osu_beatmapset, filename)
                 case osu_beatmap do
                   nil ->
                     conn
@@ -81,18 +110,7 @@ defmodule Trucksu.OsuWebController do
                 # not approved and not ranked, may need to hit the osu! API first
 
                 if conn.assigns[:fetched_set] do
-                  osu_beatmap = Enum.find(osu_beatmaps, fn(osu_beatmap) ->
-                    version = osu_beatmap.version
-                    # osu doesn't include colons in filename difficulty
-                    version = String.replace(version, ":", "")
-                    case Regex.named_captures(~r/ \[(?<version>)\]\.osu$/, filename) do
-                      %{"version" => ^version} ->
-                        true
-
-                      _ ->
-                        false
-                    end
-                  end)
+                  osu_beatmap = find_beatmap_with_filename_in_set(osu_beatmapset, filename)
                   case osu_beatmap do
                     nil ->
                       conn
@@ -104,7 +122,7 @@ defmodule Trucksu.OsuWebController do
                       |> assign(:osu_beatmap, osu_beatmap)
                   end
                 else
-                  if fetch_set_from_osu_api(beatmapset_id) do
+                  if OsuBeatmapsetFetcher.fetch(beatmapset_id) do
                     conn = assign(conn, :fetched_set, true)
 
                     # recurse
@@ -117,29 +135,7 @@ defmodule Trucksu.OsuWebController do
                   end
                 end
             end
-
-          _ ->
-            # We don't have the beatmapset
-            # Call osu! API
-            if conn.assigns[:fetched_set] do
-              conn
-              |> assign(:beatmap_status, :not_submitted)
-              |> assign(:osu_beatmap, nil)
-            else
-              if fetch_set_from_osu_api(beatmapset_id) do
-                conn = assign(conn, :fetched_set, true)
-
-                # recurse
-                fetch_osu_beatmap(conn, opts)
-              else
-                # can't access osu! API
-                conn
-                |> assign(:beatmap_status, :not_submitted)
-                |> assign(:osu_beatmap, nil)
-              end
-            end
         end
-
 
       _ ->
         # TODO: handle osu_beatmap.beatmapset_id != beatmapset_id
@@ -147,7 +143,7 @@ defmodule Trucksu.OsuWebController do
         # Check the database then the API if not ranked
         cond do
           # 3 = qualified, 2 = approved, 1 = ranked, 0 = pending, -1 = WIP, -2 = graveyard
-          osu_beatmap.approved == 2 or osu_beatmap.approved == 1 ->
+          osu_beatmap.beatmapset.approved == 2 or osu_beatmap.beatmapset.approved == 1 ->
             conn
             |> assign(:beatmap_status, :up_to_date)
             |> assign(:osu_beatmap, osu_beatmap)
@@ -158,7 +154,7 @@ defmodule Trucksu.OsuWebController do
               |> assign(:beatmap_status, :up_to_date)
               |> assign(:osu_beatmap, osu_beatmap)
             else
-              if fetch_set_from_osu_api(beatmapset_id) do
+              if OsuBeatmapsetFetcher.fetch(beatmapset_id) do
                 conn = assign(conn, :fetched_set, true)
 
                 # recurse
@@ -174,58 +170,7 @@ defmodule Trucksu.OsuWebController do
     end
   end
 
-  defp fetch_set_from_osu_api(beatmapset_id) do
-    # TODO: Rate limit
-    Logger.error "Fetch beatmapset #{beatmapset_id}"
-
-    case Osu.get_beatmaps(s: beatmapset_id) do
-      {:ok, %HTTPoison.Response{body: [first_beatmap] = beatmap_maps}} ->
-        Repo.transaction(fn ->
-
-          changeset = OsuBeatmapset.changeset_from_api(%OsuBeatmapset{}, first_beatmap)
-          case Repo.insert changeset do
-            {:ok, _osu_beatmapset} ->
-              for beatmap_map <- beatmap_maps do
-                case Repo.get_by OsuBeatmap, file_md5: beatmap_map["file_md5"] do
-                  nil ->
-                    changeset = OsuBeatmap.changeset_from_api(%OsuBeatmap{}, beatmap_map)
-                    case Repo.insert changeset do
-                      {:ok, osu_beatmap} ->
-                        :ok
-                      {:error, error} ->
-                        Logger.error "Error occurred when trying to insert a beatmap from osu! API"
-                        Logger.error inspect error
-                        :ok
-                    end
-                  osu_beatmap ->
-                    # This beatmap is already in the db
-                    :ok
-                end
-              end
-            {:error, error} ->
-              Logger.error "Error occurred when trying to insert a beatmapset from osu! API"
-              Logger.error inspect error
-          end
-        end)
-
-        # succeeded
-        true
-
-      {:ok, _} ->
-        # beatmap doesn't exist
-        true
-
-      {:error, error} ->
-        Logger.error "Failed to get beatmapset #{beatmapset_id} from the osu! API"
-        Logger.error inspect error
-
-        # failed
-        false
-
-    end
-  end
-
-  def get_scores(conn, %{"c" => _file_md5, "i" => _beatmapset_id, "f" => _filename, "m" => game_mode, "v" => type, "mods" => mods} = params) do
+  def get_scores(conn, %{"c" => _file_md5, "i" => _beatmapset_id, "f" => _filename, "m" => game_mode, "v" => type, "mods" => mods}) do
 
     %{
       user: user,
@@ -233,15 +178,15 @@ defmodule Trucksu.OsuWebController do
       osu_beatmap: osu_beatmap,
     } = conn.assigns
 
-    data = case beatmap_status do
-      :not_submitted ->
-        "-1"
+    data = case osu_beatmap do
+      nil ->
+        "-1|false"
 
       _ ->
         build_and_format_scores(user, osu_beatmap, beatmap_status, type, mods, game_mode)
     end
 
-    conn |> html(data)
+    render conn, "response.raw", data: data
   end
 
   def build_and_format_scores(user, osu_beatmap, beatmap_status, type, mods, game_mode) do
@@ -325,6 +270,28 @@ defmodule Trucksu.OsuWebController do
     format_beatmap(ranked_status, osu_beatmap, user.username, game_mode)
   end
 
+  defp format_direct(osu_beatmap) do
+    "#{osu_beatmap.beatmapset_id}.osz|#{osu_beatmap.beatmapset.artist}|#{osu_beatmap.beatmapset.title}|#{osu_beatmap.beatmapset.creator}|#{osu_beatmap.approved}|10.00000|1|#{osu_beatmap.beatmapset_id}|#{osu_beatmap.id}|0|0|0|"
+  end
+
+  def search_set(conn, %{"s" => s}) do
+    # TODO: Check authentication
+    osu_beatmap = Repo.one! from ob in OsuBeatmap,
+      join: obs in assoc(ob, :beatmapset),
+      where: obs.id == ^s,
+      preload: [beatmapset: obs]
+    render conn, "response.raw", data: format_direct(osu_beatmap)
+  end
+
+  def search_set(conn, %{"b" => b}) do
+    # TODO: Check authentication
+    osu_beatmap = Repo.one! from ob in OsuBeatmap,
+      join: obs in assoc(ob, :beatmapset),
+      where: ob.id == ^b,
+      preload: [beatmapset: obs]
+    render conn, "response.raw", data: format_direct(osu_beatmap)
+  end
+
   def bancho_connect(conn, _params) do
     render conn, "response.raw", data: "ca"
   end
@@ -347,7 +314,7 @@ defmodule Trucksu.OsuWebController do
   ## Score helpers
 
   defp format_beatmap_header(ranked_status, osu_beatmap) do
-    "#{ranked_status}|false|#{123}|#{osu_beatmap.beatmapset_id}|#{length osu_beatmap.scores}\n"
+    "#{ranked_status}|false|#{osu_beatmap.id}|#{osu_beatmap.beatmapset_id}|#{length osu_beatmap.scores}\n"
   end
 
   defp format_beatmap_song_info() do
@@ -432,12 +399,21 @@ defmodule Trucksu.OsuWebController do
     # 1: update available
     # 0: latest pending
     # -1: not submitted
-    format_beatmap_header(ranked_status, osu_beatmap)
-    <> "0\n" # nothing?
-    <> format_beatmap_song_info
-    <> "0\n" # beatmap appreciation
-    <> format_personal_best(osu_beatmap, username, game_mode)
-    <> format_beatmap_top_scores(osu_beatmap)
+    # ranked_status = 1
+    cond do
+      ranked_status == 2 or (@everything_is_ranked and ranked_status == 0) ->
+        format_beatmap_header(@ranked_status_up_to_date, osu_beatmap)
+        <> "0\n" # nothing?
+        <> format_beatmap_song_info
+        <> "0\n" # beatmap appreciation
+        <> format_personal_best(osu_beatmap, username, game_mode)
+        <> format_beatmap_top_scores(osu_beatmap)
+      true ->
+        format_beatmap_header(ranked_status, osu_beatmap)
+        <> "0\n" # nothing?
+        <> format_beatmap_song_info
+        <> "0\n" # beatmap appreciation
+    end
   end
 
   defp stop(conn, status_code) do
@@ -451,4 +427,3 @@ defmodule Trucksu.OsuWebController do
     |> halt
   end
 end
-
