@@ -174,7 +174,9 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
 
         end
       osu_beatmapset ->
-        if beatmapset_not_ranked?(osu_beatmapset) do
+        # TODO: Uncomment once we figure out why beatmapsets are getting inserted
+        # without all of their beatmaps
+        # if beatmapset_not_ranked?(osu_beatmapset) do
           hours_since_last_check = Timex.DateTime.diff(Timex.DateTime.now, osu_beatmapset.last_check, :hours)
           if hours_since_last_check <= @hour_threshold_before_updating_pending_maps do
             true
@@ -217,7 +219,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                 false
             end
           end
-        end
+        # end
     end
   end
 end
