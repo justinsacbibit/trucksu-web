@@ -133,6 +133,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
     # 1 call every 2 hours
     rate_limit = ExRated.check_rate("set-#{beatmapset_id}", 7_200_000, 1)
 
+    # TODO: Refactor so that the rate_limit only disables the API call
     case rate_limit do
       {:error, _} ->
         false
@@ -173,7 +174,9 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
 
         end
       osu_beatmapset ->
-        if beatmapset_not_ranked?(osu_beatmapset) do
+        # TODO: Uncomment once we figure out why beatmapsets are getting inserted
+        # without all of their beatmaps
+        # if beatmapset_not_ranked?(osu_beatmapset) do
           hours_since_last_check = Timex.DateTime.diff(Timex.DateTime.now, osu_beatmapset.last_check, :hours)
           if hours_since_last_check <= @hour_threshold_before_updating_pending_maps do
             true
@@ -216,7 +219,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                 false
             end
           end
-        end
+        # end
     end
   end
 end

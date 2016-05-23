@@ -215,7 +215,11 @@ defmodule Trucksu.ScoreController do
         bot_url = Application.get_env(:trucksu, :bot_url)
         cookie = Application.get_env(:trucksu, :server_cookie)
         if score.pp do
-          osu_beatmap = Repo.get_by OsuBeatmap, file_md5: score.beatmap.file_md5
+          file_md5 = score.file_md5
+          osu_beatmap = Repo.one! from ob in OsuBeatmap,
+            join: obs in assoc(ob, :beatmapset),
+            where: ob.file_md5 == ^file_md5,
+            preload: [beatmapset: obs]
           # TODO: Error logging
           data = %{
             "cookie" => cookie,
@@ -224,9 +228,9 @@ defmodule Trucksu.ScoreController do
             "username" => user.username,
             "beatmap_id" => "#{osu_beatmap.id}",
             "version" => osu_beatmap.version,
-            "artist" => osu_beatmap.artist,
-            "title" => osu_beatmap.title,
-            "creator" => osu_beatmap.creator,
+            "artist" => osu_beatmap.beatmapset.artist,
+            "title" => osu_beatmap.beatmapset.title,
+            "creator" => osu_beatmap.beatmapset.creator,
             "mods" => score.mods,
             "rank" => score.rank,
             "accuracy" => score.accuracy,

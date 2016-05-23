@@ -14,31 +14,27 @@ defmodule Trucksu.OsuBeatmapFetcher do
   database, then return it.
   """
   def fetch(identifier) do
-    # 1 call every 2 hours
-    rate_limit = ExRated.check_rate("beatmap-#{identifier}", 7_200_000, 1)
 
-    case rate_limit do
-      {:error, _} ->
-        {:error, :rate_limit}
-      _ ->
-        actually_fetch(identifier)
-    end
-  end
-
-  defp actually_fetch(identifier) do
     case beatmap_from_repo(identifier) do
       nil ->
-        case fetch_with_identifier(identifier) do
-          {:ok, beatmap_map} ->
-            OsuBeatmapsetFetcher.fetch(beatmap_map["beatmapset_id"])
-            case beatmap_from_repo(identifier) do
-              nil ->
-                {:error, :unknown_error}
-              osu_beatmap ->
-                {:ok, osu_beatmap}
+        # 1 call every 2 hours
+        rate_limit = ExRated.check_rate("beatmap-#{identifier}", 7_200_000, 1)
+        case rate_limit do
+          {:error, _} ->
+            {:error, :rate_limit}
+          _ ->
+            case fetch_with_identifier(identifier) do
+              {:ok, beatmap_map} ->
+                OsuBeatmapsetFetcher.fetch(beatmap_map["beatmapset_id"])
+                case beatmap_from_repo(identifier) do
+                  nil ->
+                    {:error, :unknown_error}
+                  osu_beatmap ->
+                    {:ok, osu_beatmap}
+                end
+              {:error, error} ->
+                {:error, error}
             end
-          {:error, error} ->
-            {:error, error}
         end
       osu_beatmap ->
         OsuBeatmapsetFetcher.fetch(osu_beatmap.beatmapset_id)
