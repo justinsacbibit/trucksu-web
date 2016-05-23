@@ -31,7 +31,7 @@ defmodule Trucksu.OsuBeatmap do
 
     field :file_data, :binary, virtual: true
 
-    has_many :scores, Score, foreign_key: :file_md5, references: :file_md5
+    has_many :scores, Trucksu.Score, foreign_key: :file_md5, references: :file_md5
 
     timestamps
   end
