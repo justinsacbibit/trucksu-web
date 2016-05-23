@@ -24,7 +24,7 @@ config :trucksu, Trucksu.Repo,
 
 config :ex_statsd,
   host: System.get_env("STATSD_HOST"),
-  port: System.get_env("STATSD_PORT"),
+  port: 8125,
   namespace: "trucksu.web"
 
 config :guardian, Guardian,
