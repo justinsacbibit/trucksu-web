@@ -53,121 +53,45 @@ defmodule Trucksu.OsuWebController do
   end
 
   defp fetch_osu_beatmap(%Plug.Conn{params: %{"f" => filename, "c" => file_md5, "i" => beatmapset_id}} = conn, opts) do
+    OsuBeatmapsetFetcher.fetch(beatmapset_id)
+
     osu_beatmap = Repo.one from ob in OsuBeatmap,
       join: obs in assoc(ob, :beatmapset),
-      where: ob.file_md5 == ^file_md5,
+      where: ob.file_md5 == ^file_md5 and obs.id == ^beatmapset_id,
       preload: [beatmapset: obs]
-    case osu_beatmap do
+
+    {status, osu_beatmap} = case osu_beatmap do
       nil ->
-        # Check the database then the API if necessary
 
         query = from obs in OsuBeatmapset,
-          left_join: ob in assoc(obs, :beatmaps),
+          join: ob in assoc(obs, :beatmaps),
           where: obs.id == ^beatmapset_id,
           preload: [beatmaps: ob]
         case Repo.one query do
           nil ->
             # We don't have the beatmapset
-            # Call osu! API
-            if conn.assigns[:fetched_set] do
-              conn
-              |> assign(:beatmap_status, :not_submitted)
-              |> assign(:osu_beatmap, nil)
-            else
-              if OsuBeatmapsetFetcher.fetch(beatmapset_id) do
-                conn = assign(conn, :fetched_set, true)
-
-                # recurse
-                fetch_osu_beatmap(conn, opts)
-              else
-                # can't access osu! API
-                conn
-                |> assign(:beatmap_status, :not_submitted)
-                |> assign(:osu_beatmap, nil)
-              end
-            end
+            {:not_submitted, nil}
 
           osu_beatmapset ->
-            # We have some version of the beatmapset
             Logger.debug "We have some version of the beatmapset"
 
-            cond do
-              # 3 = qualified, 2 = approved, 1 = ranked, 0 = pending, -1 = WIP, -2 = graveyard
-              osu_beatmapset.approved == 2 or osu_beatmapset.approved == 1 ->
-                # approved or ranked, client version either needs to be updated or is not submitted
-                osu_beatmap = find_beatmap_with_filename_in_set(osu_beatmapset, filename)
-                case osu_beatmap do
-                  nil ->
-                    conn
-                    |> assign(:beatmap_status, :not_submitted)
-                    |> assign(:osu_beatmap, osu_beatmap)
-                  _ ->
-                    conn
-                    |> assign(:beatmap_status, :update_available)
-                    |> assign(:osu_beatmap, osu_beatmap)
-                end
-              true ->
-                # not approved and not ranked, may need to hit the osu! API first
+            osu_beatmap = find_beatmap_with_filename_in_set(osu_beatmapset, filename)
 
-                if conn.assigns[:fetched_set] do
-                  osu_beatmap = find_beatmap_with_filename_in_set(osu_beatmapset, filename)
-                  case osu_beatmap do
-                    nil ->
-                      conn
-                      |> assign(:beatmap_status, :not_submitted)
-                      |> assign(:osu_beatmap, osu_beatmap)
-                    _ ->
-                      conn
-                      |> assign(:beatmap_status, :update_available)
-                      |> assign(:osu_beatmap, osu_beatmap)
-                  end
-                else
-                  if OsuBeatmapsetFetcher.fetch(beatmapset_id) do
-                    conn = assign(conn, :fetched_set, true)
-
-                    # recurse
-                    fetch_osu_beatmap(conn, opts)
-                  else
-                    # can't access osu! API
-                    conn
-                    |> assign(:beatmap_status, :not_submitted)
-                    |> assign(:osu_beatmap, nil)
-                  end
-                end
+            status = case osu_beatmap do
+              nil -> :not_submitted
+              _ -> :update_available
             end
+
+            {status, osu_beatmap}
         end
 
       _ ->
-        # TODO: handle osu_beatmap.beatmapset_id != beatmapset_id
-
-        # Check the database then the API if not ranked
-        cond do
-          # 3 = qualified, 2 = approved, 1 = ranked, 0 = pending, -1 = WIP, -2 = graveyard
-          osu_beatmap.beatmapset.approved == 2 or osu_beatmap.beatmapset.approved == 1 ->
-            conn
-            |> assign(:beatmap_status, :up_to_date)
-            |> assign(:osu_beatmap, osu_beatmap)
-          true ->
-            # not approved and not ranked, need to hit the osu API first
-            if conn.assigns[:fetched_set] do
-              conn
-              |> assign(:beatmap_status, :up_to_date)
-              |> assign(:osu_beatmap, osu_beatmap)
-            else
-              if OsuBeatmapsetFetcher.fetch(beatmapset_id) do
-                conn = assign(conn, :fetched_set, true)
-
-                # recurse
-                fetch_osu_beatmap(conn, opts)
-              else
-                # can't access osu! API
-                conn
-                |> assign(:beatmap_status, :not_submitted)
-                |> assign(:osu_beatmap, osu_beatmap)
-              end
-            end
-        end
+        {:up_to_date, osu_beatmap}
     end
+
+    conn
+    |> assign(:beatmap_status, status)
+    |> assign(:osu_beatmap, osu_beatmap)
   end
 
   def get_scores(conn, %{"c" => _file_md5, "i" => _beatmapset_id, "f" => _filename, "m" => game_mode, "v" => type, "mods" => mods}) do

@@ -1,5 +1,11 @@
 defmodule Trucksu.OsuBeatmapFetcher do
-  alias Trucksu.{Osu, OsuBeatmap, Repo}
+  alias Trucksu.{
+    OsuBeatmapsetFetcher,
+
+    Osu,
+    OsuBeatmap,
+    Repo,
+  }
   require Logger
 
   @doc """
@@ -7,36 +13,51 @@ defmodule Trucksu.OsuBeatmapFetcher do
   attempts to retrieve it from the official osu! API, insert it into the
   database, then return it.
   """
-  def fetch(beatmap_id) when is_integer(beatmap_id) do
-    case Repo.get OsuBeatmap, beatmap_id do
+  def fetch(identifier) do
+    # 1 call every 2 hours
+    rate_limit = ExRated.check_rate("beatmap-#{identifier}", 7_200_000, 1)
+
+    case rate_limit do
+      {:error, _} ->
+        {:error, :rate_limit}
+      _ ->
+        actually_fetch(identifier)
+    end
+  end
+
+  defp actually_fetch(identifier) do
+    case beatmap_from_repo(identifier) do
       nil ->
-        fetch_and_insert(b: beatmap_id)
+        case fetch_with_identifier(identifier) do
+          {:ok, beatmap_map} ->
+            OsuBeatmapsetFetcher.fetch(beatmap_map["beatmapset_id"])
+            case beatmap_from_repo(identifier) do
+              nil ->
+                {:error, :unknown_error}
+              osu_beatmap ->
+                {:ok, osu_beatmap}
+            end
+          {:error, error} ->
+            {:error, error}
+        end
       osu_beatmap ->
-        # TODO: If the beatmap is not ranked or approved, check if it's
-        # been updated
+        OsuBeatmapsetFetcher.fetch(osu_beatmap.beatmapset_id)
         {:ok, osu_beatmap}
     end
   end
 
-  @doc """
-  Attempts to load an OsuBeatmap from the database. If it doesn't exist,
-  attempts to retrieve it from the official osu! API, insert it into the
-  database, then return it.
-  """
-  def fetch(file_md5) when is_binary(file_md5) do
-    case Repo.get_by OsuBeatmap, file_md5: file_md5 do
-      nil ->
-        fetch_and_insert(h: file_md5)
-      osu_beatmap ->
-        # TODO: If the beatmap is not ranked or approved, check if it's
-        # been updated
-        {:ok, osu_beatmap}
-    end
+  defp beatmap_from_repo(beatmap_id) when is_integer(beatmap_id) do
+    Repo.get OsuBeatmap, beatmap_id
+  end
+  defp beatmap_from_repo(file_md5) when is_binary(file_md5) do
+    Repo.get_by OsuBeatmap, file_md5: file_md5
   end
 
-  defp fetch_and_insert(params) do
-    with {:ok, beatmap_data} <- fetch_with_params(params),
-         do: insert(beatmap_data)
+  defp fetch_with_identifier(beatmap_id) when is_integer(beatmap_id) do
+    fetch_with_params(b: beatmap_id)
+  end
+  defp fetch_with_identifier(file_md5) when is_binary(file_md5) do
+    fetch_with_params(h: file_md5)
   end
 
   defp fetch_with_params(params) do
@@ -52,14 +73,5 @@ defmodule Trucksu.OsuBeatmapFetcher do
         Logger.error inspect(response)
         {:error, :unknown}
     end
-  end
-
-  defp insert(beatmap_data) do
-    beatmap_data = beatmap_data
-    |> Map.put("game_mode", beatmap_data["mode"])
-    |> Map.delete("mode")
-    changeset = OsuBeatmap.changeset(%OsuBeatmap{}, beatmap_data)
-
-    Repo.insert changeset
   end
 end

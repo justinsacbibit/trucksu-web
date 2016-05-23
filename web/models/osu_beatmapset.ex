@@ -26,8 +26,9 @@ defmodule Trucksu.OsuBeatmapset do
     field :genre_id, :integer
     field :language_id, :integer
     field :favorite_count, :integer
+    field :unsubmitted, :boolean, default: false
 
-    field :last_check, Ecto.DateTime
+    field :last_check, Timex.Ecto.DateTime
 
     timestamps
   end

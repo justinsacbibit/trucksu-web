@@ -2,6 +2,7 @@ defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    OsuBeatmapFetcher,
     Performance,
     Session,
 
@@ -59,8 +60,6 @@ defmodule Trucksu.ScoreController do
       | _osu_version
     ] = score_data
 
-    # TODO: Fetch beatmap
-
     username = String.rstrip(username)
 
     case Session.authenticate(username, pass, true) do
@@ -69,6 +68,12 @@ defmodule Trucksu.ScoreController do
         raise "Invalid username or password"
       _ ->
         :ok
+    end
+
+    osu_beatmap = OsuBeatmapFetcher.fetch(beatmap_file_md5)
+    if is_nil(osu_beatmap) do
+      Logger.error "#{username} tried to submit a score for an unsubmitted map, or there's something wrong on our end"
+      raise "no"
     end
 
     full_combo = case full_combo do
