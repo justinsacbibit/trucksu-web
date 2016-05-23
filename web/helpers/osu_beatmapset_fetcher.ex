@@ -133,6 +133,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
     # 1 call every 2 hours
     rate_limit = ExRated.check_rate("set-#{beatmapset_id}", 7_200_000, 1)
 
+    # TODO: Refactor so that the rate_limit only disables the API call
     case rate_limit do
       {:error, _} ->
         false
