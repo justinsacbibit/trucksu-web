@@ -5,6 +5,7 @@ const SignupFormSchema = {
     placeholder: 'Username',
     defaultValue: '',
     required: true,
+    username: true,
   },
   email: {
     field: 'text',

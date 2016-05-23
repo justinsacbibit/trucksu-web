@@ -5,6 +5,7 @@ import Fields from './fields';
 import FieldContainer from './FieldContainer';
 
 const EMAIL_REGEXP = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const USERNAME_REGEXP = /^[-_\[\]A-Za-z0-9]+$/;
 
 class Form extends React.Component {
   static defaultProps = {
@@ -39,11 +40,14 @@ class Form extends React.Component {
       if(field.required && _.isEmpty(value[key])) {
         result[key] = 'This is a required field.';
       }
+      else if(field.minlength && value[key].length < field.minlength) {
+        result[key] = `Must be at least ${field.minlength} character(s).`;
+      }
       else if(field.email && !EMAIL_REGEXP.test(value[key])) {
         result[key] = 'Enter a valid email.';
       }
-      else if(field.minlength && value[key].length < field.minlength) {
-        result[key] = `Must be at least ${field.minlength} character(s).`;
+      else if(field.username && !USERNAME_REGEXP.test(value[key])) {
+        result[key] = 'Contains invalid characters.';
       }
       return result;
     }, {});
