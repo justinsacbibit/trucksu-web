@@ -14,6 +14,9 @@ config :trucksu, Trucksu.Endpoint,
   pubsub: [name: Trucksu.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
+config :logger,
+  backends: [:console, Trucksu.DiscordLoggerBackend]
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
