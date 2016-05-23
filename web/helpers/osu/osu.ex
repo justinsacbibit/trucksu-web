@@ -77,7 +77,9 @@ defmodule Trucksu.Osu do
     one_minute = 60000
     opts = [params: params, timeout: one_minute, recv_timeout: one_minute]
 
-    Logger.error "Executing osu! API call: path=#{path} params=#{inspect params} bang=#{bang}"
+    Logger.warn "Executing osu! API call: path=#{path} params=#{inspect params} bang=#{bang}"
+
+    ExStatsD.increment "osu.api_calls"
 
     if bang do
       get!(path, [], opts)
