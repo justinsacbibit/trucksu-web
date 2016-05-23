@@ -24,6 +24,7 @@ defmodule Trucksu.Router do
     scope "/web" do
       get "/bancho_connect.php", OsuWebController, :bancho_connect
       get "/osu-osz2-getscores.php", OsuWebController, :get_scores
+      get "/osu-search-set.php", OsuWebController, :search_set
       post "/osu-metrics.php", OsuWebController, :osu_metrics
       get "/check-updates.php", OsuWebController, :check_updates
       get "/lastfm.php", OsuWebController, :lastfm

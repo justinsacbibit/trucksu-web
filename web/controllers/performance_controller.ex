@@ -33,12 +33,13 @@ defmodule Trucksu.PerformanceController do
     case Performance.calculate(identifier, mods, game_mode) do
       {:ok, pp} ->
         {:ok, osu_beatmap} = OsuBeatmapFetcher.fetch(identifier)
+        osu_beatmap = Repo.preload osu_beatmap, :beatmapset
         data = %{
           "event_type" => "max-pp-calc",
           "pp" => "#{round pp}",
           "osu_beatmap" => osu_beatmap,
         }
-        Logger.warn "Calculated #{round pp}pp for #{identifier} #{osu_beatmap.artist} - #{osu_beatmap.title} (#{osu_beatmap.creator}) [#{osu_beatmap.version}]"
+        Logger.warn "Calculated #{round pp}pp for #{identifier} #{osu_beatmap.beatmapset.artist} - #{osu_beatmap.beatmapset.title} (#{osu_beatmap.beatmapset.creator}) [#{osu_beatmap.version}]"
         json(conn, data)
 
       error ->

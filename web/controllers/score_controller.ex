@@ -2,11 +2,11 @@ defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    OsuBeatmapFetcher,
     Performance,
     Session,
 
     Repo,
-    Beatmap,
     OsuBeatmap,
     User,
     Score,
@@ -70,6 +70,12 @@ defmodule Trucksu.ScoreController do
         :ok
     end
 
+    osu_beatmap = OsuBeatmapFetcher.fetch(beatmap_file_md5)
+    if is_nil(osu_beatmap) do
+      Logger.error "#{username} tried to submit a score for an unsubmitted map, or there's something wrong on our end"
+      raise "no"
+    end
+
     full_combo = case full_combo do
       "True" -> 1
       _ -> 0
@@ -115,9 +121,9 @@ defmodule Trucksu.ScoreController do
 
       completed >= 2 ->
         top_score = Repo.one from s in Score,
-          join: b in assoc(s, :beatmap),
+          join: ob in assoc(s, :osu_beatmap),
           join: u in assoc(s, :user),
-          where: b.file_md5 == ^beatmap_file_md5
+          where: ob.file_md5 == ^beatmap_file_md5
             and u.username == ^username
             and s.game_mode == ^game_mode,
           order_by: [desc: s.score],
@@ -144,23 +150,9 @@ defmodule Trucksu.ScoreController do
         accuracy = total_points_of_hits / (total_number_of_hits * 300)
 
         {:ok, score} = Repo.transaction fn ->
-          query = from b in Beatmap,
-            where: b.file_md5 == ^beatmap_file_md5
-          beatmap = case Repo.one query do
-            nil ->
-              # TODO: Now that we insert the beatmap as the result of a
-              # changeAction packet, this should never happen.
-              params = %{
-                file_md5: beatmap_file_md5,
-              }
-              Repo.insert! Beatmap.changeset(%Beatmap{}, params)
-
-            beatmap ->
-              beatmap
-          end
 
           score = Score.changeset(%Score{}, %{
-            beatmap_id: beatmap.id,
+            file_md5: beatmap_file_md5,
             user_id: user.id,
             score: score,
             max_combo: max_combo,
@@ -214,7 +206,7 @@ defmodule Trucksu.ScoreController do
             accuracy: new_accuracy,
             pp: new_pp
 
-          score = Repo.preload score, :beatmap
+          score = Repo.preload score, :osu_beatmap
 
           score
         end
@@ -223,18 +215,22 @@ defmodule Trucksu.ScoreController do
         bot_url = Application.get_env(:trucksu, :bot_url)
         cookie = Application.get_env(:trucksu, :server_cookie)
         if score.pp do
-          osu_beatmap = Repo.get_by OsuBeatmap, file_md5: score.beatmap.file_md5
+          file_md5 = score.file_md5
+          osu_beatmap = Repo.one! from ob in OsuBeatmap,
+            join: obs in assoc(ob, :beatmapset),
+            where: ob.file_md5 == ^file_md5,
+            preload: [beatmapset: obs]
           # TODO: Error logging
           data = %{
             "cookie" => cookie,
             "event_type" => "pp",
             "pp" => "#{round score.pp}",
             "username" => user.username,
-            "beatmap_id" => "#{osu_beatmap.beatmap_id}",
+            "beatmap_id" => "#{osu_beatmap.id}",
             "version" => osu_beatmap.version,
-            "artist" => osu_beatmap.artist,
-            "title" => osu_beatmap.title,
-            "creator" => osu_beatmap.creator,
+            "artist" => osu_beatmap.beatmapset.artist,
+            "title" => osu_beatmap.beatmapset.title,
+            "creator" => osu_beatmap.beatmapset.creator,
             "mods" => score.mods,
             "rank" => score.rank,
             "accuracy" => score.accuracy,
@@ -306,4 +302,3 @@ defmodule Trucksu.ScoreController do
     <> "|onlineScoreId:#{score.id}\n"
   end
 end
-

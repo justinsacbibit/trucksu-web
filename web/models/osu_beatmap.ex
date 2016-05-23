@@ -2,26 +2,19 @@ defmodule Trucksu.OsuBeatmap do
   use Trucksu.Web, :model
 
   @derive {Poison.Encoder, only: [
-    :beatmap_id,
+    :id,
     :version,
     :diff_size,
     :diff_overall,
     :diff_approach,
     :diff_drain,
     :game_mode,
-    :approved_date,
-    :last_update,
-    :artist,
-    :title,
-    :creator,
-    :bpm,
     :difficultyrating,
+    :beatmapset,
   ]}
 
   schema "osu_beatmaps" do
-    field :beatmapset_id, :integer
-    field :beatmap_id, :integer
-    field :approved, :integer
+    belongs_to :beatmapset, Trucksu.OsuBeatmapset
     field :total_length, :integer
     field :hit_length, :integer
     field :version, :string
@@ -31,17 +24,6 @@ defmodule Trucksu.OsuBeatmap do
     field :diff_approach, :float
     field :diff_drain, :float
     field :game_mode, :integer
-    field :approved_date, Ecto.DateTime
-    field :last_update, Ecto.DateTime
-    field :artist, :string
-    field :title, :string
-    field :creator, :string
-    field :bpm, :float
-    field :source, :string
-    field :tags, :string
-    field :genre_id, :integer
-    field :language_id, :integer
-    field :favourite_count, :integer
     field :playcount, :integer
     field :passcount, :integer
     field :max_combo, :integer
@@ -49,11 +31,13 @@ defmodule Trucksu.OsuBeatmap do
 
     field :file_data, :binary, virtual: true
 
+    has_many :scores, Score, foreign_key: :file_md5, references: :file_md5
+
     timestamps
   end
 
-  @required_fields ~w(beatmapset_id beatmap_id approved total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode last_update artist title creator bpm source tags genre_id language_id favourite_count playcount passcount difficultyrating)
-  @optional_fields ~w(max_combo approved_date)
+  @required_fields ~w(id beatmapset_id total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode playcount passcount difficultyrating)
+  @optional_fields ~w(max_combo)
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -64,10 +48,13 @@ defmodule Trucksu.OsuBeatmap do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
+    |> unique_constraint(:file_md5)
   end
 
   def changeset_from_api(model, params) do
-    params = Map.put(params, "game_mode", Map.get(params, "mode"))
+    params = params
+    |> Map.put("game_mode", Map.get(params, "mode"))
+    |> Map.put("id", Map.get(params, "beatmap_id"))
 
     changeset(model, params)
   end

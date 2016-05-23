@@ -2,303 +2,218 @@ defmodule Trucksu.OsuWebController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
-    Osu,
+    OsuBeatmapsetFetcher,
     Session,
 
-    Beatmap,
     Friendship,
     OsuBeatmap,
+    OsuBeatmapset,
     Score,
-    User,
   }
 
-  plug :authenticate when not action in [:status]
+  @ranked_status_not_submitted -1
+  @ranked_status_up_to_date 2
+  @ranked_status_update_available 1
+
+  @everything_is_ranked true
+
+  plug :authenticate when action in [:get_scores, :search_set]
   # TODO: Uncomment when rate limiting is implemented
-  # plug :fetch_osu_beatmap when action == :get_scores
+  plug :fetch_osu_beatmap when action == :get_scores
 
   defp authenticate(conn, _) do
-    case conn.request_path do
-      "/osu/web/osu-osz2-getscores.php" ->
-        username = conn.params["us"]
-        password_md5 = conn.params["ha"]
-        case Session.authenticate(username, password_md5, true) do
-          {:error, reason} ->
-            Logger.warn "#{username} attempted to get scores, but was unable to authenticate: #{reason}"
-            stop_plug(conn, 403)
-          {:ok, user} ->
-            assign(conn, :user, user)
-        end
-      _ ->
-        conn
+    username = conn.params["us"] || conn.params["u"]
+    password_md5 = conn.params["ha"] || conn.params["h"]
+    case Session.authenticate(username, password_md5, true) do
+      {:error, reason} ->
+        Logger.warn "#{username} attempted to get scores, but was unable to authenticate: #{reason}"
+        stop_plug(conn, 403)
+      {:ok, user} ->
+        assign(conn, :user, user)
     end
+  end
+
+  defp find_beatmap_with_filename_in_set(osu_beatmapset, filename) do
+    Logger.debug "Checking if same difficulty exists in freshly fetched set"
+
+    Enum.find(osu_beatmapset.beatmaps, fn(osu_beatmap) ->
+      version = osu_beatmap.version
+      # osu! doesn't include colons in filename difficulty
+      # TODO: Find what other characters osu! strips out from the filename
+      version = String.replace(version, ":", "")
+      Logger.debug "comparing '#{filename}' and #{version}"
+      case Regex.named_captures(~r/ \[(?<version>.*)\]\.osu$/, filename) do
+        %{"version" => ^version} ->
+          true
+
+        _ ->
+          false
+      end
+    end)
   end
 
   defp fetch_osu_beatmap(%Plug.Conn{params: %{"f" => filename, "c" => file_md5, "i" => beatmapset_id}} = conn, opts) do
+    OsuBeatmapsetFetcher.fetch(beatmapset_id)
+
     osu_beatmap = Repo.one from ob in OsuBeatmap,
-      where: ob.file_md5 == ^file_md5
-    case osu_beatmap do
+      join: obs in assoc(ob, :beatmapset),
+      where: ob.file_md5 == ^file_md5 and obs.id == ^beatmapset_id,
+      preload: [beatmapset: obs]
+
+    {status, osu_beatmap} = case osu_beatmap do
       nil ->
-        # Check the database then the API if necessary
 
-        osu_beatmaps = Repo.all from ob in OsuBeatmap,
-          where: ob.beatmapset_id == ^beatmapset_id
-
-        case osu_beatmaps do
-          [first_map | _] ->
-            # We have some version of the beatmapset
-            Logger.error "We have some version of the beatmapset"
-
-            first_map = Enum.at(osu_beatmaps, 0)
-            cond do
-              # 3 = qualified, 2 = approved, 1 = ranked, 0 = pending, -1 = WIP, -2 = graveyard
-              first_map.approved == 2 or first_map.approved == 1 ->
-                # approved or ranked, client version either needs to be updated or is not submitted
-                osu_beatmap = Enum.find(osu_beatmaps, fn(osu_beatmap) ->
-                  version = osu_beatmap.version
-                  case Regex.named_captures(~r/\[(?<version>)\]\.osu$/, filename) do
-                    %{"version" => ^version} ->
-                      true
-
-                    _ ->
-                      false
-                  end
-                end)
-                case osu_beatmap do
-                  nil ->
-                    assign(conn, :beatmap_status, :not_submitted)
-                  _ ->
-                    assign(conn, :beatmap_status, :update_available)
-                end
-              true ->
-                # not approved and not ranked, may need to hit the osu! API first
-
-                if conn.assigns[:fetched_set] do
-                  osu_beatmap = Enum.find(osu_beatmaps, fn(osu_beatmap) ->
-                    version = osu_beatmap.version
-                    # osu doesn't include colons in filename difficulty
-                    version = String.replace(version, ":", "")
-                    case Regex.named_captures(~r/ \[(?<version>)\]\.osu$/, filename) do
-                      %{"version" => ^version} ->
-                        true
-
-                      _ ->
-                        false
-                    end
-                  end)
-                  case osu_beatmap do
-                    nil ->
-                      assign(conn, :beatmap_status, :not_submitted)
-                    _ ->
-                      assign(conn, :beatmap_status, :update_available)
-                  end
-                else
-                  if fetch_set_from_osu_api(beatmapset_id) do
-                    conn = assign(conn, :fetched_set, true)
-
-                    # recurse
-                    fetch_osu_beatmap(conn, opts)
-                  else
-                    # can't access osu! API
-                    assign(conn, :beatmap_status, :not_submitted)
-                  end
-                end
-            end
-
-          _ ->
+        query = from obs in OsuBeatmapset,
+          join: ob in assoc(obs, :beatmaps),
+          where: obs.id == ^beatmapset_id,
+          preload: [beatmaps: ob]
+        case Repo.one query do
+          nil ->
             # We don't have the beatmapset
-            # Call osu! API
-            if conn.assigns[:fetched_set] do
-              assign(conn, :beatmap_status, :not_submitted)
-            else
-              if fetch_set_from_osu_api(beatmapset_id) do
-                conn = assign(conn, :fetched_set, true)
+            {:not_submitted, nil}
 
-                # recurse
-                fetch_osu_beatmap(conn, opts)
-              else
-                # can't access osu! API
-                assign(conn, :beatmap_status, :not_submitted)
-              end
+          osu_beatmapset ->
+            Logger.debug "We have some version of the beatmapset"
+
+            osu_beatmap = find_beatmap_with_filename_in_set(osu_beatmapset, filename)
+
+            status = case osu_beatmap do
+              nil -> :not_submitted
+              _ -> :update_available
             end
-        end
 
+            {status, osu_beatmap}
+        end
 
       _ ->
-        # TODO: handle osu_beatmap.beatmapset_id != beatmapset_id
-
-        # Check the database then the API if not ranked
-        cond do
-          # 3 = qualified, 2 = approved, 1 = ranked, 0 = pending, -1 = WIP, -2 = graveyard
-          osu_beatmap.approved == 2 or osu_beatmap.approved == 1 ->
-            assign(conn, :beatmap_status, :up_to_date)
-          true ->
-            # not approved and not ranked, need to hit the osu API first
-            if conn.assigns[:fetched_set] do
-              assign(conn, :beatmap_status, :up_to_date)
-            else
-              if fetch_set_from_osu_api(beatmapset_id) do
-                conn = assign(conn, :fetched_set, true)
-
-                # recurse
-                fetch_osu_beatmap(conn, opts)
-              else
-                # can't access osu! API
-                assign(conn, :beatmap_status, :not_submitted)
-              end
-            end
-        end
+        {:up_to_date, osu_beatmap}
     end
+
+    conn
+    |> assign(:beatmap_status, status)
+    |> assign(:osu_beatmap, osu_beatmap)
   end
 
-  defp fetch_set_from_osu_api(beatmapset_id) do
-    # TODO: Return a value that indicates if the fetching succeeded?
-    # TODO: Rate limit
-    Logger.error "Fetch beatmapset #{beatmapset_id}"
+  def get_scores(conn, %{"c" => _file_md5, "i" => _beatmapset_id, "f" => _filename, "m" => game_mode, "v" => type, "mods" => mods}) do
 
-    case Osu.get_beatmaps(s: beatmapset_id) do
-      {:ok, %HTTPoison.Response{body: beatmap_maps}} ->
-        Repo.transaction(fn ->
-          for beatmap_map <- beatmap_maps do
-            case Repo.get_by OsuBeatmap, file_md5: beatmap_map["file_md5"] do
-              nil ->
-                changeset = OsuBeatmap.changeset_from_api(%OsuBeatmap{}, beatmap_map)
-                case Repo.insert changeset do
-                  {:ok, osu_beatmap} ->
-                    :ok
-                  {:error, error} ->
-                    Logger.error "Error occurred when trying to insert a beatmap from osu! API"
-                    Logger.error inspect error
-                    :ok
-                end
-              osu_beatmap ->
-                # This beatmap is already in the db
-                :ok
-            end
-          end
-        end)
+    %{
+      user: user,
+      beatmap_status: beatmap_status,
+      osu_beatmap: osu_beatmap,
+    } = conn.assigns
 
-        # succeeded
-        true
-
-      {:error, error} ->
-        Logger.error "Failed to get beatmapset #{beatmapset_id} from the osu! API"
-        Logger.error inspect error
-
-        # failed
-        false
-
-    end
-  end
-
-  def get_scores(conn, %{"c" => file_md5, "i" => beatmapset_id, "f" => filename, "m" => mode, "v" => type, "mods" => mods} = params) do
-
-    user = conn.assigns[:user]
-
-    query = from b in Beatmap,
-      where: b.file_md5 == ^file_md5
-
-    beatmap = case Repo.one query do
+    data = case osu_beatmap do
       nil ->
-        params = %{
-          filename: filename,
-          beatmapset_id: beatmapset_id,
-          file_md5: file_md5,
-        }
-        beatmap = Repo.insert! Beatmap.changeset(%Beatmap{}, params)
-        Repo.preload beatmap, :scores
+        "-1|false"
 
-      beatmap ->
-
-        if is_nil(beatmap.filename) do
-          # This beatmap was inserted as the result of a changeAction packet or
-          # a score submission. The beatmap is missing a filename and
-          # beatmapset_id, so let's fill that in now.
-          params = %{
-            filename: filename,
-            beatmapset_id: beatmapset_id,
-            file_md5: file_md5,
-          }
-          Repo.update! Beatmap.changeset(beatmap, params)
-        end
-
-        # type
-        # 4 - country ranking
-        # 1 - global ranking
-        # 2 - global ranking (selected mods)
-        # 3 - friend ranking
-
-        beatmap_id = beatmap.id
-        preload_query = case type do
-          "2" ->
-            # global ranking (selected mods)
-
-            {mods, _} = Integer.parse(mods)
-
-            from s in Score.completed,
-              join: u in assoc(s, :user),
-              where: u.banned == false
-                and s.beatmap_id == ^beatmap_id
-                and s.game_mode == ^mode
-                and s.mods == ^mods,
-              order_by: [desc: s.score],
-              preload: [user: u]
-
-          "3" ->
-            # friend ranking
-
-            user_id = user.id
-            from s in Score.completed,
-              join: f in Friendship,
-              on: (f.requester_id == ^user_id
-                and s.user_id == f.receiver_id)
-                or s.user_id == ^user_id,
-              join: u in assoc(s, :user),
-              where: u.banned == false
-                and s.beatmap_id == ^beatmap_id
-                and s.game_mode == ^mode,
-              order_by: [desc: s.score],
-              preload: [user: u]
-
-          "4" ->
-            # country ranking
-
-            country = user.country
-            from s in Score.completed,
-              join: u in assoc(s, :user),
-              where: u.banned == false
-                and s.beatmap_id == ^beatmap_id
-                and s.game_mode == ^mode
-                and u.country == ^country,
-              order_by: [desc: s.score],
-              preload: [user: u]
-
-          _ ->
-            from s in Score.completed,
-              join: u in assoc(s, :user),
-              where: u.banned == false
-                and s.beatmap_id == ^beatmap_id
-                and s.game_mode == ^mode,
-              order_by: [desc: s.score],
-              preload: [user: u]
-        end
-
-        beatmap = Repo.preload beatmap, scores: preload_query
-
-        # TODO: Filter in SQL with subquery
-        scores = Enum.uniq_by(beatmap.scores, &(&1.user_id))
-
-        %{beatmap | scores: scores}
+      _ ->
+        build_and_format_scores(user, osu_beatmap, beatmap_status, type, mods, game_mode)
     end
 
-    ranked_status = case conn.assigns[:beatmap_status] do
-      :not_submitted -> -1
-      :up_to_date -> 2
-      :update_available -> 1
+    render conn, "response.raw", data: data
+  end
+
+  def build_and_format_scores(user, osu_beatmap, beatmap_status, type, mods, game_mode) do
+
+    # type
+    # 4 - country ranking
+    # 1 - global ranking
+    # 2 - global ranking (selected mods)
+    # 3 - friend ranking
+
+    %OsuBeatmap{file_md5: file_md5} = osu_beatmap
+
+    preload_query = case type do
+      "2" ->
+        # global ranking (selected mods)
+
+        {mods, _} = Integer.parse(mods)
+
+        from s in Score.completed,
+          join: u in assoc(s, :user),
+          where: u.banned == false
+            and s.file_md5 == ^file_md5
+            and s.game_mode == ^game_mode
+            and s.mods == ^mods,
+          order_by: [desc: s.score],
+          preload: [user: u]
+
+      "3" ->
+        # friend ranking
+
+        user_id = user.id
+        from s in Score.completed,
+          join: f in Friendship,
+          on: (f.requester_id == ^user_id
+            and s.user_id == f.receiver_id)
+            or s.user_id == ^user_id,
+          join: u in assoc(s, :user),
+          where: u.banned == false
+            and s.file_md5 == ^file_md5
+            and s.game_mode == ^game_mode,
+          order_by: [desc: s.score],
+          preload: [user: u]
+
+      "4" ->
+        # country ranking
+
+        country = user.country
+        from s in Score.completed,
+          join: u in assoc(s, :user),
+          where: u.banned == false
+            and s.file_md5 == ^file_md5
+            and s.game_mode == ^game_mode
+            and u.country == ^country,
+          order_by: [desc: s.score],
+          preload: [user: u]
+
+      _ ->
+        from s in Score.completed,
+          join: u in assoc(s, :user),
+          where: u.banned == false
+            and s.file_md5 == ^file_md5
+            and s.game_mode == ^game_mode,
+          order_by: [desc: s.score],
+          preload: [user: u]
+    end
+
+    osu_beatmap = Repo.preload osu_beatmap, scores: preload_query
+
+    # TODO: Filter in SQL with subquery
+    scores = Enum.uniq_by(osu_beatmap.scores, &(&1.user_id))
+
+    osu_beatmap = %{osu_beatmap | scores: scores}
+
+    ranked_status = case beatmap_status do
+      :not_submitted -> raise "attempting to format an unsubmitted beatmap"
+      :up_to_date -> @ranked_status_up_to_date
+      :update_available -> @ranked_status_update_available
       _ -> 2
     end
 
-    data = format_beatmap(ranked_status, beatmapset_id, beatmap, user.username, mode)
-    render conn, "response.raw", data: data
+    format_beatmap(ranked_status, osu_beatmap, user.username, game_mode)
+  end
+
+  defp format_direct(osu_beatmap) do
+    "#{osu_beatmap.beatmapset_id}.osz|#{osu_beatmap.beatmapset.artist}|#{osu_beatmap.beatmapset.title}|#{osu_beatmap.beatmapset.creator}|#{osu_beatmap.approved}|10.00000|1|#{osu_beatmap.beatmapset_id}|#{osu_beatmap.id}|0|0|0|"
+  end
+
+  def search_set(conn, %{"s" => s}) do
+    # TODO: Check authentication
+    osu_beatmap = Repo.one! from ob in OsuBeatmap,
+      join: obs in assoc(ob, :beatmapset),
+      where: obs.id == ^s,
+      preload: [beatmapset: obs]
+    render conn, "response.raw", data: format_direct(osu_beatmap)
+  end
+
+  def search_set(conn, %{"b" => b}) do
+    # TODO: Check authentication
+    osu_beatmap = Repo.one! from ob in OsuBeatmap,
+      join: obs in assoc(ob, :beatmapset),
+      where: ob.id == ^b,
+      preload: [beatmapset: obs]
+    render conn, "response.raw", data: format_direct(osu_beatmap)
   end
 
   def bancho_connect(conn, _params) do
@@ -322,8 +237,8 @@ defmodule Trucksu.OsuWebController do
 
   ## Score helpers
 
-  defp format_beatmap_header(ranked_status, beatmapset_id, beatmap) do
-    "#{ranked_status}|false|#{123}|#{beatmapset_id}|#{length beatmap.scores}\n"
+  defp format_beatmap_header(ranked_status, osu_beatmap) do
+    "#{ranked_status}|false|#{osu_beatmap.id}|#{osu_beatmap.beatmapset_id}|#{length osu_beatmap.scores}\n"
   end
 
   defp format_beatmap_song_info() do
@@ -344,8 +259,8 @@ defmodule Trucksu.OsuWebController do
     <> "\n"
   end
 
-  defp format_personal_best(beatmap, username, game_mode) do
-    beatmap_id = beatmap.id
+  defp format_personal_best(osu_beatmap, username, game_mode) do
+    %OsuBeatmap{file_md5: file_md5} = osu_beatmap
 
     {game_mode, _} = Integer.parse(game_mode)
 
@@ -364,13 +279,13 @@ defmodule Trucksu.OsuWebController do
                 JOIN users u ON u.id = sc.user_id
               WHERE
                 u.banned = FALSE
-                AND sc.beatmap_id = (?)
+                AND sc.file_md5 = (?)
                 AND (completed = 2 OR completed = 3)
                 AND sc.game_mode = (?)
               ORDER BY sc.user_id, sc.score DESC
              ) sc) sc
         WHERE username = (?)
-      ", ^beatmap_id, ^game_mode, ^username),
+      ", ^file_md5, ^game_mode, ^username),
         on: s.id == s_.id,
       join: u in assoc(s, :user),
       preload: [user: u],
@@ -392,8 +307,8 @@ defmodule Trucksu.OsuWebController do
     json(conn, %{})
   end
 
-  defp format_beatmap_top_scores(beatmap) do
-    {acc, _} = Enum.reduce beatmap.scores, {"", 0}, fn score, {acc, index} ->
+  defp format_beatmap_top_scores(osu_beatmap) do
+    {acc, _} = Enum.reduce osu_beatmap.scores, {"", 0}, fn score, {acc, index} ->
       acc = acc <> format_score(score, index + 1)
 
       {acc, index + 1}
@@ -402,18 +317,27 @@ defmodule Trucksu.OsuWebController do
     acc
   end
 
-  defp format_beatmap(ranked_status, beatmapset_id, beatmap, username, game_mode) do
+  defp format_beatmap(ranked_status, osu_beatmap, username, game_mode) do
     # ranked_status:
     # 2: up to date
     # 1: update available
     # 0: latest pending
     # -1: not submitted
-    format_beatmap_header(ranked_status, beatmapset_id, beatmap)
-    <> "0\n" # nothing?
-    <> format_beatmap_song_info
-    <> "0\n" # beatmap appreciation
-    <> format_personal_best(beatmap, username, game_mode)
-    <> format_beatmap_top_scores(beatmap)
+    # ranked_status = 1
+    cond do
+      ranked_status == 2 or (@everything_is_ranked and ranked_status == 0) ->
+        format_beatmap_header(@ranked_status_up_to_date, osu_beatmap)
+        <> "0\n" # nothing?
+        <> format_beatmap_song_info
+        <> "0\n" # beatmap appreciation
+        <> format_personal_best(osu_beatmap, username, game_mode)
+        <> format_beatmap_top_scores(osu_beatmap)
+      true ->
+        format_beatmap_header(ranked_status, osu_beatmap)
+        <> "0\n" # nothing?
+        <> format_beatmap_song_info
+        <> "0\n" # beatmap appreciation
+    end
   end
 
   defp stop(conn, status_code) do
@@ -427,4 +351,3 @@ defmodule Trucksu.OsuWebController do
     |> halt
   end
 end
-

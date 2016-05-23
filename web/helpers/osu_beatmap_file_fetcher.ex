@@ -3,27 +3,27 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
   alias Trucksu.OsuBeatmapFetcher
 
   def fetch(beatmap_id) when is_integer(beatmap_id) do
-    with {:ok, beatmap} <- OsuBeatmapFetcher.fetch(beatmap_id),
-         do: fetch_with_beatmap(beatmap)
+    with {:ok, osu_beatmap} <- OsuBeatmapFetcher.fetch(beatmap_id),
+         do: fetch_with_beatmap(osu_beatmap)
   end
 
   def fetch(file_md5) when is_binary(file_md5) do
-    with {:ok, beatmap} <- OsuBeatmapFetcher.fetch(file_md5),
-         do: fetch_with_beatmap(beatmap)
+    with {:ok, osu_beatmap} <- OsuBeatmapFetcher.fetch(file_md5),
+         do: fetch_with_beatmap(osu_beatmap)
   end
 
-  defp fetch_with_beatmap(beatmap) do
+  defp fetch_with_beatmap(osu_beatmap) do
     bucket = Application.get_env(:trucksu, :beatmap_file_bucket)
-    case ExAws.S3.get_object(bucket, beatmap.file_md5) do
+    case ExAws.S3.get_object(bucket, osu_beatmap.file_md5) do
       {:error, {:http_error, 404, _}} ->
-        case download_osu_file(beatmap.beatmap_id) do
+        case download_osu_file(osu_beatmap.id) do
           {:ok, osu_file_content} ->
             # TODO: Need to verify beatmap.file_md5 is the same as osu_file_content hash
-            case ExAws.S3.put_object(bucket, beatmap.file_md5, osu_file_content) do
+            case ExAws.S3.put_object(bucket, osu_beatmap.file_md5, osu_file_content) do
               {:ok, _} ->
                 :ok
               error ->
-                Logger.error "Failed to put beatmap #{beatmap.file_md5} to S3: #{inspect error}"
+                Logger.error "Failed to put beatmap #{osu_beatmap.file_md5} to S3: #{inspect error}"
             end
             {:ok, osu_file_content}
 

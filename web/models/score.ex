@@ -1,6 +1,5 @@
 defmodule Trucksu.Score do
   use Trucksu.Web, :model
-  alias Trucksu.{Beatmap, User}
 
   @derive {Poison.Encoder, only: [
     :id,
@@ -40,17 +39,18 @@ defmodule Trucksu.Score do
     field :game_mode, :integer
     field :accuracy, :float
     field :completed, :integer
-    belongs_to :beatmap, Beatmap
-    belongs_to :user, User
+    belongs_to :user, Trucksu.User
     field :pp, :float
     field :has_replay, :boolean
     field :rank, :string
 
+    belongs_to :osu_beatmap, Trucksu.OsuBeatmap, foreign_key: :file_md5, references: :file_md5, type: :string
+
     timestamps
   end
 
-  @required_fields ~w(score max_combo full_combo mods count_300 count_100 count_50 katu_count geki_count miss_count time game_mode accuracy completed user_id beatmap_id rank)
-  @optional_fields ~w(pp has_replay)
+  @required_fields ~w(score max_combo full_combo mods count_300 count_100 count_50 katu_count geki_count miss_count time game_mode accuracy completed user_id file_md5)
+  @optional_fields ~w(pp has_replay rank)
 
   @doc """
   Creates a changeset based on the `model` and `params`.
