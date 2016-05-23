@@ -215,7 +215,7 @@ defmodule Trucksu.ScoreController do
         bot_url = Application.get_env(:trucksu, :bot_url)
         cookie = Application.get_env(:trucksu, :server_cookie)
         if score.pp do
-          osu_beatmap = Repo.get_by OsuBeatmap, file_md5: score.beatmap.file_md5
+          osu_beatmap = Repo.get_by OsuBeatmap, file_md5: score.file_md5
           # TODO: Error logging
           data = %{
             "cookie" => cookie,
