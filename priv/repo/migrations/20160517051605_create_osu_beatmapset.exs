@@ -24,30 +24,31 @@ defmodule Trucksu.Repo.Migrations.CreateOsuBeatmapset do
       timestamps
     end
 
-    # Execute the above table alter
-    flush()
+    # Already run in prod
+    # # Execute the above table alter
+    # flush()
 
-    beatmapset_data = Repo.all from ob in OsuBeatmap,
-      distinct: ob.beatmapset_id
+    # beatmapset_data = Repo.all from ob in OsuBeatmap,
+    #   distinct: ob.beatmapset_id
 
-    for beatmap <- beatmapset_data do
-      changeset = OsuBeatmapset.changeset(%OsuBeatmapset{}, %{
-        id: beatmap.beatmapset_id,
-        approved_date: beatmap.approved_date,
-        last_update: beatmap.last_update,
-        artist: beatmap.artist,
-        title: beatmap.title,
-        creator: beatmap.creator,
-        bpm: beatmap.bpm,
-        source: beatmap.source,
-        tags: beatmap.tags,
-        genre_id: beatmap.genre_id,
-        language_id: beatmap.language_id,
-        favorite_count: beatmap.favourite_count,
-      })
+    # for beatmap <- beatmapset_data do
+    #   changeset = OsuBeatmapset.changeset(%OsuBeatmapset{}, %{
+    #     id: beatmap.beatmapset_id,
+    #     approved_date: beatmap.approved_date,
+    #     last_update: beatmap.last_update,
+    #     artist: beatmap.artist,
+    #     title: beatmap.title,
+    #     creator: beatmap.creator,
+    #     bpm: beatmap.bpm,
+    #     source: beatmap.source,
+    #     tags: beatmap.tags,
+    #     genre_id: beatmap.genre_id,
+    #     language_id: beatmap.language_id,
+    #     favorite_count: beatmap.favourite_count,
+    #   })
 
-      Repo.insert! changeset
-    end
+    #   Repo.insert! changeset
+    # end
 
     alter table(:osu_beatmaps, primary_key: false) do
       modify :id, :integer, primary_key: true
@@ -87,22 +88,23 @@ defmodule Trucksu.Repo.Migrations.CreateOsuBeatmapset do
       add :file_md5, :string, size: @md5_hash_length
     end
 
-    flush()
+    # Already run in prod
+    # flush()
 
-    scores = Repo.all from sc in Score,
-      join: b in assoc(sc, :beatmap),
-      left_join: ob in NewOsuBeatmap,
-        on: b.file_md5 == ob.file_md5,
-      preload: [beatmap: {b, [osu_beatmap: ob]}]
+    # scores = Repo.all from sc in Score,
+    #   join: b in assoc(sc, :beatmap),
+    #   left_join: ob in NewOsuBeatmap,
+    #     on: b.file_md5 == ob.file_md5,
+    #   preload: [beatmap: {b, [osu_beatmap: ob]}]
 
-    for score <- scores do
-      if is_nil(score.beatmap.osu_beatmap) do
-        Repo.delete! score
-      else
-        changeset = Score.changeset(score, %{file_md5: score.beatmap.file_md5})
-        Repo.update! changeset
-      end
-    end
+    # for score <- scores do
+    #   if is_nil(score.beatmap.osu_beatmap) do
+    #     Repo.delete! score
+    #   else
+    #     changeset = Score.changeset(score, %{file_md5: score.beatmap.file_md5})
+    #     Repo.update! changeset
+    #   end
+    # end
 
     alter table(:scores) do
       modify :file_md5, references(:osu_beatmaps, column: :file_md5, type: :string), null: false
