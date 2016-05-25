@@ -22,6 +22,10 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+config :ex_aws, :httpoison_opts,
+  recv_timeout: 60_000,
+  hackney: [recv_timeout: 60_000, pool: false]
+
 config :guardian, Guardian,
   issuer: "Trucksu",
   ttl: { 60, :days },
@@ -40,6 +44,9 @@ config :trucksu,
   replay_file_bucket: System.get_env("REPLAY_FILE_BUCKET"),
   avatar_file_bucket: System.get_env("AVATAR_FILE_BUCKET"),
   screenshot_file_bucket: System.get_env("SCREENSHOT_FILE_BUCKET"),
+  osz_file_bucket: System.get_env("OSZ_FILE_BUCKET"),
+  osu_username: System.get_env("OSU_USERNAME"),
+  osu_password_md5: System.get_env("OSU_PASSWORD_MD5"),
   server_cookie: "a",
   performance_cookie: "b",
   decryption_cookie: "c",

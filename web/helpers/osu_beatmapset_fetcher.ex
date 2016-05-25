@@ -80,10 +80,21 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
     Logger.warn "Updating beatmapset with id #{osu_beatmapset.id} in the database"
 
     {:ok, result} = Repo.transaction(fn ->
+      prev_osu_beatmapset = osu_beatmapset
       changeset = OsuBeatmapset.changeset_from_api(osu_beatmapset, first_beatmap)
       case Repo.update changeset do
         {:ok, osu_beatmapset} ->
           Logger.warn "Updated beatmapset with id #{osu_beatmapset.id} in the database"
+
+          if prev_osu_beatmapset.last_update != osu_beatmapset.last_update do
+            bucket = Application.get_env(:trucksu, :osz_file_bucket)
+            case ExAws.S3.delete_object(bucket, "#{osu_beatmapset.id}.osz") do
+              {:ok, _} ->
+                Logger.warn "Deleted beatmapset #{osu_beatmapset.id} from S3"
+              {:error, error} ->
+                Logger.error "Failed to delete beatmapset #{osu_beatmapset.id} from S3: #{inspect error}"
+            end
+          end
 
           # Find maps that are in our database, but are no longer in the set
           for existing_beatmap <- osu_beatmapset.beatmaps,
@@ -197,6 +208,8 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                 # TODO: Add cascade delete, so that deleting the set will delete the
                 # beatmaps and associated scores. Also add a way to manually delete
                 # the beatmapset, and notify users of the wiped scores.
+
+                # TODO: Delete .osz from S3 if present
 
                 # Mark as unsubmitted
                 changeset = Ecto.Changeset.change(osu_beatmapset, unsubmitted: true)

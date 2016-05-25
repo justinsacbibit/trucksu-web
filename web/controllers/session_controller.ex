@@ -35,5 +35,11 @@ defmodule Trucksu.SessionController do
     |> put_status(:forbidden)
     |> render(Trucksu.SessionView, "forbidden.json", error: "Not authenticated")
   end
+
+  def osu_unauthenticated(conn, _params) do
+    conn
+    |> put_status(:forbidden)
+    |> html("")
+  end
 end
 
