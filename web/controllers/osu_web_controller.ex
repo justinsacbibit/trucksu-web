@@ -2,6 +2,7 @@ defmodule Trucksu.OsuWebController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    OsuBeatmapFetcher,
     OsuBeatmapsetFetcher,
     Session,
 
@@ -195,24 +196,30 @@ defmodule Trucksu.OsuWebController do
   end
 
   defp format_direct(osu_beatmap) do
-    "#{osu_beatmap.beatmapset_id}.osz|#{osu_beatmap.beatmapset.artist}|#{osu_beatmap.beatmapset.title}|#{osu_beatmap.beatmapset.creator}|#{osu_beatmap.approved}|10.00000|1|#{osu_beatmap.beatmapset_id}|#{osu_beatmap.id}|0|0|0|"
+    "#{osu_beatmap.beatmapset_id}.osz|#{osu_beatmap.beatmapset.artist}|#{osu_beatmap.beatmapset.title}|#{osu_beatmap.beatmapset.creator}|#{osu_beatmap.beatmapset.approved}|10.00000|1|#{osu_beatmap.beatmapset_id}|#{osu_beatmap.id}|0|0|0|"
   end
 
   def search_set(conn, %{"s" => s}) do
     # TODO: Check authentication
+    {s, _} = Integer.parse(s)
+    OsuBeatmapsetFetcher.fetch(s)
     osu_beatmap = Repo.one! from ob in OsuBeatmap,
       join: obs in assoc(ob, :beatmapset),
       where: obs.id == ^s,
-      preload: [beatmapset: obs]
+      preload: [beatmapset: obs],
+      limit: 1
     render conn, "response.raw", data: format_direct(osu_beatmap)
   end
 
   def search_set(conn, %{"b" => b}) do
     # TODO: Check authentication
+    {b, _} = Integer.parse(b)
+    OsuBeatmapFetcher.fetch(b)
     osu_beatmap = Repo.one! from ob in OsuBeatmap,
       join: obs in assoc(ob, :beatmapset),
       where: ob.id == ^b,
-      preload: [beatmapset: obs]
+      preload: [beatmapset: obs],
+      limit: 1
     render conn, "response.raw", data: format_direct(osu_beatmap)
   end
 

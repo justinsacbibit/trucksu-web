@@ -35,8 +35,13 @@ defmodule Trucksu.OszController do
               case ExAws.S3.put_object(bucket, object, osz_file_content, opts) do
                 {:ok, _} ->
                   Logger.warn "Put beatmapset #{beatmapset_id} to S3"
-                  # TODO: Add headers
-                  html(conn, osz_file_content)
+                  case ExAws.S3.presigned_url(:get, bucket, object) do
+                    {:ok, url} ->
+                      redirect(conn, external: url)
+                    {:error, error} ->
+                      Logger.error "Failed to generate presigned url for beatmapset #{beatmapset_id} : #{inspect error}"
+                      html(conn, "")
+                  end
                 {:error, error} ->
                   Logger.error "Failed to put beatmapset #{beatmapset_id} to S3: #{inspect error}"
                   html(conn, "")
