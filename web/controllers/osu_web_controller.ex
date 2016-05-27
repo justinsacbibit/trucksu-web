@@ -196,7 +196,8 @@ defmodule Trucksu.OsuWebController do
   end
 
   defp format_direct(osu_beatmap) do
-    "#{osu_beatmap.beatmapset_id}.osz|#{osu_beatmap.beatmapset.artist}|#{osu_beatmap.beatmapset.title}|#{osu_beatmap.beatmapset.creator}|#{osu_beatmap.beatmapset.approved}|10.00000|1|#{osu_beatmap.beatmapset_id}|#{osu_beatmap.id}|0|0|0|"
+    has_video = 0 # 0 = no video, 1 = has video
+    "#{osu_beatmap.beatmapset_id}.osz|#{osu_beatmap.beatmapset.artist}|#{osu_beatmap.beatmapset.title}|#{osu_beatmap.beatmapset.creator}|#{osu_beatmap.beatmapset.approved}|10.00000|1|#{osu_beatmap.beatmapset_id}|#{osu_beatmap.id}|#{has_video}|0|0|"
   end
 
   def search_set(conn, %{"s" => s}) do

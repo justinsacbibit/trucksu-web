@@ -1,65 +1,58 @@
 defmodule Trucksu.OszController do
   use Trucksu.Web, :controller
   require Logger
+  alias Trucksu.OsuOszFetcher
 
-  plug Trucksu.Plugs.EnsureOsuClientAuthenticated
+  plug Trucksu.Plugs.EnsureOsuClientAuthenticated when action == :osu_client_download
+  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action == :download
 
-  def download(conn, %{"beatmapset_id" => beatmapset_id, "u" => username, "h" => password_md5}) do
+  def osu_client_download(conn, %{"beatmapset_id" => beatmapset_id}) do
     {beatmapset_id, _} = Integer.parse(beatmapset_id)
 
-    bucket = Application.get_env(:trucksu, :osz_file_bucket)
-    object = "#{beatmapset_id}.osz"
-    case ExAws.S3.head_object(bucket, object) do
-      {:error, {:http_error, 404, _}} ->
-        # TODO: Query params
-        Logger.warn "Downloading beatmapset #{beatmapset_id} from osu!"
-        ExStatsD.increment "osu.osz_downloads.attempted"
-        osu_username = Application.get_env(:trucksu, :osu_username)
-        osu_password_md5 = Application.get_env(:trucksu, :osu_password_md5)
-        response = HTTPoison.get("https://osu.ppy.sh/d/#{beatmapset_id}", [], follow_redirect: true, params: [{"u", osu_username}, {"h", osu_password_md5}])
-        case response do
-          {:ok, %HTTPoison.Response{body: osz_file_content, headers: headers} = resp} ->
-            Logger.debug inspect resp
-            if byte_size(osz_file_content) == 0 do
-              Logger.error "Downloaded beatmapset #{beatmapset_id} from osu!, but the .osz is empty!"
-              html(conn, "")
-            else
-              Logger.warn "Downloaded beatmapset #{beatmapset_id} from osu!"
-              ExStatsD.increment "osu.osz_downloads.succeeded"
+    # TODO: Rate limit
+    # user = conn.assigns[:user]
 
-              content_type = Enum.find(headers, &(elem(&1, 0) == "Content-Type")) |> elem(1)
-              content_length = Enum.find(headers, &(elem(&1, 0) == "Content-Length")) |> elem(1)
-              content_disposition = Enum.find(headers, &(elem(&1, 0) == "Content-Disposition")) |> elem(1)
-              opts = [content_type: content_type, content_length: content_length, content_disposition: content_disposition]
-              # TODO: Multipart upload
-              case ExAws.S3.put_object(bucket, object, osz_file_content, opts) do
-                {:ok, _} ->
-                  Logger.warn "Put beatmapset #{beatmapset_id} to S3"
-                  case ExAws.S3.presigned_url(:get, bucket, object) do
-                    {:ok, url} ->
-                      redirect(conn, external: url)
-                    {:error, error} ->
-                      Logger.error "Failed to generate presigned url for beatmapset #{beatmapset_id} : #{inspect error}"
-                      html(conn, "")
-                  end
-                {:error, error} ->
-                  Logger.error "Failed to put beatmapset #{beatmapset_id} to S3: #{inspect error}"
-                  html(conn, "")
-              end
-            end
-          {:error, error} ->
-            Logger.error "Failed to download beatmapset #{beatmapset_id} from osu!: #{inspect error}"
-            html(conn, "")
-        end
+    case OsuOszFetcher.fetch(beatmapset_id) do
+      {:ok, headers, osz_file_content} ->
+        send_osz(conn, headers, osz_file_content)
+      {:error, _reason} ->
+        html(conn, "")
+    end
+  end
 
-      {:ok, _} ->
+  defp send_osz(conn, headers, osz_file_content) do
+    content_type = Enum.find(headers, &(elem(&1, 0) == "Content-Type")) |> elem(1)
+    content_length = Enum.find(headers, &(elem(&1, 0) == "Content-Length")) |> elem(1)
+    content_disposition = Enum.find(headers, &(elem(&1, 0) == "Content-Disposition")) |> elem(1)
+
+    # TODO: Check if additional headers are needed
+
+    conn
+    |> put_resp_header("Content-Type", content_type)
+    |> put_resp_header("Content-Length", content_length)
+    |> put_resp_header("Content-Disposition", content_disposition)
+    |> send_resp(200, osz_file_content)
+  end
+
+  def download(conn, %{"beatmapset_id" => beatmapset_id}) do
+    {beatmapset_id, _} = Integer.parse(beatmapset_id)
+
+    # TODO: Rate limit
+    # user = Guardian.Plug.current_resource(conn)
+
+    case OsuOszFetcher.fetch(beatmapset_id) do
+      {:ok, _headers, osz_file_content} ->
+        bucket = Application.get_env(:trucksu, :osz_file_bucket)
+        object = "#{beatmapset_id}.osz"
         case ExAws.S3.presigned_url(:get, bucket, object) do
           {:ok, url} ->
             redirect(conn, external: url)
           {:error, error} ->
             Logger.error "Failed to generate presigned url for beatmapset #{beatmapset_id} : #{inspect error}"
-            html(conn, "")
+            json(conn, %{"ok" => false})
         end
+      {:error, _reason} ->
+        json(conn, %{"ok" => false})
     end
   end
 end
