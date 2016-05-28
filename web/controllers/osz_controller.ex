@@ -3,7 +3,8 @@ defmodule Trucksu.OszController do
   require Logger
   alias Trucksu.OsuOszFetcher
 
-  plug Trucksu.Plugs.EnsureOsuClientAuthenticated when action == :osu_client_download
+  # TODO: If no username/password is specified, redirect to Trucksu website to allow for download
+  # plug Trucksu.Plugs.EnsureOsuClientAuthenticated when action == :osu_client_download
   plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action == :download
 
   def osu_client_download(conn, %{"beatmapset_id" => beatmapset_id}) do
