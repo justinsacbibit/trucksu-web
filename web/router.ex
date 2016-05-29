@@ -42,6 +42,10 @@ defmodule Trucksu.Router do
 
     get "/ss/:id", ScreenshotController, :show
     get "/d/:beatmapset_id", OszController, :download
+
+    # beatmap page
+    get "/b/:beatmap_id", OsuBeatmapPageController, :show_beatmap
+    get "/s/:beatmapset_id", OsuBeatmapPageController, :show_beatmapset
   end
 
   # The following calls go to a.ppy.sh
