@@ -1,9 +1,5 @@
 defmodule Trucksu.UserStats do
   use Trucksu.Web, :model
-  alias Trucksu.{
-    Score,
-    User,
-  }
 
   defimpl Poison.Encoder, for: Trucksu.UserStats do
     def encode(user_stats, _options) do
@@ -35,7 +31,7 @@ defmodule Trucksu.UserStats do
     field :replays_watched, :integer
     field :total_hits, :integer
     field :level, :integer
-    belongs_to :user, User
+    belongs_to :user, Trucksu.User
     has_many :scores, through: [:user, :scores]
     field :rank, :integer, virtual: true
     field :first_place_scores, :any, virtual: true

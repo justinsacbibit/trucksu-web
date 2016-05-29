@@ -28,7 +28,7 @@ defmodule Trucksu.OszController do
     # user = Guardian.Plug.current_resource(conn)
 
     case OsuOszFetcher.fetch(beatmapset_id) do
-      {:ok, _headers, osz_file_content} ->
+      {:ok, _headers, _osz_file_content} ->
         bucket = Application.get_env(:trucksu, :osz_file_bucket)
         object = "#{beatmapset_id}.osz"
         case ExAws.S3.presigned_url(:get, bucket, object) do
