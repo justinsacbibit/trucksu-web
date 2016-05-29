@@ -196,4 +196,9 @@ defmodule Trucksu.UserController do
 
     render conn, "user_detail.json", user
   end
+
+  def show_osu_user(conn, %{"user_id" => user_id}) do
+    website_url = Application.get_env(:trucksu, :website_url)
+    redirect conn, external: "#{website_url}/users/#{user_id}"
+  end
 end

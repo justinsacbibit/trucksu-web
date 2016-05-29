@@ -42,7 +42,8 @@ config :trucksu,
   performance_url: System.get_env("PERFORMANCE_URL"),
   performance_cookie: System.get_env("PERFORMANCE_COOKIE"),
   bancho_url: System.get_env("BANCHO_URL"),
-  server_cookie: System.get_env("SERVER_COOKIE")
+  server_cookie: System.get_env("SERVER_COOKIE"),
+  website_url: "https://trucksu.com"
 
 # ## SSL Support
 #
