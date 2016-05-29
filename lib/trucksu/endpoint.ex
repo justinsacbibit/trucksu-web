@@ -33,5 +33,7 @@ defmodule Trucksu.Endpoint do
     key: "_trucksu_key",
     signing_salt: "cMWxglTY"
 
+  plug CORSPlug, origin: ["*"]
+
   plug Trucksu.Router
 end

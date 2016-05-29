@@ -49,6 +49,7 @@ defmodule Trucksu.Mixfile do
      {:ex_rated, "~> 1.2"},
      {:mix_test_watch, "~> 0.2", only: :dev},
      {:ex_statsd, ">= 0.5.1"},
+     {:cors_plug, "~> 1.1"},
      {:cowboy, "~> 1.0"}]
   end
 
