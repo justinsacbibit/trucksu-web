@@ -33,15 +33,13 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                 {:cont, :ok}
               {:error, error} ->
                 # Stop the reduction here
-                Logger.error "Error occurred when trying to insert a beatmap from osu! API"
-                Logger.error inspect error
+                Logger.error "Error occurred when trying to insert a beatmap from osu! API: #{inspect error}"
                 {:halt, {:error, error}}
             end
           end)
 
         {:error, error} ->
-          Logger.error "Error occurred when trying to insert beatmapset with id #{beatmapset_id} from osu! API"
-          Logger.error inspect error
+          Logger.error "Error occurred when trying to insert beatmapset with id #{beatmapset_id} from osu! API: #{inspect error}"
           {:error, error}
       end
     end)
@@ -58,8 +56,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
       {:ok, osu_beatmap} ->
         :ok
       {:error, error} ->
-        Logger.error "Error occurred when trying to delete osu_beatmap"
-        Logger.error inspect error
+        Logger.error "Error occurred when trying to delete osu_beatmap: #{inspect error}"
         :ok
     end
   end
@@ -70,8 +67,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
       {:ok, _osu_beatmap} ->
         :ok
       {:error, error} ->
-        Logger.error "Error occurred when trying to insert a beatmap from osu! API"
-        Logger.error inspect error
+        Logger.error "Error occurred when trying to insert a beatmap from osu! API: #{inspect error}"
         :ok
     end
   end
@@ -116,8 +112,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                     {:ok, _osu_beatmap} ->
                       :ok
                     {:error, error} ->
-                      Logger.error "Error occurred when trying to update a beatmap from osu! API"
-                      Logger.error inspect error
+                      Logger.error "Error occurred when trying to update a beatmap from osu! API: #{inspect error}"
                       :ok
                   end
                 end
@@ -125,8 +120,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
           end
 
         {:error, error} ->
-          Logger.error "Error occurred when trying to update beatmapset with id #{osu_beatmapset.id} from osu! API"
-          Logger.error inspect error
+          Logger.error "Error occurred when trying to update beatmapset with id #{osu_beatmapset.id} from osu! API: #{inspect error}"
           {:error, error}
       end
     end)
@@ -174,15 +168,13 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
             end
 
           {:ok, body} ->
-            Logger.error "Looks like beatmapset #{beatmapset_id} doesn't exist"
-            Logger.error inspect body
+            Logger.warn "Looks like beatmapset #{beatmapset_id} doesn't exist: #{inspect body}"
 
             # beatmap doesn't exist
             true
 
           {:error, error} ->
-            Logger.error "Failed to get beatmapset #{beatmapset_id} from the osu! API"
-            Logger.error inspect error
+            Logger.error "Failed to get beatmapset #{beatmapset_id} from the osu! API: #{inspect error}"
 
             # failed
             false
@@ -206,8 +198,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                 end
 
               {:ok, body} ->
-                Logger.error "Looks like beatmapset #{beatmapset_id} doesn't exist"
-                Logger.error inspect body
+                Logger.error "Looks like beatmapset #{beatmapset_id} no longer exists: #{inspect body}"
 
                 # TODO: Add cascade delete, so that deleting the set will delete the
                 # beatmaps and associated scores. Also add a way to manually delete
@@ -221,16 +212,14 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                   {:ok, _osu_beatmapset} ->
                     :ok
                   {:error, error} ->
-                    Logger.error "Error occurred when trying to mark a beatmapset as unsubmitted"
-                    Logger.error inspect error
+                    Logger.error "Error occurred when trying to mark a beatmapset as unsubmitted: #{inspect error}"
                     :ok
                 end
 
                 true
 
               {:error, error} ->
-                Logger.error "Failed to get beatmapset #{beatmapset_id} from the osu! API"
-                Logger.error inspect error
+                Logger.error "Failed to get beatmapset #{beatmapset_id} from the osu! API: #{inspect error}"
 
                 # failed
                 false
