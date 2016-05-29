@@ -5,7 +5,7 @@ defmodule Trucksu.OszController do
 
   # TODO: If no username/password is specified, redirect to Trucksu website to allow for download
   # plug Trucksu.Plugs.EnsureOsuClientAuthenticated when action == :osu_client_download
-  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action == :download
+  # plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action == :download
 
   def download(conn, %{"beatmapset_id" => beatmapset_id, "u" => _username, "h" => _password_md5}) do
     {beatmapset_id, _} = Integer.parse(beatmapset_id)
