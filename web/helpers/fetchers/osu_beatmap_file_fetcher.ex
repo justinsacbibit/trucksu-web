@@ -40,12 +40,16 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
   defp download_osu_file(beatmap_id) do
     url = "https://osu.ppy.sh/osu/#{beatmap_id}"
     case HTTPoison.get url do
-      {:ok, %HTTPoison.Response{body: osu_file_content}} ->
+      {:ok, %HTTPoison.Response{body: osu_file_content}} when byte_size(osu_file_content) > 0 ->
         {:ok, osu_file_content}
 
-      {:error, response} ->
-        Logger.error "Received unknown response when fetching osu file for beatmap id #{beatmap_id}"
+      {:ok, response} ->
+        Logger.error "Received empty osu file content when fetching osu file for beatmap id #{beatmap_id}: #{inspect response}"
         {:error, :unknown_osu_file_response}
+
+      {:error, error} ->
+        Logger.error "Error when fetching osu file for beatmap id #{beatmap_id}: #{inspect error}"
+        {:error, :osu_file_download_error}
     end
   end
 end

@@ -1,5 +1,4 @@
 defmodule Trucksu.Session do
-  import Ecto.Query, only: [from: 2]
   alias Trucksu.{Hash, Repo, User}
 
   def authenticate(%{"username" => username, "password" => password}, already_hashed \\ false) do

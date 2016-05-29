@@ -6,7 +6,6 @@ defmodule Trucksu.ReplayController do
 
     Repo,
     Score,
-    UserStats,
   }
 
   plug :authenticate

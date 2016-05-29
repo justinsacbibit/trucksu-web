@@ -1,5 +1,4 @@
 defmodule Trucksu.Accuracy do
-  alias Trucksu.Score
 
   def from_accuracies([]) do
     1

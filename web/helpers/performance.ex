@@ -6,7 +6,6 @@ defmodule Trucksu.Performance do
     OsuBeatmapFileFetcher,
 
     Repo,
-    OsuBeatmap,
     Score,
     UserStats,
   }

@@ -54,7 +54,7 @@ defmodule Trucksu.ScoreController do
       full_combo,
       rank,
       mods,
-      passed,
+      _passed, # TODO: Make use of this?
       game_mode,
       score_datetime
       | _osu_version
