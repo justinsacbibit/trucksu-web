@@ -153,6 +153,10 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
     end
   end
 
+  defp actually_fetch(beatmapset_id) when beatmapset_id <= 0 do
+    true
+  end
+
   defp actually_fetch(beatmapset_id) do
     query = from obs in OsuBeatmapset,
       join: ob in assoc(obs, :beatmaps),
