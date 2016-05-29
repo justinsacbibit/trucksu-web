@@ -12,6 +12,11 @@ defmodule Trucksu.OsuWebController do
     Score,
   }
 
+  @ranking_type_global_selected_mods 2
+  @ranking_type_global 1
+  @ranking_type_country 4
+  @ranking_type_friend 3
+
   @ranked_status_not_submitted -1
   @ranked_status_up_to_date 2
   @ranked_status_update_available 1
@@ -96,6 +101,7 @@ defmodule Trucksu.OsuWebController do
   end
 
   def get_scores(conn, %{"c" => _file_md5, "i" => _beatmapset_id, "f" => _filename, "m" => game_mode, "v" => type, "mods" => mods}) do
+    {type, _} = Integer.parse(type)
 
     %{
       user: user,
@@ -125,8 +131,7 @@ defmodule Trucksu.OsuWebController do
     %OsuBeatmap{file_md5: file_md5} = osu_beatmap
 
     preload_query = case type do
-      "2" ->
-        # global ranking (selected mods)
+      @ranking_type_global_selected_mods ->
 
         {mods, _} = Integer.parse(mods)
 
@@ -139,8 +144,7 @@ defmodule Trucksu.OsuWebController do
           order_by: [desc: s.score],
           preload: [user: u]
 
-      "3" ->
-        # friend ranking
+      @ranking_type_friend ->
 
         user_id = user.id
         from s in Score.completed,
@@ -155,7 +159,7 @@ defmodule Trucksu.OsuWebController do
           order_by: [desc: s.score],
           preload: [user: u]
 
-      "4" ->
+      @ranking_type_country ->
         # country ranking
 
         country = user.country
