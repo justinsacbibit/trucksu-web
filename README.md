@@ -1,7 +1,7 @@
 # Trucksu Web
 
 trucksu-web is the main web application for Trucksu. It contains:
-- front-end and back-end for the website
+- the back-end for the website
 - osu! avatar server (used by osu! client)
 - osu! replay/score endpoints (used by osu! client)
 
@@ -17,13 +17,11 @@ Webpack is used to build the JS app.
 
 Within this repo directory, an `src` directory should be created after provisioning with Vagrant. You can edit the source code within `src/trucksu-web`.
 
-The source code for the front-end can be found in `web/static/js/`.
+The source code for the front-end can be found in the trucksu-frontend repository.
 
 Note: If you're not developing Bancho, you may want to change the forwarded ports in the Vagrantfile. For [these two lines](https://github.com/justinsacbibit/trucksu-vagrant/blob/7297e4bb5f5e9ed5605d1f7442cfbb539a1bb166/Vagrantfile#L47-48), change the host ports from 80 to 8080 and from 443 to 8443. If you change these while the vm is running, use `vagrant reload` in a shell to update the vm.
 
 ##### Running
-
-You'll need two shells/command prompts to run trucksu-web. One will be for the Phoenix app
 
 ```sh
 # NOTE: One of these steps might prompt you install rebar, say Y
@@ -41,16 +39,7 @@ $ mix run priv/repo/seeds.exs
 $ mix phoenix.server
 ```
 
-The other will be for Webpack
-
-```sh
-$ vagrant ssh
-$ cd src/trucksu-web
-$ npm install
-$ npm run dev-win
-```
-
-If they both run, try visited [http://localhost:8080](http://localhost:8080) in your browser! (Or [http://localhost](http://localhost) if you didn't update the ports in the Vagrantfile)
+Now visit [http://localhost:8080](http://localhost:8080) in your browser! (Or [http://localhost](http://localhost) if you didn't update the ports in the Vagrantfile)
 
 ## Running on Windows
 

@@ -71,11 +71,4 @@ defmodule Trucksu.Router do
   scope "/ss", Trucksu do
     get "/:id", ScreenshotController, :show
   end
-
-  # Frontend
-  scope "/", Trucksu do
-    pipe_through :browser
-
-    get "*path", PageController, :index
-  end
 end

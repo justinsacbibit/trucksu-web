@@ -14,7 +14,6 @@ use Mix.Config
 config :trucksu, Trucksu.Endpoint,
   http: [port: {:system, "PORT"}],
   url: [host: "trucksu.com", port: 443],
-  cache_static_manifest: "priv/static/manifest.json",
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 config :trucksu, Trucksu.Repo,
