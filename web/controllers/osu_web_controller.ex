@@ -3,6 +3,7 @@ defmodule Trucksu.OsuWebController do
   require Logger
   alias Trucksu.{
     OsuBeatmapFetcher,
+    OsuBeatmapFileFetcher,
     OsuBeatmapsetFetcher,
     Session,
 
@@ -23,9 +24,17 @@ defmodule Trucksu.OsuWebController do
 
   @everything_is_ranked true
 
-  plug :authenticate when action in [:get_scores, :search_set]
+  plug :authenticate when action in [:get_scores, :search_set] # TODO: add :show_map?
   # TODO: Uncomment when rate limiting is implemented
   plug :fetch_osu_beatmap when action == :get_scores
+
+  def show_map(conn, %{"filename" => filename}) do
+    osu_beatmap = Repo.get_by! OsuBeatmap, filename: filename
+    {:ok, osu_file_content} = OsuBeatmapFileFetcher.fetch(osu_beatmap.id)
+    # TODO: Content-Type header?
+    conn
+    |> send_resp(200, osu_file_content)
+  end
 
   defp authenticate(conn, _) do
     username = conn.params["us"] || conn.params["u"]
@@ -43,18 +52,7 @@ defmodule Trucksu.OsuWebController do
     Logger.debug "Checking if same difficulty exists in freshly fetched set"
 
     Enum.find(osu_beatmapset.beatmaps, fn(osu_beatmap) ->
-      version = osu_beatmap.version
-      # osu! doesn't include colons in filename difficulty
-      # TODO: Find what other characters osu! strips out from the filename
-      version = String.replace(version, ":", "")
-      Logger.debug "comparing '#{filename}' and #{version}"
-      case Regex.named_captures(~r/ \[(?<version>.*)\]\.osu$/, filename) do
-        %{"version" => ^version} ->
-          true
-
-        _ ->
-          false
-      end
+      osu_beatmap.filename == filename
     end)
   end
 
