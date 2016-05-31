@@ -57,6 +57,7 @@ defmodule Trucksu.OsuWebController do
   end
 
   defp fetch_osu_beatmap(%Plug.Conn{params: %{"f" => filename, "c" => file_md5, "i" => beatmapset_id}} = conn, _opts) do
+    {beatmapset_id, _} = Integer.parse(beatmapset_id)
     OsuBeatmapsetFetcher.fetch(beatmapset_id)
 
     osu_beatmap = Repo.one from ob in OsuBeatmap,
