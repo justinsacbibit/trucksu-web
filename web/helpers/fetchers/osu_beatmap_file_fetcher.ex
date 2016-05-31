@@ -21,19 +21,22 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
             # TODO: Need to verify beatmap.file_md5 is the same as osu_file_content hash
             case ExAws.S3.put_object(bucket, osu_beatmap.file_md5, osu_file_content) do
               {:ok, _} ->
-                :ok
-              error ->
+                {:ok, osu_file_content}
+              {:error, error} ->
                 Logger.error "Failed to put beatmap #{osu_beatmap.file_md5} to S3: #{inspect error}"
+                {:error, error}
             end
             {:ok, osu_file_content}
 
-          error ->
-            error
+          {:error, error} ->
+            Logger.error "Failed download of beatmap file #{osu_beatmap.file_md5}: #{inspect error}"
+            {:error, error}
         end
       {:ok, %{body: osu_file_content}} ->
         {:ok, osu_file_content}
-      error ->
-        error
+      {:error, error} ->
+        Logger.error "Failed to check if beatmap file #{osu_beatmap.file_md5} exists in S3: #{inspect error}"
+        {:error, error}
     end
   end
 

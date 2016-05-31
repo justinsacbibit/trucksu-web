@@ -1,5 +1,6 @@
 defmodule Trucksu.OsuBeatmap do
   use Trucksu.Web, :model
+  alias Trucksu.Repo
 
   @derive {Poison.Encoder, only: [
     :id,
@@ -28,6 +29,7 @@ defmodule Trucksu.OsuBeatmap do
     field :passcount, :integer
     field :max_combo, :integer
     field :difficultyrating, :float
+    field :filename, :string
 
     field :file_data, :binary, virtual: true
 
@@ -37,7 +39,7 @@ defmodule Trucksu.OsuBeatmap do
   end
 
   @required_fields ~w(id beatmapset_id total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode playcount passcount difficultyrating)
-  @optional_fields ~w(max_combo)
+  @optional_fields ~w(max_combo filename)
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -57,5 +59,34 @@ defmodule Trucksu.OsuBeatmap do
     |> Map.put("id", Map.get(params, "beatmap_id"))
 
     changeset(model, params)
+  end
+
+  def set_filenames() do
+    osu_beatmaps = Repo.all from ob in __MODULE__,
+      join: obs in assoc(ob, :beatmapset),
+      preload: [beatmapset: obs]
+
+    for %__MODULE__{beatmapset: beatmapset} = osu_beatmap <- osu_beatmaps do
+      changeset = Ecto.Changeset.change(osu_beatmap, filename: filename(osu_beatmap))
+      Repo.update! changeset
+    end
+  end
+
+  def filename(osu_beatmap) do
+    osu_beatmap = Repo.preload osu_beatmap, :beatmapset
+    beatmapset = osu_beatmap.beatmapset
+    artist = strip_characters(beatmapset.artist)
+    title = strip_characters(beatmapset.title)
+    version = strip_characters(osu_beatmap.version)
+
+    filename = "#{artist} - #{title} (#{beatmapset.creator}) [#{version}].osu"
+
+    filename
+  end
+
+  defp strip_characters(str) do
+    str
+    |> String.replace(":", "")
+    |> String.replace("*", "")
   end
 end

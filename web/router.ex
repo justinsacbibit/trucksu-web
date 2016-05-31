@@ -29,6 +29,7 @@ defmodule Trucksu.Router do
       get "/check-updates.php", OsuWebController, :check_updates
       get "/lastfm.php", OsuWebController, :lastfm
       get "/osu-getreplay.php", ReplayController, :show
+      get "/maps/:filename", OsuWebController, :show_map
 
       post "/osu-submit-modular.php", ScoreController, :create
       post "/osu-screenshot.php", ScreenshotController, :create
