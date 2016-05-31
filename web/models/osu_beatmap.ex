@@ -57,6 +57,7 @@ defmodule Trucksu.OsuBeatmap do
     params = params
     |> Map.put("game_mode", Map.get(params, "mode"))
     |> Map.put("id", Map.get(params, "beatmap_id"))
+    |> Map.put("filename", filename(params))
 
     changeset(model, params)
   end
@@ -72,14 +73,28 @@ defmodule Trucksu.OsuBeatmap do
     end
   end
 
-  def filename(osu_beatmap) do
+  def filename(%__MODULE__{} = osu_beatmap) do
     osu_beatmap = Repo.preload osu_beatmap, :beatmapset
     beatmapset = osu_beatmap.beatmapset
-    artist = strip_characters(beatmapset.artist)
-    title = strip_characters(beatmapset.title)
-    version = strip_characters(osu_beatmap.version)
 
-    filename = "#{artist} - #{title} (#{beatmapset.creator}) [#{version}].osu"
+    filename(beatmapset.artist, beatmapset.title, beatmapset.creator, osu_beatmap.version)
+  end
+
+  def filename(%{} = params) do
+    filename(
+      params["artist"],
+      params["title"],
+      params["creator"],
+      params["version"]
+    )
+  end
+
+  defp filename(artist, title, creator, version) do
+    artist = strip_characters(artist)
+    title = strip_characters(title)
+    version = strip_characters(version)
+
+    filename = "#{artist} - #{title} (#{creator}) [#{version}].osu"
 
     filename
   end
