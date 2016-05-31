@@ -98,12 +98,21 @@ defmodule Trucksu.Performance do
   @doc """
   Calculates the missing pp values in the database. Useful for when the
   performance server was unreachable during score submission.
-
-  TODO: Make sure that this doesn't attempt to calculate pp for maps that don't
-  exist in the osu! API.
   """
-  def update_missing() do
-    # TODO
+  def calculate_missing() do
+    scores = Repo.all from sc in Score,
+      where: is_nil(sc.pp)
+
+    for score <- scores do
+      case calculate(score) do
+        {:ok, pp} ->
+          changeset = Ecto.Changeset.change(score, pp: pp)
+          Logger.warn "Updating score with pp=#{pp}: #{inspect score}"
+          Repo.update! changeset
+        {:error, _} ->
+          :ok
+      end
+    end
   end
 
   @doc """
@@ -206,9 +215,8 @@ defmodule Trucksu.Performance do
             Logger.error inspect something
             {:error, :json_error}
         end
-      {:error, response} ->
-        Logger.error "Failed to calculate max pp"
-        Logger.error "Response: #{inspect response}"
+      {:error, error} ->
+        Logger.error "Failed to calculate max pp: #{inspect error}"
         {:error, :performance_error}
     end
   end
