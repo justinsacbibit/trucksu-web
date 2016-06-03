@@ -19,6 +19,11 @@ defmodule Trucksu.Router do
     # pipe_through :api
   end
 
+  # ss.trucksu.com
+  scope "/ss", Trucksu do
+    get "/:id", ScreenshotController, :show
+  end
+
   # The following calls go to osu.ppy.sh
   scope "/osu", Trucksu do
     scope "/web" do
