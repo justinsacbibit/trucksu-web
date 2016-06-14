@@ -124,7 +124,7 @@ defmodule Trucksu.UserController do
       join: obs in assoc(ob, :beatmapset),
       where: us.user_id == ^id
         and not is_nil(sc.pp)
-        and (sc.completed == 2 or sc.completed == 3)
+        and sc.pass
         and us.game_mode == sc.game_mode,
       preload: [stats: {us, scores: {sc, osu_beatmap: {ob, [beatmapset: obs]}}}],
       order_by: [desc: sc.pp]
@@ -177,7 +177,7 @@ defmodule Trucksu.UserController do
                   FROM scores sc
                   JOIN osu_beatmaps ob
                     on sc.file_md5 = ob.file_md5
-                  WHERE completed = 2 OR completed = 3
+                  WHERE sc.pass
                ) x
           WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
         ", ^user_id, ^game_mode),

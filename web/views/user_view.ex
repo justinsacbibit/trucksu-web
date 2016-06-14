@@ -42,7 +42,7 @@ defmodule Trucksu.UserView do
       time: score.time,
       game_mode: score.game_mode,
       accuracy: score.accuracy,
-      completed: score.completed,
+      pass: score.pass,
       beatmap: score.osu_beatmap,
       pp: score.pp,
       has_replay: score.has_replay,

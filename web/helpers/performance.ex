@@ -23,7 +23,7 @@ defmodule Trucksu.Performance do
       join: ob in assoc(s, :osu_beatmap),
       where: s.user_id == ^user_id
         and s.game_mode == ^game_mode
-        and (s.completed == 2 or s.completed == 3)
+        and s.pass
         and not is_nil(s.pp),
       order_by: [desc: s.pp],
       preload: [osu_beatmap: ob]
@@ -150,11 +150,17 @@ defmodule Trucksu.Performance do
     end
   end
 
+  def calculate(%Score{game_mode: game_mode}) when game_mode != 0 do
+    {:ok, nil}
+  end
   def calculate(score) do
     with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(score.file_md5),
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
+  def calculate(_identifier, _mods, game_mode) when game_mode != 0 do
+    {:ok, nil}
+  end
   def calculate(identifier, mods, game_mode) do
     with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(identifier),
          do: calculate_max_with_osu_file_content(mods, game_mode, osu_file_content)

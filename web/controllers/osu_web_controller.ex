@@ -134,19 +134,20 @@ defmodule Trucksu.OsuWebController do
 
         {mods, _} = Integer.parse(mods)
 
-        from s in Score.completed,
+        from s in Score,
           join: u in assoc(s, :user),
           where: u.banned == false
             and s.file_md5 == ^file_md5
             and s.game_mode == ^game_mode
-            and s.mods == ^mods,
+            and s.mods == ^mods
+            and s.pass,
           order_by: [desc: s.score],
           preload: [user: u]
 
       @ranking_type_friend ->
 
         user_id = user.id
-        from s in Score.completed,
+        from s in Score,
           join: f in Friendship,
           on: (f.requester_id == ^user_id
             and s.user_id == f.receiver_id)
@@ -154,7 +155,8 @@ defmodule Trucksu.OsuWebController do
           join: u in assoc(s, :user),
           where: u.banned == false
             and s.file_md5 == ^file_md5
-            and s.game_mode == ^game_mode,
+            and s.game_mode == ^game_mode
+            and s.pass,
           order_by: [desc: s.score],
           preload: [user: u]
 
@@ -162,21 +164,23 @@ defmodule Trucksu.OsuWebController do
         # country ranking
 
         country = user.country
-        from s in Score.completed,
+        from s in Score,
           join: u in assoc(s, :user),
           where: u.banned == false
             and s.file_md5 == ^file_md5
             and s.game_mode == ^game_mode
-            and u.country == ^country,
+            and u.country == ^country
+            and s.pass,
           order_by: [desc: s.score],
           preload: [user: u]
 
       _ ->
-        from s in Score.completed,
+        from s in Score,
           join: u in assoc(s, :user),
           where: u.banned == false
             and s.file_md5 == ^file_md5
-            and s.game_mode == ^game_mode,
+            and s.game_mode == ^game_mode
+            and s.pass,
           order_by: [desc: s.score],
           preload: [user: u]
     end
@@ -291,7 +295,7 @@ defmodule Trucksu.OsuWebController do
               WHERE
                 u.banned = FALSE
                 AND sc.file_md5 = (?)
-                AND (completed = 2 OR completed = 3)
+                AND sc.pass
                 AND sc.game_mode = (?)
               ORDER BY sc.user_id, sc.score DESC
              ) sc) sc

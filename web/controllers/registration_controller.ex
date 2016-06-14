@@ -12,7 +12,7 @@ defmodule Trucksu.RegistrationController do
 
     changeset = User.changeset(%User{}, user_params)
 
-    {:ok, rendered} = Repo.transaction(fn ->
+    result = Repo.transaction(fn ->
       case Repo.insert(changeset) do
         {:ok, user} ->
           Enum.each [0, 1, 2, 3], fn(mode) ->
@@ -32,7 +32,10 @@ defmodule Trucksu.RegistrationController do
       end
     end)
 
-    rendered
+    case result do
+      {:ok, rendered} -> rendered
+      _ -> conn
+    end
   end
 end
 
