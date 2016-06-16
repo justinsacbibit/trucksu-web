@@ -14,19 +14,19 @@ defmodule Trucksu.ScoreController do
   }
   use Bitwise
 
-  def create(conn, %{"osuver" => osuver} = params) do
+  plug :determine_key
+
+  defp determine_key(%Plug.Conn{params: %{"osuver" => osuver}} = conn, _) do
     key = "osu!-scoreburgr---------#{osuver}"
-
-    actually_create(conn, params, key)
+    assign(conn, :key, key)
   end
-
-  def create(conn, params) do
+  defp determine_key(conn, _) do
     key = "h89f2-890h2h89b34g-h80g134n90133"
-
-    actually_create(conn, params, key)
+    assign(conn, :key, key)
   end
 
-  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => replay} = params, key) do
+  def create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => replay} = params) do
+    key = conn.assigns[:key]
 
     url = Application.get_env(:trucksu, :decryption_url)
     cookie = Application.get_env(:trucksu, :decryption_cookie)
