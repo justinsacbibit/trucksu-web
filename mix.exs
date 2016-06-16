@@ -17,11 +17,14 @@ defmodule Trucksu.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
+
+    applications = [:phoenix, :cowboy, :logger, :gettext, :phoenix_ecto,
+                    :postgrex, :comeonin, :timex, :phoenix_html,
+                    :guardian, :httpoison, :ex_rated, :ex_statsd]
+                  ++ if Mix.env == :test do [] else [:ex_aws] end
+
     [mod: {Trucksu, []},
-     applications: [:phoenix, :cowboy, :logger, :gettext,
-                    :phoenix_ecto, :postgrex, :comeonin, :timex,
-                    :phoenix_html, :guardian, :httpoison, :ex_aws,
-                    :ex_rated, :ex_statsd]]
+     applications: applications]
   end
 
   # Specifies which paths to compile per environment.
@@ -38,13 +41,14 @@ defmodule Trucksu.Mixfile do
      {:timex, "~> 2.1.4"},
      {:timex_ecto, "~> 1.0.4"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
+     {:mock, "~> 0.1.1", only: :test},
      {:phoenix_ecto, "~> 2.0"},
      {:guardian, "~> 0.9.0"},
      {:comeonin, "~> 2.0"},
      {:gettext, "~> 0.9"},
      {:httpoison, "~> 0.8.0"},
      {:poison, "~> 1.5"},
-     {:ex_aws, "~> 0.4.10"},
+     {:ex_aws, "~> 0.4.10", only: [:dev, :prod]},
      {:sweet_xml, "~> 0.5.0"},
      {:ex_rated, "~> 1.2"},
      {:mix_test_watch, "~> 0.2", only: :dev},

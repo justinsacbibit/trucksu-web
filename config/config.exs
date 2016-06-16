@@ -50,6 +50,7 @@ config :trucksu,
   server_cookie: "a",
   performance_cookie: "b",
   decryption_cookie: "c",
+  file_repository: :fs,
   bot_url: System.get_env("BOT_URL") || ""
 
 # Import environment specific config. This must remain at the bottom

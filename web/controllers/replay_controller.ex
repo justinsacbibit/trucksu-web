@@ -2,6 +2,7 @@ defmodule Trucksu.ReplayController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    FileRepository,
     Session,
 
     Repo,
@@ -42,16 +43,22 @@ defmodule Trucksu.ReplayController do
   defp find_replay(conn, _) do
     score = conn.assigns[:score]
 
-    bucket = Application.get_env(:trucksu, :replay_file_bucket)
-    case ExAws.S3.get_object(bucket, "#{score.id}") do
-      {:error, {:http_error, 404, _}} ->
+    case FileRepository.get_file(:replay_file_bucket, score.id) do
+      {:error, :not_found} ->
 
         changeset = Ecto.Changeset.change score, %{has_replay: false}
         Repo.update! changeset
 
         stop_plug(conn, 404)
 
-      {:ok, %{body: replay_file_content}} ->
+      {:error, error} ->
+
+        Logger.error "Failed to get replay for score id #{score.id}"
+        Logger.error inspect error
+
+        stop_plug(conn, 500)
+
+      {:ok, replay_file_content} ->
 
         changeset = Ecto.Changeset.change score, %{has_replay: true}
         score = Repo.update! changeset
