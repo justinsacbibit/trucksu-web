@@ -2,6 +2,7 @@ defmodule Trucksu.ScreenshotController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    FileRepository,
     Session,
 
     Screenshot,
@@ -28,9 +29,8 @@ defmodule Trucksu.ScreenshotController do
       changeset = Screenshot.new(user.id)
       screenshot = Repo.insert! changeset
 
-      bucket = Application.get_env(:trucksu, :screenshot_file_bucket)
       screenshot_file_content = File.read!(ss_path)
-      ExAws.S3.put_object!(bucket, "#{screenshot.id}", screenshot_file_content)
+      FileRepository.put_file!(:screenshot_file_bucket, screenshot.id, screenshot_file_content)
 
       screenshot.id
     end)
@@ -44,15 +44,23 @@ defmodule Trucksu.ScreenshotController do
   end
 
   def show(conn, %{"id" => id}) do
-    bucket = Application.get_env(:trucksu, :screenshot_file_bucket)
-    case ExAws.S3.get_object(bucket, id) do
-      {:error, {:http_error, 404, _}} ->
+    case FileRepository.get_file(:screenshot_file_bucket, id) do
+      {:error, :not_found} ->
 
         conn
         |> put_status(404)
         |> html("")
 
-      {:ok, %{body: screenshot_file_content}} ->
+      {:error, error} ->
+
+        Logger.error "Failed to retrieve screenshot with id #{id}"
+        Logger.error inspect error
+
+        conn
+        |> put_status(500)
+        |> html("internal error")
+
+      {:ok, screenshot_file_content} ->
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "image/jpeg")

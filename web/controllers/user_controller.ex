@@ -115,6 +115,7 @@ defmodule Trucksu.UserController do
         end
     end
   end
+
   def show(conn, %{"id" => id}) do
 
     query = from u in User,

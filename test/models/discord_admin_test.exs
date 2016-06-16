@@ -3,7 +3,7 @@ defmodule Trucksu.DiscordAdminTest do
 
   alias Trucksu.DiscordAdmin
 
-  @valid_attrs %{discord_id: 42}
+  @valid_attrs %{discord_id: "42"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

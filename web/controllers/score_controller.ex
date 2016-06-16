@@ -3,6 +3,7 @@ defmodule Trucksu.ScoreController do
   require Logger
   alias Trucksu.{
     OsuBeatmapFetcher,
+    FileRepository,
     Performance,
     Session,
 
@@ -187,9 +188,8 @@ defmodule Trucksu.ScoreController do
               score
           end
 
-          bucket = Application.get_env(:trucksu, :replay_file_bucket)
           replay_file_content = File.read!(replay.path)
-          ExAws.S3.put_object!(bucket, "#{score.id}", replay_file_content)
+          FileRepository.put_file!(:replay_file_bucket, score.id, replay_file_content)
           Logger.info "Uploaded replay for #{user.username}, score id #{score.id}, byte size: #{replay_file_content |> byte_size}"
 
           Logger.info "Inserting score: #{inspect score}"
@@ -242,7 +242,6 @@ defmodule Trucksu.ScoreController do
 
           case response do
             {:ok, _response} ->
-              :ok
               Logger.warn "Sent pp event to Bancho: #{inspect data}"
             {:error, response} ->
               Logger.error "Failed to send pp event to Bancho: #{inspect response}"
@@ -252,7 +251,6 @@ defmodule Trucksu.ScoreController do
 
           case response do
             {:ok, _response} ->
-              :ok
               Logger.warn "Sent pp event to Bot: #{inspect data}"
             {:error, response} ->
               Logger.error "Failed to send pp event to Bot: #{inspect response}"
