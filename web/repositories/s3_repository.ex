@@ -13,6 +13,9 @@ defmodule Trucksu.S3Repository do
         {:ok, file_content}
     end
   end
+  def get_file!(bucket, filename) do
+    ExAws.S3.get_object!(bucket, "#{filename}")
+  end
 
   def put_file(bucket, filename, contents) do
     case ExAws.S3.put_object(bucket, filename, contents) do

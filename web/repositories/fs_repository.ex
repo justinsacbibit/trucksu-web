@@ -3,7 +3,7 @@ defmodule Trucksu.FsRepository do
 
   def get_file(folder, filename) do
     path = Path.join(folder, filename)
-    case File.open(path) do
+    case File.read(path) do
       {:error, :enoent} ->
         {:error, :not_found}
       {:error, error} ->
@@ -13,6 +13,10 @@ defmodule Trucksu.FsRepository do
       {:ok, file_content} ->
         {:ok, file_content}
     end
+  end
+  def get_file!(folder, filename) do
+    {:ok, file_content} = get_file(folder, filename)
+    file_content
   end
 
   def put_file(folder, filename, contents) do
@@ -26,6 +30,10 @@ defmodule Trucksu.FsRepository do
         {:error, error}
       :ok -> :ok
     end
+  end
+  def put_file!(folder, filename, contents) do
+    :ok = put_file(folder, filename, contents)
+    :ok
   end
 
   defp create_folder(folder) do
