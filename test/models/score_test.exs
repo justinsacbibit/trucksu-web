@@ -10,16 +10,17 @@ defmodule Trucksu.ScoreTest do
     count_100: 42,
     count_300: 42,
     count_50: 42,
-    full_combo: 42,
-    game_mode: 42,
-    geki_count: 42,
-    katu_count: 42,
-    max_combo: 42,
-    miss_count: 42,
-    mods: 42,
+    full_combo: 0,
+    game_mode: 0,
+    geki_count: 31,
+    katu_count: 12,
+    max_combo: 420,
+    miss_count: 10,
+    mods: 0,
     score: 42,
     time: "some content",
     user_id: 3,
+    rank: "A"
   }
   @invalid_attrs %{}
 

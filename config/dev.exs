@@ -26,7 +26,11 @@ config :phoenix, :stacktrace_depth, 20
 config :trucksu,
   performance_url: "http://localhost:5000",
   bancho_url: "http://localhost:4002",
-  website_url: "http://localhost:4001"
+  website_url: "http://localhost:4001",
+  beatmap_file_bucket: "files/beatmaps",
+  replay_file_bucket: "files/replays",
+  avatar_file_bucket: "files/avatars",
+  screenshot_file_bucket: "files/screenshots"
 
 # Configure your database
 config :trucksu, Trucksu.Repo,
