@@ -115,8 +115,8 @@ defmodule Trucksu.UserController do
         end
     end
   end
-  def show(conn, %{"id" => id}) do
 
+  def show(conn, %{"id" => id}) do
     query = from u in User,
       join: us in assoc(u, :stats),
       join: sc in assoc(u, :scores),
