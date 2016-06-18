@@ -71,9 +71,10 @@ defmodule Trucksu.Router do
 
       get "/ranks", RanksController, :index
       get "/pp-calc", PerformanceController, :calculate
-      post "/ban", UserController, :ban
-      post "/unban", UserController, :unban
       get "/users/:id", UserController, :show
+
+      post "/ban", UserController, :ban
+      delete "/ban", UserController, :unban
     end
 
     get "*path", ApiController, :not_found
