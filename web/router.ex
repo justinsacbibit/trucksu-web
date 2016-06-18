@@ -60,6 +60,7 @@ defmodule Trucksu.Router do
     get "/:user_id", AvatarController, :show
   end
 
+  # api.trucksu.com
   scope "/api", Trucksu do
     pipe_through :api
 
