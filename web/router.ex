@@ -74,8 +74,10 @@ defmodule Trucksu.Router do
       get "/pp-calc", PerformanceController, :calculate
       get "/users/:id", UserController, :show
 
+      # admin endpoints
       post "/ban", UserController, :ban
       delete "/ban", UserController, :unban
+      get "/users/:username/multis", UserController, :multiaccounts
     end
 
     get "*path", ApiController, :not_found
