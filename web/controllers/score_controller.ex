@@ -9,7 +9,7 @@ defmodule Trucksu.ScoreController do
     Constants,
 
     Repo,
-    InternalUserReport,
+    ScoreProcessList,
     OsuBeatmap,
     User,
     Score,
@@ -112,12 +112,7 @@ defmodule Trucksu.ScoreController do
         0 ->
           raise "missinginfo"
         _ ->
-          changeset = InternalUserReport.changeset(%InternalUserReport{}, %{
-            user_id: user.id,
-            process_list: process_list,
-            version: version,
-          })
-          Repo.insert! changeset
+          :ok
       end
     end
 
@@ -205,6 +200,19 @@ defmodule Trucksu.ScoreController do
           })
 
           score = Repo.insert! score
+
+          changeset = ScoreProcessList.changeset(%ScoreProcessList{}, %{
+            user_id: user.id,
+            score_id: score.id,
+            process_list: process_list,
+            version: version,
+          })
+          case Repo.insert changeset do
+            {:error, error} ->
+              Logger.error "Unable to save process list for #{user.username} score with id #{score.id}"
+            _ ->
+              :ok
+          end
 
           score = case Performance.calculate(score) do
             {:ok, nil} ->
