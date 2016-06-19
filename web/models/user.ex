@@ -75,7 +75,7 @@ defmodule Trucksu.User do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
-    |> validate_format(:username, ~r/^[-_\[\]A-Za-z0-9]+$/)
+    |> validate_format(:username, ~r/^[-_\[\]A-Za-z0-9 ]+$/)
     |> validate_format(:email, ~r/@/)
     |> validate_length(:password, min: 5)
     |> validate_confirmation(:password, message: "Password does not match")

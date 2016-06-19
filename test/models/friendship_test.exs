@@ -3,7 +3,7 @@ defmodule Trucksu.FriendshipTest do
 
   alias Trucksu.Friendship
 
-  @valid_attrs %{}
+  @valid_attrs %{requester_id: 1, receiver_id: 2}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

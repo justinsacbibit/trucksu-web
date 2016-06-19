@@ -5,11 +5,10 @@ defmodule Trucksu.ScoreTest do
 
   @valid_attrs %{
     accuracy: 120.5,
-    beatmap_id: 1,
-    pass: true,
     count_100: 42,
     count_300: 42,
     count_50: 42,
+    file_md5: "abc",
     full_combo: 42,
     game_mode: 42,
     geki_count: 42,
@@ -17,6 +16,7 @@ defmodule Trucksu.ScoreTest do
     max_combo: 42,
     miss_count: 42,
     mods: 42,
+    pass: true,
     score: 42,
     time: "some content",
     user_id: 3,
