@@ -1,10 +1,14 @@
 defmodule Trucksu.UserController do
   use Trucksu.Web, :controller
   require Logger
-  alias Trucksu.{DiscordAdmin, User}
+  alias Trucksu.{
+    DiscordAdmin,
+    User,
+  }
 
   # admin endpoints
   plug :check_cookie when action in [:ban, :unban, :multiaccounts]
+  plug :get_user
 
   defp check_cookie(conn, _) do
     cookie = conn.params["c"]
@@ -16,6 +20,24 @@ defmodule Trucksu.UserController do
         |> put_status(403)
         |> json(%{"detail" => "invalid_cookie"})
         |> halt
+    end
+  end
+
+  # should be refactored into a generic plug
+  defp get_user(conn, _) do
+    id_or_username = conn.params["id_or_username"]
+
+    if id_or_username do
+      user = case Integer.parse(id_or_username) do
+        {id, _} ->
+          Repo.get! User, id
+        _ ->
+          Repo.get_by! User, username: id_or_username
+      end
+
+      assign(conn, :user, user)
+    else
+      conn
     end
   end
 
@@ -117,8 +139,8 @@ defmodule Trucksu.UserController do
     end
   end
 
-  def multiaccounts(conn, %{"username" => username}) do
-    user = Repo.get_by! User, username: username
+  def multiaccounts(conn, _) do
+    user = conn.assigns[:user]
 
     multi_usernames = User.find_multiaccounts_by_ip(user)
     |> Map.to_list

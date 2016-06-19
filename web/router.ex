@@ -77,7 +77,7 @@ defmodule Trucksu.Router do
       # admin endpoints
       post "/ban", UserController, :ban
       delete "/ban", UserController, :unban
-      get "/users/:username/multis", UserController, :multiaccounts
+      get "/users/:id_or_username/multis", UserController, :multiaccounts
     end
 
     get "*path", ApiController, :not_found
