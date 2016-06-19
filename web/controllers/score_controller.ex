@@ -83,8 +83,11 @@ defmodule Trucksu.ScoreController do
     end
 
     trimmed_length = raw_version |> String.strip |> String.length
+
     bad_flag = (String.length(raw_version) - trimmed_length) &&& ~~~4
-    Logger.error "#{username} submitted a score with bad_flag!"
+    if bad_flag != 0 do
+      Logger.error "#{username} submitted a score with bad_flag!"
+    end
 
     version = String.strip(raw_version)
     encryption_version = params["osuver"]
