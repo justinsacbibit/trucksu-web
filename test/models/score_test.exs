@@ -6,7 +6,7 @@ defmodule Trucksu.ScoreTest do
   @valid_attrs %{
     accuracy: 120.5,
     beatmap_id: 1,
-    completed: 2,
+    pass: true,
     count_100: 42,
     count_300: 42,
     count_50: 42,
