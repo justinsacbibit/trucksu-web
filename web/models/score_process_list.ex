@@ -1,7 +1,7 @@
 defmodule Trucksu.ScoreProcessList do
   use Trucksu.Web, :model
 
-  schema "known_ips" do
+  schema "score_process_lists" do
     belongs_to :user, Trucksu.User
     belongs_to :score, Trucksu.Score
     field :process_list, :string

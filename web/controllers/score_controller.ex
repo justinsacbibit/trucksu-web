@@ -138,7 +138,7 @@ defmodule Trucksu.ScoreController do
 
     ignored_mods = [Constants.Mods.relax, Constants.Mods.auto, Constants.Mods.autopilot]
     cond do
-      Enum.any(ignored_mods, &(Mods.is_mod_enabled(mods, &1))) ->
+      Enum.any?(ignored_mods, &(Mods.is_mod_enabled(mods, &1))) ->
         # RX, Auto, or AP
         Logger.info "#{user.username} submitted a score with RX, Auto, or AP, ignoring."
 
