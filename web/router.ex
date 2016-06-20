@@ -80,6 +80,7 @@ defmodule Trucksu.Router do
 
       scope "/beatmapsets" do
         get "/", OsuBeatmapsetController, :index
+        get "/:beatmapset_id/download", OszController, :download
       end
 
       # admin endpoints
