@@ -16,7 +16,7 @@ defmodule Trucksu.Score do
     :time,
     :game_mode,
     :accuracy,
-    :completed,
+    :pass,
     :beatmap,
     :user,
     :pp,
@@ -38,7 +38,7 @@ defmodule Trucksu.Score do
     field :time, :string
     field :game_mode, :integer
     field :accuracy, :float
-    field :completed, :integer
+    field :pass, :boolean
     belongs_to :user, Trucksu.User
     field :pp, :float
     field :has_replay, :boolean
@@ -49,7 +49,7 @@ defmodule Trucksu.Score do
     timestamps
   end
 
-  @required_fields ~w(score max_combo full_combo mods count_300 count_100 count_50 katu_count geki_count miss_count time game_mode accuracy completed user_id file_md5)
+  @required_fields ~w(score max_combo full_combo mods count_300 count_100 count_50 katu_count geki_count miss_count time game_mode accuracy pass user_id file_md5)
   @optional_fields ~w(pp has_replay rank)
 
   @doc """
@@ -61,10 +61,5 @@ defmodule Trucksu.Score do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
-  end
-
-  def completed(query \\ __MODULE__) do
-    from s in query,
-      where: s.completed == 2 or s.completed == 3
   end
 end

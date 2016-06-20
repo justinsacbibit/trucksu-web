@@ -25,4 +25,5 @@ node_modules/
 
 host.pem
 host.key
+/files/
 

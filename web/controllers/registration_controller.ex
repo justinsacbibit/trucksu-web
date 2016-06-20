@@ -7,12 +7,9 @@ defmodule Trucksu.RegistrationController do
 
   def create(conn, %{"user" => user_params}) do
 
-    # TODO: This is obviously a problem
-    user_params = Map.put(user_params, "banned", false)
-
     changeset = User.changeset(%User{}, user_params)
 
-    {:ok, rendered} = Repo.transaction(fn ->
+    result = Repo.transaction(fn ->
       case Repo.insert(changeset) do
         {:ok, user} ->
           Enum.each [0, 1, 2, 3], fn(mode) ->
@@ -32,7 +29,17 @@ defmodule Trucksu.RegistrationController do
       end
     end)
 
-    rendered
+    case result do
+      {:ok, rendered} ->
+        rendered
+
+      _ ->
+        # Makes no sense, but in the event of an error, Phoenix sends the correct
+        # error json. This seems to get rid of the Plug.Conn.NotSentError
+        conn
+        |> put_status(:unprocessable_entity)
+        |> html("")
+    end
   end
 end
 

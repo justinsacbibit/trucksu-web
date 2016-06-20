@@ -1,9 +1,14 @@
 defmodule Trucksu.UserController do
   use Trucksu.Web, :controller
   require Logger
-  alias Trucksu.{DiscordAdmin, User}
+  alias Trucksu.{
+    DiscordAdmin,
+    User,
+  }
 
-  plug :check_cookie when action in [:ban, :unban]
+  # admin endpoints
+  plug :check_cookie when action in [:ban, :unban, :multiaccounts]
+  plug :get_user
 
   defp check_cookie(conn, _) do
     cookie = conn.params["c"]
@@ -15,6 +20,24 @@ defmodule Trucksu.UserController do
         |> put_status(403)
         |> json(%{"detail" => "invalid_cookie"})
         |> halt
+    end
+  end
+
+  # should be refactored into a generic plug
+  defp get_user(conn, _) do
+    id_or_username = conn.params["id_or_username"]
+
+    if id_or_username do
+      user = case Integer.parse(id_or_username) do
+        {id, _} ->
+          Repo.get! User, id
+        _ ->
+          Repo.get_by! User, username: id_or_username
+      end
+
+      assign(conn, :user, user)
+    else
+      conn
     end
   end
 
@@ -115,8 +138,21 @@ defmodule Trucksu.UserController do
         end
     end
   end
-  def show(conn, %{"id" => id}) do
 
+  def multiaccounts(conn, _) do
+    user = conn.assigns[:user]
+
+    multi_usernames = User.find_multiaccounts_by_ip(user)
+    |> Map.to_list
+    |> Enum.map(fn({_id, %User{username: username}}) ->
+      username
+    end)
+
+    conn
+    |> json(multi_usernames)
+  end
+
+  def show(conn, %{"id" => id}) do
     query = from u in User,
       join: us in assoc(u, :stats),
       join: sc in assoc(u, :scores),
@@ -124,7 +160,7 @@ defmodule Trucksu.UserController do
       join: obs in assoc(ob, :beatmapset),
       where: us.user_id == ^id
         and not is_nil(sc.pp)
-        and (sc.completed == 2 or sc.completed == 3)
+        and sc.pass
         and us.game_mode == sc.game_mode,
       preload: [stats: {us, scores: {sc, osu_beatmap: {ob, [beatmapset: obs]}}}],
       order_by: [desc: sc.pp]
@@ -177,7 +213,7 @@ defmodule Trucksu.UserController do
                   FROM scores sc
                   JOIN osu_beatmaps ob
                     on sc.file_md5 = ob.file_md5
-                  WHERE completed = 2 OR completed = 3
+                  WHERE sc.pass
                ) x
           WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
         ", ^user_id, ^game_mode),

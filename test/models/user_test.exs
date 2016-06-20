@@ -8,6 +8,7 @@ defmodule Trucksu.UserTest do
     username: "Truck Driver",
     password: "abc12",
     password_confirmation: "abc12",
+    banned: false,
   }
   @invalid_attrs %{}
 

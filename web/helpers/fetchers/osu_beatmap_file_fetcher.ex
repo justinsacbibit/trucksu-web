@@ -40,7 +40,13 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
     end
   end
 
-  defp download_osu_file(beatmap_id) do
+  defp download_osu_file(beatmap_id, tries_remaining \\ 3)
+
+  defp download_osu_file(_beatmap_id, 0) do
+    {:error, :osu_file_download_error}
+  end
+
+  defp download_osu_file(beatmap_id, tries_remaining) do
     url = "https://osu.ppy.sh/osu/#{beatmap_id}"
     case HTTPoison.get url do
       {:ok, %HTTPoison.Response{body: osu_file_content}} when byte_size(osu_file_content) > 0 ->
@@ -52,7 +58,7 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
 
       {:error, error} ->
         Logger.error "Error when fetching osu file for beatmap id #{beatmap_id}: #{inspect error}"
-        {:error, :osu_file_download_error}
+        download_osu_file(beatmap_id, tries_remaining - 1)
     end
   end
 end

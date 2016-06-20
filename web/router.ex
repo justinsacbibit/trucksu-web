@@ -60,6 +60,7 @@ defmodule Trucksu.Router do
     get "/:user_id", AvatarController, :show
   end
 
+  # api.trucksu.com
   scope "/api", Trucksu do
     pipe_through :api
 
@@ -71,9 +72,12 @@ defmodule Trucksu.Router do
 
       get "/ranks", RanksController, :index
       get "/pp-calc", PerformanceController, :calculate
-      post "/ban", UserController, :ban
-      post "/unban", UserController, :unban
       get "/users/:id", UserController, :show
+
+      # admin endpoints
+      post "/ban", UserController, :ban
+      delete "/ban", UserController, :unban
+      get "/users/:id_or_username/multis", UserController, :multiaccounts
     end
 
     get "*path", ApiController, :not_found

@@ -1,17 +1,20 @@
 defmodule Trucksu.ScoreController do
   use Trucksu.Web, :controller
   require Logger
+  use Bitwise
   alias Trucksu.{
     OsuBeatmapFetcher,
     Performance,
     Session,
+    Constants,
 
     Repo,
+    ScoreProcessList,
     OsuBeatmap,
     User,
     Score,
   }
-  use Bitwise
+  alias Trucksu.Helpers.Mods
 
   def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
@@ -25,24 +28,33 @@ defmodule Trucksu.ScoreController do
     actually_create(conn, params, key)
   end
 
-  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => pass, "score_file" => replay} = params, key) do
-
+  defp decrypt(ciphertext, key, iv) do
     url = Application.get_env(:trucksu, :decryption_url)
     cookie = Application.get_env(:trucksu, :decryption_cookie)
-    score = if url do
-      body = {:form, [{"c", score}, {"iv", iv}, {"k", key}, {"cookie", cookie}]}
-      %HTTPoison.Response{body: score} = HTTPoison.post!(url, body)
-      score
+    plaintext = if url do
+      body = {:form, [{"c", ciphertext}, {"iv", iv}, {"k", key}, {"cookie", cookie}]}
+      %HTTPoison.Response{body: plaintext} = HTTPoison.post!(url, body)
+      plaintext
     else
-      {score, 0} = System.cmd("php", ["score.php", key, score, iv])
-      score
+      {plaintext, 0} = System.cmd("php", ["score.php", key, ciphertext, iv])
+      plaintext
     end
+
+    # Strip out trailing weird bytes
+    plaintext = Regex.replace(~r/\p{Cc}*$/u, plaintext, "")
+
+    plaintext
+  end
+
+  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => password_md5, "score_file" => replay, "pl" => pl} = params, key) do
+
+    score = decrypt(score, key, iv)
     score_data = String.split(score, ":")
 
     [
       beatmap_file_md5,
       username,
-      _,
+      _score_checksum, # TODO: Use to avoid duplicate scores
       count_300,
       count_100,
       count_50,
@@ -54,20 +66,57 @@ defmodule Trucksu.ScoreController do
       full_combo,
       rank,
       mods,
-      _passed, # TODO: Make use of this?
+      pass,
       game_mode,
-      score_datetime
-      | _osu_version
+      score_datetime,
+      raw_version,
     ] = score_data
 
     username = String.rstrip(username)
 
-    case Session.authenticate(username, pass, true) do
+    case Session.authenticate(username, password_md5, true) do
       {:error, _reason} ->
         # TODO: Return a 403 instead of 500
         raise "Invalid username or password"
       _ ->
         :ok
+    end
+
+    trimmed_length = raw_version |> String.strip |> String.length
+
+    bad_flag = (String.length(raw_version) - trimmed_length) &&& ~~~4
+    if bad_flag != 0 do
+      Logger.error "#{username} submitted a score with bad_flag!"
+    end
+
+    version = String.strip(raw_version)
+    encryption_version = params["osuver"]
+    if encryption_version && encryption_version != version do
+      raise "version mismatch"
+    end
+
+    pass = pass == "True"
+
+    process_list = if pass do
+      decrypt(pl, key, iv)
+    else
+      ""
+    end
+
+    user = Repo.one! from u in User,
+      join: s in assoc(u, :stats),
+      where: s.game_mode == ^game_mode,
+      where: u.username == ^username,
+      preload: [stats: s]
+    [stats] = user.stats
+
+    if pass do
+      case String.length(process_list) do
+        0 ->
+          raise "missinginfo"
+        _ ->
+          :ok
+      end
     end
 
     osu_beatmap = OsuBeatmapFetcher.fetch(beatmap_file_md5)
@@ -81,24 +130,7 @@ defmodule Trucksu.ScoreController do
       _ -> 0
     end
 
-    #passed = case passed do
-      #"True" -> 1
-      #_ -> 0
-    #end
-
-    completed = case params["x"] do
-      nil -> 2
-      completed ->
-        {int, _} = Integer.parse(completed)
-        int
-    end
-
-    user = Repo.one! from u in User,
-      join: s in assoc(u, :stats),
-      where: s.game_mode == ^game_mode,
-      where: u.username == ^username,
-      preload: [stats: s]
-    [stats] = user.stats
+    exited = params["x"] == "1"
 
     {count_300, _} = Integer.parse(count_300)
     {count_100, _} = Integer.parse(count_100)
@@ -107,19 +139,17 @@ defmodule Trucksu.ScoreController do
 
     {mods, _} = Integer.parse(mods)
 
+    ignored_mods = [Constants.Mods.relax, Constants.Mods.auto, Constants.Mods.autopilot]
     cond do
-      # TODO: Refactor mod checking
-      band(mods, 128) != 0 || band(mods, 2048) != 0 || band(mods, 8192) != 0 ->
+      Enum.any?(ignored_mods, &(Mods.is_mod_enabled(mods, &1))) ->
         # RX, Auto, or AP
-        # TODO: If Auto was used, log that somewhere. My client doesn't send
-        # a score when Auto is used.
+        Logger.info "#{user.username} submitted a score with RX, Auto, or AP, ignoring."
 
         # TODO: Don't call render func
-        Logger.warn "#{user.username} submitted a score with RX, Auto, or AP, ignoring."
         render conn, "response.raw", data: <<>>
 
 
-      completed >= 2 ->
+      pass ->
         top_score = Repo.one from s in Score,
           join: ob in assoc(s, :osu_beatmap),
           join: u in assoc(s, :user),
@@ -167,19 +197,35 @@ defmodule Trucksu.ScoreController do
             time: score_datetime,
             game_mode: game_mode,
             accuracy: accuracy,
-            completed: completed,
+            pass: pass,
             has_replay: true,
             rank: rank,
           })
-          # IO.inspect score
 
           score = Repo.insert! score
 
+          changeset = ScoreProcessList.changeset(%ScoreProcessList{}, %{
+            user_id: user.id,
+            score_id: score.id,
+            process_list: process_list,
+            version: version,
+          })
+          case Repo.insert changeset do
+            {:error, error} ->
+              Logger.error "Unable to save process list for #{user.username} score with id #{score.id}"
+            _ ->
+              :ok
+          end
+
           score = case Performance.calculate(score) do
+            {:ok, nil} ->
+              score
+
             {:ok, pp} ->
               Logger.info "Calculated a pp of #{pp} for #{user.username} for score id #{score.id}"
               changeset = Ecto.Changeset.change(score, %{pp: pp})
               Repo.update! changeset
+
             {:error, error} ->
               Logger.error "Failed to calculate pp for score: #{inspect score}"
               Logger.error "Error: #{inspect error}"
@@ -262,7 +308,7 @@ defmodule Trucksu.ScoreController do
         # TODO: Don't call render func
         render conn, "response.raw", data: build_response(score)
       true ->
-        # User failed or retried
+        # User failed or retried, or exited?
 
         user_stats = Ecto.Changeset.change stats,
           playcount: stats.playcount + 1,
