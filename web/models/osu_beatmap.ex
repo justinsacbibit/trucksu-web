@@ -67,7 +67,7 @@ defmodule Trucksu.OsuBeatmap do
       join: obs in assoc(ob, :beatmapset),
       preload: [beatmapset: obs]
 
-    for %__MODULE__{beatmapset: beatmapset} = osu_beatmap <- osu_beatmaps do
+    for osu_beatmap <- osu_beatmaps do
       changeset = Ecto.Changeset.change(osu_beatmap, filename: filename(osu_beatmap))
       Repo.update! changeset
     end

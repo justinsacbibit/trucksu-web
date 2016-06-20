@@ -130,11 +130,6 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
     result
   end
 
-  defp beatmapset_not_ranked?(osu_beatmapset) do
-    osu_beatmapset.approved != @beatmap_status_approved
-    && osu_beatmapset.approved != @beatmap_status_ranked
-  end
-
   # Fetch the beatmapset_id from the osu! API
   def fetch(beatmapset_id) do
     # 1 call every 2 hours

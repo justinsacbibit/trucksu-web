@@ -130,7 +130,7 @@ defmodule Trucksu.ScoreController do
       _ -> 0
     end
 
-    exited = params["x"] == "1"
+    # exited = params["x"] == "1"
 
     {count_300, _} = Integer.parse(count_300)
     {count_100, _} = Integer.parse(count_100)
@@ -212,7 +212,7 @@ defmodule Trucksu.ScoreController do
           })
           case Repo.insert changeset do
             {:error, error} ->
-              Logger.error "Unable to save process list for #{user.username} score with id #{score.id}"
+              Logger.error "Unable to save process list for #{user.username} score with id #{score.id}: #{inspect error}"
             _ ->
               :ok
           end
