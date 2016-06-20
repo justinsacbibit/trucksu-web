@@ -7,7 +7,9 @@ defmodule Trucksu.UserController do
   }
 
   # admin endpoints
-  plug :check_cookie when action in [:ban, :unban, :multiaccounts]
+  @admin_endpoints [:ban, :unban, :multiaccounts]
+  plug :check_cookie when action in @admin_endpoints
+  plug :check_admin when action in @admin_endpoints
   plug :get_user
 
   defp check_cookie(conn, _) do
@@ -20,6 +22,21 @@ defmodule Trucksu.UserController do
         |> put_status(403)
         |> json(%{"detail" => "invalid_cookie"})
         |> halt
+    end
+  end
+
+  defp check_admin(conn, _) do
+    discord_id = conn.params["discord_id"]
+    case Repo.get_by DiscordAdmin, discord_id: discord_id do
+      nil ->
+        conn
+        |> put_status(403)
+        |> json(%{"detail" => "not_admin"})
+        |> halt
+
+      _ ->
+        conn
+
     end
   end
 
@@ -41,100 +58,76 @@ defmodule Trucksu.UserController do
     end
   end
 
-  def ban(conn, %{"username" => username, "discord_id" => discord_id}) do
-    case Repo.get_by DiscordAdmin, discord_id: discord_id do
+  def ban(conn, %{"username" => username}) do
+    case Repo.one User.by_username(username) do
       nil ->
-
-        detail = "not_admin"
+        detail = "username_not_found"
 
         conn
         |> put_status(400)
         |> json(%{"detail" => detail})
-      _ ->
 
-        case Repo.one User.by_username(username) do
-          nil ->
-            detail = "username_not_found"
+      %User{banned: true} ->
+
+        detail = "user_already_banned"
+
+        conn
+        |> put_status(400)
+        |> json(%{"detail" => detail})
+
+      user ->
+
+        changeset = Ecto.Changeset.change(user, %{banned: true})
+        case Repo.update changeset do
+          {:ok, _} ->
+            conn
+            |> put_status(200)
+            |> json(%{"ok" => true})
+          {:error, error} ->
+
+            Logger.error "Error trying to ban user #{user.username}"
+            Logger.error inspect error
 
             conn
-            |> put_status(400)
-            |> json(%{"detail" => detail})
-
-          %User{banned: true} ->
-
-            detail = "user_already_banned"
-
-            conn
-            |> put_status(400)
-            |> json(%{"detail" => detail})
-
-          user ->
-
-            changeset = Ecto.Changeset.change(user, %{banned: true})
-            case Repo.update changeset do
-              {:ok, _} ->
-                conn
-                |> put_status(200)
-                |> json(%{"ok" => true})
-              {:error, error} ->
-
-                Logger.error "Error trying to ban user #{user.username}"
-                Logger.error inspect error
-
-                conn
-                |> put_status(500)
-                |> json(%{"detail" => "internal_error"})
-            end
-
+            |> put_status(500)
+            |> json(%{"detail" => "internal_error"})
         end
     end
   end
 
-  def unban(conn, %{"username" => username, "discord_id" => discord_id}) do
-    case Repo.get_by DiscordAdmin, discord_id: discord_id do
+  def unban(conn, %{"username" => username}) do
+    case Repo.one User.by_username(username) do
       nil ->
-
-        detail = "not_admin"
+        detail = "username_not_found"
 
         conn
         |> put_status(400)
         |> json(%{"detail" => detail})
-      _ ->
 
-        case Repo.one User.by_username(username) do
-          nil ->
-            detail = "username_not_found"
+      %User{banned: false} ->
+
+        detail = "user_not_banned"
+
+        conn
+        |> put_status(400)
+        |> json(%{"detail" => detail})
+
+      user ->
+
+        changeset = Ecto.Changeset.change(user, %{banned: false})
+        case Repo.update changeset do
+          {:ok, _} ->
+            conn
+            |> put_status(200)
+            |> json(%{"ok" => true})
+          {:error, error} ->
+
+            Logger.error "Error trying to unban user #{user.username}"
+            Logger.error inspect error
 
             conn
-            |> put_status(400)
-            |> json(%{"detail" => detail})
-
-          %User{banned: false} ->
-
-            detail = "user_not_banned"
-
-            conn
-            |> put_status(400)
-            |> json(%{"detail" => detail})
-
-          user ->
-
-            changeset = Ecto.Changeset.change(user, %{banned: false})
-            case Repo.update changeset do
-              {:ok, _} ->
-                conn
-                |> put_status(200)
-                |> json(%{"ok" => true})
-              {:error, error} ->
-
-                Logger.error "Error trying to unban user #{user.username}"
-                Logger.error inspect error
-
-                conn
-                |> put_status(500)
-                |> json(%{"detail" => "internal_error"})
-            end
-
+            |> put_status(500)
+            |> json(%{"detail" => "internal_error"})
         end
     end
   end
