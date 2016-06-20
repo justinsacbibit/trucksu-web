@@ -78,6 +78,10 @@ defmodule Trucksu.Router do
         get "/:beatmap_id", OsuBeatmapController, :show
       end
 
+      scope "/beatmapsets" do
+        get "/", OsuBeatmapsetController, :index
+      end
+
       # admin endpoints
       post "/ban", UserController, :ban
       delete "/ban", UserController, :unban
