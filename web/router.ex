@@ -74,6 +74,10 @@ defmodule Trucksu.Router do
       get "/pp-calc", PerformanceController, :calculate
       get "/users/:id", UserController, :show
 
+      scope "/beatmaps" do
+        get "/:beatmap_id", OsuBeatmapController, :show
+      end
+
       # admin endpoints
       post "/ban", UserController, :ban
       delete "/ban", UserController, :unban
