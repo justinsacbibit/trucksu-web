@@ -30,6 +30,12 @@ defmodule Trucksu.OsuBeatmapView do
         tags: beatmapset.tags,
         genre_id: beatmapset.genre_id,
         language_id: beatmapset.language_id,
+        beatmaps: for beatmap <- beatmapset.beatmaps do
+          %{
+            id: beatmap.id,
+            version: beatmap.version,
+          }
+        end,
       },
       scores: for score <- beatmap.scores do
         %{
