@@ -46,7 +46,7 @@ defmodule Trucksu.ScoreController do
     plaintext
   end
 
-  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => password_md5, "score_file" => replay, "pl" => pl} = params, key) do
+  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => password_md5, "score_file" => replay} = params, key) do
 
     score = decrypt(score, key, iv)
     score_data = String.split(score, ":")
@@ -98,6 +98,7 @@ defmodule Trucksu.ScoreController do
     pass = pass == "True"
 
     process_list = if pass do
+      pl = conn.params["pl"]
       decrypt(pl, key, iv)
     else
       ""
