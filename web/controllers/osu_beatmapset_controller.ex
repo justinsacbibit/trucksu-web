@@ -15,8 +15,14 @@ defmodule Trucksu.OsuBeatmapsetController do
         and sc.game_mode == obs_ob.game_mode
         and sc.pass,
       order_by: [asc: obs_ob.difficultyrating, desc: sc.pp],
-      distinct: [obs_ob.id, u.id],
       preload: [beatmapset: {obs, [beatmaps: {obs_ob, [scores: {sc, [user: u]}]}]}]
+
+    beatmaps = for beatmap <- beatmap.beatmapset.beatmaps do
+      scores = Enum.uniq_by(beatmap.scores, &(&1.user_id))
+      %{beatmap | scores: scores}
+    end
+
+    beatmap = %{beatmap | beatmapset: %{beatmap.beatmapset | beatmaps: beatmaps}}
 
     render(conn, "beatmapset.json", beatmapset: beatmap.beatmapset)
   end
