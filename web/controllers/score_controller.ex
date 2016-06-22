@@ -85,9 +85,6 @@ defmodule Trucksu.ScoreController do
     trimmed_length = raw_version |> String.strip |> String.length
 
     bad_flag = (String.length(raw_version) - trimmed_length) &&& ~~~4
-    if bad_flag != 0 do
-      Logger.error "#{username} submitted a score with bad_flag!"
-    end
 
     version = String.strip(raw_version)
     encryption_version = params["osuver"]
@@ -204,6 +201,10 @@ defmodule Trucksu.ScoreController do
           })
 
           score = Repo.insert! score
+
+          if bad_flag != 0 do
+            Logger.error "#{username} submitted a score with bad_flag! score id: #{score.id}"
+          end
 
           changeset = ScoreProcessList.changeset(%ScoreProcessList{}, %{
             user_id: user.id,
