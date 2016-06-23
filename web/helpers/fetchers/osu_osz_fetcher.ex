@@ -30,22 +30,24 @@ defmodule Trucksu.OsuOszFetcher do
               content_length_header = Enum.find(headers, &(elem(&1, 0) == "Content-Length"))
 
               if content_length_header do
-                Logger.warn "Downloaded beatmapset #{beatmapset_id} from osu!"
-                ExStatsD.increment "osu.osz_downloads.succeeded"
+                Task.start(fn ->
+                  Logger.warn "Downloaded beatmapset #{beatmapset_id} from osu!"
+                  ExStatsD.increment "osu.osz_downloads.succeeded"
 
-                content_type = Enum.find(headers, &(elem(&1, 0) == "Content-Type")) |> elem(1)
-                content_length = content_length_header |> elem(1)
-                content_disposition = Enum.find(headers, &(elem(&1, 0) == "Content-Disposition")) |> elem(1)
-                opts = [content_type: content_type, content_length: content_length, content_disposition: content_disposition]
-                # TODO: Multipart upload
-                case ExAws.S3.put_object(bucket, object, osz_file_content, opts) do
-                  {:ok, _} ->
-                    Logger.warn "Put beatmapset #{beatmapset_id} to S3"
-                    {:ok, headers, osz_file_content}
-                  {:error, error} ->
-                    Logger.error "Failed to put beatmapset #{beatmapset_id} to S3: #{inspect error}"
-                    {:error, :s3_error}
-                end
+                  content_type = Enum.find(headers, &(elem(&1, 0) == "Content-Type")) |> elem(1)
+                  content_length = content_length_header |> elem(1)
+                  content_disposition = Enum.find(headers, &(elem(&1, 0) == "Content-Disposition")) |> elem(1)
+                  opts = [content_type: content_type, content_length: content_length, content_disposition: content_disposition]
+                  # TODO: Multipart upload
+                  case ExAws.S3.put_object(bucket, object, osz_file_content, opts) do
+                    {:ok, _} ->
+                      Logger.debug "Put beatmapset #{beatmapset_id} to S3"
+                    {:error, error} ->
+                      Logger.error "Failed to put beatmapset #{beatmapset_id} to S3: #{inspect error}"
+                  end
+                end)
+
+                {:ok, headers, osz_file_content}
               else
                 Logger.error "Downloaded beatmapset #{beatmapset_id} from osu!, but there is no Content-Length header!"
                 {:error, :no_content_length}
