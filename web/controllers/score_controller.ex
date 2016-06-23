@@ -138,7 +138,7 @@ defmodule Trucksu.ScoreController do
     })
     case Repo.insert changeset do
       {:error, %{constraints: [%{field: :osu_md5, type: :unique}]}} ->
-        Logger.info "Ignoring duplicate access point"
+        Logger.debug "Ignoring duplicate access point"
       {:error, error} ->
         Logger.error "Unable to save access point for #{user.username}: #{inspect error}"
       _ ->
