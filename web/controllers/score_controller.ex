@@ -9,10 +9,11 @@ defmodule Trucksu.ScoreController do
     Constants,
 
     Repo,
-    ScoreProcessList,
     OsuBeatmap,
-    User,
+    OsuUserAccessPoint,
     Score,
+    ScoreProcessList,
+    User,
   }
   alias Trucksu.Helpers.Mods
 
@@ -107,6 +108,42 @@ defmodule Trucksu.ScoreController do
       where: u.username == ^username,
       preload: [stats: s]
     [stats] = user.stats
+
+    security_hash = decrypt(conn.params["s"], key, iv) |> String.strip
+    security_hash_parts = String.split(security_hash, ":")
+    if length(security_hash_parts) < 4 do
+      raise "missinginfo"
+    end
+
+    [
+      osu_md5,
+      _mac_address_list,
+      mac_md5,
+      unique_md5
+      | _
+    ] = security_hash_parts
+
+    disk_md5 = if length(security_hash_parts) > 4 do
+      Enum.at(security_hash_parts, 4)
+    else
+      nil
+    end
+
+    changeset = OsuUserAccessPoint.changeset(%OsuUserAccessPoint{}, %{
+      osu_md5: osu_md5,
+      mac_md5: mac_md5,
+      unique_md5: unique_md5,
+      disk_md5: disk_md5,
+      user_id: user.id,
+    })
+    case Repo.insert changeset do
+      {:error, %{constraints: [%{field: :osu_md5, type: :unique}]}} ->
+        Logger.debug "Ignoring duplicate access point"
+      {:error, error} ->
+        Logger.error "Unable to save access point for #{user.username}: #{inspect error}"
+      _ ->
+        :ok
+    end
 
     if pass do
       case String.length(process_list) do
