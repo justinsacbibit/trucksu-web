@@ -47,6 +47,7 @@ defmodule Trucksu.OsuBeatmapsetView do
               accuracy: score.accuracy,
               pass: score.pass,
               user: %{
+                id: score.user.id,
                 username: score.user.username,
               },
               pp: score.pp,
