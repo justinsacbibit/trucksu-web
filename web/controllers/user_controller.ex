@@ -135,14 +135,23 @@ defmodule Trucksu.UserController do
   def multiaccounts(conn, _) do
     user = conn.assigns[:user]
 
-    multi_usernames = User.find_multiaccounts_by_ip(user)
+    multi_ip_usernames = User.find_multiaccounts_by_ip(user)
+    |> Map.to_list
+    |> Enum.map(fn({_id, %User{username: username}}) ->
+      username
+    end)
+
+    multi_ap_usernames = User.find_multiaccounts_by_access_point(user)
     |> Map.to_list
     |> Enum.map(fn({_id, %User{username: username}}) ->
       username
     end)
 
     conn
-    |> json(multi_usernames)
+    |> json(%{
+      ip_address: multi_ip_usernames,
+      access_point: multi_ap_usernames,
+    })
   end
 
   def show(conn, %{"id" => id}) do
