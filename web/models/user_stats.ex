@@ -8,6 +8,7 @@ defmodule Trucksu.UserStats do
         user: %{
           id: user_stats.user.id,
           username: user_stats.user.username,
+          country: user_stats.user.country,
         },
         game_mode: user_stats.game_mode,
         ranked_score: user_stats.ranked_score,
