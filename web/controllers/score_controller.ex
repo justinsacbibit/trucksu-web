@@ -47,14 +47,53 @@ defmodule Trucksu.ScoreController do
     plaintext
   end
 
-  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => password_md5, "score_file" => replay} = params, key) do
+  defp check_authentication(username, password_md5) do
+    case Session.authenticate(username, password_md5, true) do
+      {:error, _reason} ->
+        # TODO: Return a 403 instead of 500
+        raise "Invalid username or password"
+      _ ->
+        :ok
+    end
+  end
 
-    score = decrypt(score, key, iv)
-    score_data = String.split(score, ":")
+  defp fetch_beatmap(beatmap_file_md5) do
+    case OsuBeatmapFetcher.fetch(beatmap_file_md5) do
+      {:error, :beatmap_not_found} ->
+        :stop
+      _ ->
+        :ok
+    end
+  end
+
+  defp actually_create(conn, %{"score" => score, "iv" => iv, "pass" => password_md5} = params, key) do
+
+    decrypted_score = decrypt(score, key, iv)
+    score_data = String.split(decrypted_score, ":")
 
     [
       beatmap_file_md5,
-      username,
+      username | _
+    ] = score_data
+
+    username = String.rstrip(username)
+
+    result =
+      with :ok <- check_authentication(username, password_md5),
+        do: fetch_beatmap(beatmap_file_md5)
+
+    if result == :ok do
+      keep_creating(conn, params, key, score_data, username)
+    else
+      conn |> html("")
+    end
+  end
+
+  defp keep_creating(conn, %{"iv" => iv, "score_file" => replay} = params, key, score_data, username) do
+
+    [
+      beatmap_file_md5,
+      _username,
       _score_checksum, # TODO: Use to avoid duplicate scores
       count_300,
       count_100,
@@ -72,16 +111,6 @@ defmodule Trucksu.ScoreController do
       score_datetime,
       raw_version,
     ] = score_data
-
-    username = String.rstrip(username)
-
-    case Session.authenticate(username, password_md5, true) do
-      {:error, _reason} ->
-        # TODO: Return a 403 instead of 500
-        raise "Invalid username or password"
-      _ ->
-        :ok
-    end
 
     trimmed_length = raw_version |> String.strip |> String.length
 
@@ -152,12 +181,6 @@ defmodule Trucksu.ScoreController do
         _ ->
           :ok
       end
-    end
-
-    osu_beatmap = OsuBeatmapFetcher.fetch(beatmap_file_md5)
-    if is_nil(osu_beatmap) do
-      Logger.error "#{username} tried to submit a score for an unsubmitted map, or there's something wrong on our end"
-      raise "no"
     end
 
     full_combo = case full_combo do
