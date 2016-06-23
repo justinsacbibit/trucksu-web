@@ -38,6 +38,8 @@ defmodule Trucksu.OszController do
             Logger.error "Failed to generate presigned url for beatmapset #{beatmapset_id} : #{inspect error}"
             json(conn, %{"ok" => false})
         end
+      {:error, :no_content_length} ->
+        json(conn, %{"ok" => false, "detail" => "Beatmap is no longer available for download (probably due to copyright)"})
       {:error, _reason} ->
         json(conn, %{"ok" => false})
     end
