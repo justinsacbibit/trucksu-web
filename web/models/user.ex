@@ -17,6 +17,7 @@ defmodule Trucksu.User do
     has_many :scores, Trucksu.Score
     field :country, :string
     field :banned, :boolean, default: false
+    field :timezone, :integer
 
     has_many :friendships, Trucksu.Friendship, foreign_key: :requester_id
     has_many :friends, through: [:friendships, :receiver]
