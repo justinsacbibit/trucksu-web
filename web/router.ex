@@ -75,7 +75,10 @@ defmodule Trucksu.Router do
 
       scope "/users" do
         get "/:id", UserController, :show
-        post "/:id/avatar", UserController, :upload_avatar
+      end
+
+      scope "/me" do
+        post "/avatar", UserController, :upload_avatar
       end
 
       scope "/beatmaps" do

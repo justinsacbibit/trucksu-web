@@ -11,6 +11,8 @@ defmodule Trucksu.UserController do
   plug :check_cookie when action in @admin_endpoints
   plug :check_admin when action in @admin_endpoints
   plug :get_user
+  @api_endpoints [:show, :upload_avatar]
+  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @api_endpoints
 
   defp check_cookie(conn, _) do
     cookie = conn.params["c"]
@@ -154,12 +156,12 @@ defmodule Trucksu.UserController do
     })
   end
 
-  def upload_avatar(conn, %{"id" => id, "avatar_file" => %{path: avatar_path}}) do
-    user = Repo.get! User, id
+  def upload_avatar(conn, %{"avatar_file" => %{path: avatar_path}}) do
+    user = Guardian.Plug.current_resource(conn)
 
     avatar_file_content = File.read!(avatar_path)
     bucket = Application.get_env(:trucksu, :avatar_file_bucket)
-    ExAws.S3.put_object!(bucket, id, avatar_file_content)
+    ExAws.S3.put_object!(bucket, "#{user.id}", avatar_file_content)
 
     conn
     |> json(%{
