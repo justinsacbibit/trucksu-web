@@ -72,7 +72,11 @@ defmodule Trucksu.Router do
 
       get "/ranks", RanksController, :index
       get "/pp-calc", PerformanceController, :calculate
-      get "/users/:id", UserController, :show
+
+      scope "/users" do
+        get "/:id", UserController, :show
+        post "/:id/avatar", UserController, :upload_avatar
+      end
 
       scope "/beatmaps" do
         get "/:beatmap_id", OsuBeatmapController, :show

@@ -154,6 +154,19 @@ defmodule Trucksu.UserController do
     })
   end
 
+  def upload_avatar(conn, %{"id" => id, "avatar_file" => %{path: avatar_path}}) do
+    user = Repo.get! User, id
+
+    avatar_file_content = File.read!(avatar_path)
+    bucket = Application.get_env(:trucksu, :avatar_file_bucket)
+    ExAws.S3.put_object!(bucket, id, avatar_file_content)
+
+    conn
+    |> json(%{
+      "ok" => true,
+    })
+  end
+
   def show(conn, %{"id" => id}) do
     query = from u in User,
       join: us in assoc(u, :stats),
