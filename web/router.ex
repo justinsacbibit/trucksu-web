@@ -50,6 +50,8 @@ defmodule Trucksu.Router do
     get "/d/:beatmapset_id", OszController, :download
     get "/u/:user_id", UserController, :show_osu_user
 
+    get "/forum/ucp.php", UserController, :show_osu_user
+
     # beatmap page
     get "/b/:beatmap_id", OsuBeatmapPageController, :show_beatmap
     get "/s/:beatmapset_id", OsuBeatmapPageController, :show_beatmapset
