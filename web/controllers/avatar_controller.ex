@@ -14,7 +14,10 @@ defmodule Trucksu.AvatarController do
             Plug.Conn.send_file(conn, 200, default_path)
 
           {:ok, %{body: avatar_file_content}} ->
-            Plug.Conn.send_resp(conn, 200, avatar_file_content)
+            conn
+            |> Plug.Conn.put_resp_header("content-type", "image/jpeg")
+            |> Plug.Conn.put_resp_header("content-transfer-encoding", "binary")
+            |> Plug.Conn.send_resp(200, avatar_file_content)
         end
     end
   end
