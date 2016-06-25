@@ -158,12 +158,12 @@ defmodule Trucksu.Performance do
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
-  def calculate(_identifier, _mods, game_mode) when game_mode != 0 do
+  def calculate(_identifier, _mods, game_mode, acc) when game_mode != 0 do
     {:ok, nil}
   end
-  def calculate(identifier, mods, game_mode) do
+  def calculate(identifier, mods, game_mode, acc) do
     with {:ok, osu_file_content} <- OsuBeatmapFileFetcher.fetch(identifier),
-         do: calculate_max_with_osu_file_content(mods, game_mode, osu_file_content)
+         do: calculate_max_with_osu_file_content(mods, game_mode, osu_file_content, acc)
   end
 
   defp calculate_with_osu_file_content(score, osu_file_content) do
@@ -199,22 +199,23 @@ defmodule Trucksu.Performance do
     end
   end
 
-  defp calculate_max_with_osu_file_content(mods, game_mode, osu_file_content) do
+  defp calculate_max_with_osu_file_content(mods, game_mode, osu_file_content, acc) do
 
     cookie = Application.get_env(:trucksu, :performance_cookie)
     form_data = [
       {"b", osu_file_content},
       {"EnabledMods", mods},
       {"GameMode", game_mode},
+      {"Accuracy", acc},
       {"Cookie", cookie},
     ]
 
     performance_url = Application.get_env(:trucksu, :performance_url)
-    case HTTPoison.post performance_url <> "/max", {:form, form_data} do
+    case HTTPoison.post performance_url <> "/acc", {:form, form_data} do
       {:ok, %HTTPoison.Response{body: body}} ->
         case Poison.decode(body) do
-          {:ok, %{"pp" => pp}} ->
-            {:ok, pp}
+          {:ok, %{} = result} ->
+            {:ok, result}
           something ->
             Logger.error "Failed to decode max performance json"
             Logger.error inspect(body, limit: :infinity)

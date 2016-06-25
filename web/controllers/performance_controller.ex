@@ -17,29 +17,34 @@ defmodule Trucksu.PerformanceController do
     end
   end
 
+  def calculate(conn, %{"file_md5" => file_md5, "mods" => mods, "m" => game_mode, "acc" => acc}) do
+    calculate_with_identifier(conn, file_md5, mods, game_mode, acc)
+  end
   def calculate(conn, %{"file_md5" => file_md5, "mods" => mods, "m" => game_mode}) do
     calculate_with_identifier(conn, file_md5, mods, game_mode)
   end
 
+  def calculate(conn, %{"b" => b, "mods" => mods, "m" => game_mode, "acc" => acc}) do
+    {b, _} = Integer.parse(b)
+    calculate_with_identifier(conn, b, mods, game_mode, acc)
+  end
   def calculate(conn, %{"b" => b, "mods" => mods, "m" => game_mode}) do
     {b, _} = Integer.parse(b)
     calculate_with_identifier(conn, b, mods, game_mode)
   end
 
-  defp calculate_with_identifier(conn, identifier, mods, game_mode) do
+  defp calculate_with_identifier(conn, identifier, mods, game_mode, acc \\ -1) do
     {mods, _} = Integer.parse(mods)
     {game_mode, _} = Integer.parse(game_mode)
 
-    case Performance.calculate(identifier, mods, game_mode) do
-      {:ok, pp} ->
+    case Performance.calculate(identifier, mods, game_mode, acc) do
+      {:ok, result} ->
         {:ok, osu_beatmap} = OsuBeatmapFetcher.fetch(identifier)
         osu_beatmap = Repo.preload osu_beatmap, :beatmapset
-        data = %{
-          "event_type" => "max-pp-calc",
-          "pp" => "#{round pp}",
+        data = Map.merge(%{
           "osu_beatmap" => osu_beatmap,
-        }
-        Logger.warn "Calculated #{round pp}pp for #{identifier} #{osu_beatmap.beatmapset.artist} - #{osu_beatmap.beatmapset.title} (#{osu_beatmap.beatmapset.creator}) [#{osu_beatmap.version}]"
+        }, result)
+        Logger.info "Calculated pp: #{inspect data}"
         json(conn, data)
 
       error ->
