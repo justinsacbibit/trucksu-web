@@ -116,6 +116,15 @@ defmodule Trucksu.User do
     |> generate_encrypted_password
   end
 
+  def patch_changeset(model, params \\ :empty) do
+    model
+    |> cast(params, ~w(), ~w(username))
+    |> validate_format(:username, ~r/^[-_\[\]A-Za-z0-9 ]+$/)
+    |> validate_format(:email, ~r/@/)
+    |> unique_constraint(:email, message: "Email already taken", name: :users_lower_email_index)
+    |> unique_constraint(:username, message: "Username already taken", name: :users_lower_username_index)
+  end
+
   defp generate_encrypted_password(changeset) do
     case changeset do
       %Ecto.Changeset{valid?: true, changes: %{password: password}} ->

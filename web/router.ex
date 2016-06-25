@@ -77,6 +77,9 @@ defmodule Trucksu.Router do
 
       scope "/users" do
         get "/:id", UserController, :show
+
+        # admin
+        patch "/:id_or_username", UserController, :patch
       end
 
       scope "/me" do

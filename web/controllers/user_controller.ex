@@ -7,7 +7,7 @@ defmodule Trucksu.UserController do
   }
 
   # admin endpoints
-  @admin_endpoints [:ban, :unban, :multiaccounts]
+  @admin_endpoints [:ban, :unban, :multiaccounts, :patch]
   plug :check_cookie when action in @admin_endpoints
   plug :check_admin when action in @admin_endpoints
   plug :get_user
@@ -153,6 +153,33 @@ defmodule Trucksu.UserController do
     |> json(%{
       ip_address: multi_ip_usernames,
       access_point: multi_ap_usernames,
+    })
+  end
+
+  def patch(conn, %{"username" => username}) do
+    user = conn.assigns[:user]
+
+    changeset = User.patch_changeset(user, %{"username" => username})
+    case Repo.update changeset do
+      {:ok, _} ->
+        conn
+        |> json(%{
+          "ok" => true,
+          "username" => username,
+        })
+      {:error, changeset} ->
+        conn
+        |> put_status(400)
+        |> json(%{
+          "ok" => false,
+          "errors" => changeset.errors |> Enum.into(%{}),
+        })
+    end
+  end
+  def patch(conn, _) do
+    conn
+    |> json(%{
+      "ok" => true,
     })
   end
 
