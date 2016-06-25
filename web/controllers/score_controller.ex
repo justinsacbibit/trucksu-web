@@ -333,6 +333,7 @@ defmodule Trucksu.ScoreController do
             "cookie" => cookie,
             "event_type" => "pp",
             "pp" => "#{round score.pp}",
+            "user_id" => user.id,
             "username" => user.username,
             "beatmap_id" => "#{osu_beatmap.id}",
             "version" => osu_beatmap.version,
