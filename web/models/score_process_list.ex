@@ -22,6 +22,7 @@ defmodule Trucksu.ScoreProcessList do
   def changeset(model, params \\ :empty) do
     model
     |> cast(params, @required_fields, @optional_fields)
+    |> update_change(:process_list, &String.slice(&1, 0..8999))
   end
 end
 
