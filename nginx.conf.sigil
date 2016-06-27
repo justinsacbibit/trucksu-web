@@ -100,6 +100,7 @@ server {
   # TODO: Set up file upload restrictions
   large_client_header_buffers 4 16k;
   keepalive_timeout 60;
+  client_max_body_size 100m;
 
   location / {
     proxy_pass http://{{ .APP }};
