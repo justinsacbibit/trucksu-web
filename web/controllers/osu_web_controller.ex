@@ -328,7 +328,8 @@ defmodule Trucksu.OsuWebController do
     json(conn, %{})
   end
 
-  def screenshot(conn, %{"ss_file" => ss_file, "i" => user_id}) do
+  def screenshot(conn, %{"ss_file" => ss_file, "i" => user_id} = params) do
+    IO.inspect params, [limit: :infinity]
     # TODO: Process list
     ss_file_content = File.read!(ss_file.path)
     if byte_size(ss_file_content) > 0 do
@@ -339,7 +340,8 @@ defmodule Trucksu.OsuWebController do
     end
     conn |> html("")
   end
-  def screenshot(conn, _params) do
+  def screenshot(conn, params) do
+    IO.inspect params, [limit: :infinity]
     conn |> html("")
   end
 
