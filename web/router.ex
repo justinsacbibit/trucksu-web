@@ -36,6 +36,8 @@ defmodule Trucksu.Router do
       get "/osu-getreplay.php", ReplayController, :show
       get "/maps/:filename", OsuWebController, :show_map
 
+      post "/osu-error.php", OsuWebController, :screenshot
+
       post "/osu-submit-modular.php", ScoreController, :create
       post "/osu-screenshot.php", ScreenshotController, :create
 

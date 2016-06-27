@@ -1,5 +1,6 @@
 defmodule Trucksu.OsuWebController do
   use Trucksu.Web, :controller
+  use Timex
   require Logger
   alias Trucksu.{
     OsuBeatmapFetcher,
@@ -325,6 +326,21 @@ defmodule Trucksu.OsuWebController do
     Repo.one query
 
     json(conn, %{})
+  end
+
+  def screenshot(conn, %{"ss_file" => ss_file, "i" => user_id}) do
+    # TODO: Process list
+    ss_file_content = File.read!(ss_file.path)
+    if byte_size(ss_file_content) > 0 do
+      bucket = Application.get_env(:trucksu, :desktop_screenshot_file_bucket)
+      ExAws.S3.put_object!(bucket, "#{user_id}-#{Time.now |> Time.to_milliseconds}.jpg", ss_file_content)
+    else
+      Logger.info "No screenshot file content for #{user_id}"
+    end
+    conn |> html("")
+  end
+  def screenshot(conn, _params) do
+    conn |> html("")
   end
 
   defp format_beatmap_top_scores(osu_beatmap) do
