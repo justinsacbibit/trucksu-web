@@ -76,7 +76,7 @@ defmodule Trucksu.Performance do
       where: us.game_mode == ^game_mode,
       preload: [user: u]
 
-    Enum.each user_stats, fn user_stats ->
+    results = Enum.map user_stats, fn user_stats ->
       # TODO: Sort in SQL using a subquery
       calculated = calculate_stats_for_user(user_stats.user_id, user_stats.game_mode)
       [pp: pp, accuracy: accuracy] = calculated
@@ -87,16 +87,23 @@ defmodule Trucksu.Performance do
       })
 
       if not dry_run do
-        Logger.warn "Updating #{user_stats.user.username}:#{user_stats.game_mode} pp:old=#{user_stats.pp} accuracy:old=#{user_stats.accuracy} pp=#{pp} accuracy=#{accuracy}"
         case Repo.update changeset do
           {:ok, _} ->
-            :ok
+            {:ok, user_stats.user, user_stats.pp, pp}
           {:error, changeset} ->
-            Logger.error "Failed to insert updated user_stats for #{user_stats.user.username}:#{user_stats.game_mode}"
-            Logger.error inspect changeset
+            Logger.error "Failed to update user_stats for #{user_stats.user.username}:#{user_stats.game_mode}: #{inspect changeset}"
+            {:error, changeset}
         end
       else
-        Logger.warn "Would update #{user_stats.user.username}:#{user_stats.game_mode} pp:old=#{user_stats.pp} accuracy:old=#{user_stats.accuracy} pp=#{pp} accuracy=#{accuracy}"
+        {:ok, user_stats.user, user_stats.pp, pp}
+      end
+    end
+
+    for {:ok, user, old_pp, new_pp} <- results, old_pp != new_pp do
+      if not dry_run do
+        Logger.warn "Updated #{user.username}:#{game_mode} diff=#{round(new_pp - old_pp)} pp:old=#{round(old_pp)} pp=#{round(new_pp)}"
+      else
+        Logger.warn "Would update #{user.username}:#{game_mode} diff=#{round(new_pp - old_pp)} pp:old=#{round(old_pp)} pp=#{round(new_pp)}"
       end
     end
   end
