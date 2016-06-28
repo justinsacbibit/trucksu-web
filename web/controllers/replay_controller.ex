@@ -129,7 +129,8 @@ defmodule Trucksu.ReplayController do
         "D"
     end
 
-    magic_string = "#{score.count_100}p#{score.count_300}o#{score.count_50}o#{score.geki_count}t#{score.katu_count}a#{score.miss_count}r#{score.file_md5}e#{score.max_combo}y#{full_combo}o#{score.user.username}u#{score.score}#{rank}#{score.mods}"
+    # TODO: Verify that this is right
+    magic_string = "#{score.count_100}p#{score.count_300}o#{score.count_50}o#{score.geki_count}t#{score.katu_count}a#{score.miss_count}r#{score.file_md5}e#{score.max_combo}y#{full_combo}o#{score.user.username}u#{score.score}#{rank}#{score.mods}" |> Trucksu.Hash.md5
 
     html conn, replay_file_content
   end
