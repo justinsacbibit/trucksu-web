@@ -36,6 +36,7 @@ defmodule Trucksu.OsuDirectController do
     params = params
     |> Map.put("u", osu_username)
     |> Map.put("h", osu_password_md5)
+    ExStatsD.increment "osu.direct.searches.attempted"
     case HTTPoison.get("https://osu.ppy.sh/web/osu-search.php", [], follow_redirect: true, params: Enum.to_list(params)) do
       {:ok, %HTTPoison.Response{body: body}} ->
         conn
