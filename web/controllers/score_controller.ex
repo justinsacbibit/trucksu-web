@@ -263,7 +263,7 @@ defmodule Trucksu.ScoreController do
           score = Repo.insert! score
 
           if bad_flag != 0 do
-            Logger.error "#{username} submitted a score with bad_flag! score id: #{score.id}"
+            Logger.error "#{username} submitted a score with bad_flag! score.id=#{score.id}, bad_flag=#{bad_flag}"
           end
 
           changeset = ScoreProcessList.changeset(%ScoreProcessList{}, %{
