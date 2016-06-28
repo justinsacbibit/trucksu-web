@@ -35,6 +35,7 @@ defmodule Trucksu.Router do
       get "/lastfm.php", OsuWebController, :lastfm
       get "/osu-getreplay.php", ReplayController, :show
       get "/maps/:filename", OsuWebController, :show_map
+      get "/osu-search.php", OsuDirectController, :direct_index
 
       post "/osu-error.php", OsuWebController, :screenshot
 
