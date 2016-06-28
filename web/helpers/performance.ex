@@ -164,7 +164,7 @@ defmodule Trucksu.Performance do
          do: calculate_with_osu_file_content(score, osu_file_content)
   end
 
-  def calculate(_identifier, _mods, game_mode, acc) when game_mode != 0 do
+  def calculate(_identifier, _mods, game_mode, _acc) when game_mode != 0 do
     {:ok, nil}
   end
   def calculate(identifier, mods, game_mode, acc) do
