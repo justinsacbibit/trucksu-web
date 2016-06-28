@@ -48,7 +48,13 @@ defmodule Trucksu.Performance do
 
     pp = max(pp, 0.0)
 
+    pp = pp + calculate_bonus_pp(length(scores))
+
     [pp: pp, accuracy: accuracy]
+  end
+
+  defp calculate_bonus_pp(score_count) do
+    416.6667 * (1 - :math.pow(0.9994, score_count))
   end
 
   defp from_pps(pps) do
