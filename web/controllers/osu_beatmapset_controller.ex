@@ -11,9 +11,10 @@ defmodule Trucksu.OsuBeatmapsetController do
       left_join: sc in assoc(obs_ob, :scores),
       left_join: u in assoc(sc, :user),
       where: ob.id == ^beatmap_id
-        and not u.banned
-        and sc.game_mode == obs_ob.game_mode
-        and sc.pass,
+        and (is_nil(sc.id) or
+          (sc.game_mode == obs_ob.game_mode
+          and sc.pass
+          and not u.banned)),
       order_by: [asc: obs_ob.difficultyrating, desc: sc.pp],
       preload: [beatmapset: {obs, [beatmaps: {obs_ob, [scores: {sc, [user: u]}]}]}]
 
