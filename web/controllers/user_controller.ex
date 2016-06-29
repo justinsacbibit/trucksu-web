@@ -52,7 +52,7 @@ defmodule Trucksu.UserController do
         {id, _} ->
           Repo.get! User, id
         _ ->
-          Repo.get_by! User, username: id_or_username
+          Repo.one! User.by_username(id_or_username)
       end
 
       assign(conn, :user, user)
@@ -197,8 +197,20 @@ defmodule Trucksu.UserController do
     })
   end
 
+  def resend_verification_email(conn, %{"email" => email}) do
+    user = Repo.get_by! User, email: email
+    resend_verification_email_to_user(conn, user)
+  end
+  def resend_verification_email(conn, %{"username" => username}) do
+    user = Repo.one! User.by_username(username)
+    resend_verification_email_to_user(conn, user)
+  end
   def resend_verification_email(conn, _) do
     user = Guardian.Plug.current_resource(conn)
+    resend_verification_email_to_user(conn, user)
+  end
+
+  defp resend_verification_email_to_user(conn, user) do
     Mailer.send_verification_email(user)
 
     conn
