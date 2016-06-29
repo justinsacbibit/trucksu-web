@@ -18,6 +18,7 @@ defmodule Trucksu.User do
     field :country, :string
     field :banned, :boolean, default: false
     field :timezone, :integer
+    field :email_verified, :boolean, default: false
 
     has_many :friendships, Trucksu.Friendship, foreign_key: :requester_id
     has_many :friends, through: [:friendships, :receiver]
