@@ -3,6 +3,10 @@ defmodule Trucksu.Mailer do
   @config domain: Application.get_env(:trucksu, :mailgun_domain),
           key: Application.get_env(:trucksu, :mailgun_key)
   use Mailgun.Client, @config
+  alias Trucksu.{
+    EmailToken,
+    Repo,
+  }
 
   @from "noreply@trucksu.com"
 
@@ -22,11 +26,14 @@ defmodule Trucksu.Mailer do
     "#{@website_url}/verify-email?t=#{token}"
   end
 
-  def send_verification_email(user, token) do
+  def send_verification_email(user) do
+    changeset = EmailToken.new(user)
+    email_token = Repo.insert!(changeset)
+
     send_email to: user.email,
                from: @from,
                subject: "Trucksu Account Verification",
-               html: verification_html(user, token)
+               html: verification_html(user, email_token.token)
   end
 end
 

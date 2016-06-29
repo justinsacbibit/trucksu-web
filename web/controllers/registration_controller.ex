@@ -26,10 +26,7 @@ defmodule Trucksu.RegistrationController do
 
           {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, :token)
 
-          changeset = EmailToken.new(user)
-          email_token = Repo.insert!(changeset)
-
-          Mailer.send_verification_email(user, email_token.token)
+          Mailer.send_verification_email(user)
 
           conn
           |> put_status(:created)
@@ -55,7 +52,7 @@ defmodule Trucksu.RegistrationController do
     end
   end
 
-  def verify_email(conn, %{"t" => token}) do
+  def verify_email(conn, %{"token" => token}) do
     email_token = Repo.one! from e in EmailToken,
       join: u in assoc(e, :user),
       where: e.token == ^token,

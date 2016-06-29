@@ -2,6 +2,7 @@ defmodule Trucksu.UserController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    Mailer,
     DiscordAdmin,
     User,
   }
@@ -11,7 +12,7 @@ defmodule Trucksu.UserController do
   plug :check_cookie when action in @admin_endpoints
   plug :check_admin when action in @admin_endpoints
   plug :get_user
-  @api_endpoints [:show, :upload_avatar]
+  @api_endpoints [:show, :upload_avatar, :resend_verification_email]
   plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @api_endpoints
 
   defp check_cookie(conn, _) do
@@ -189,6 +190,16 @@ defmodule Trucksu.UserController do
     avatar_file_content = File.read!(avatar_path)
     bucket = Application.get_env(:trucksu, :avatar_file_bucket)
     ExAws.S3.put_object!(bucket, "#{user.id}", avatar_file_content)
+
+    conn
+    |> json(%{
+      "ok" => true,
+    })
+  end
+
+  def resend_verification_email(conn, _) do
+    user = Guardian.Plug.current_resource(conn)
+    Mailer.send_verification_email(user)
 
     conn
     |> json(%{
