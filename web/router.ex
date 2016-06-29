@@ -71,7 +71,7 @@ defmodule Trucksu.Router do
 
     scope "v1" do
       post "/registrations", RegistrationController, :create
-      get "/verify-email", RegistrationController, :verify_email
+      post "/verify-email", RegistrationController, :verify_email
       post "/sessions", SessionController, :create
       delete "/sessions", SessionController, :delete
       get "/current-user", CurrentUserController, :show
