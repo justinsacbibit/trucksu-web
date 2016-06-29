@@ -12,8 +12,8 @@ defmodule Trucksu.UserController do
   plug :check_cookie when action in @admin_endpoints
   plug :check_admin when action in @admin_endpoints
   plug :get_user
-  @api_endpoints [:show, :upload_avatar, :resend_verification_email]
-  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @api_endpoints
+  @authenticated_api_endpoints [:upload_avatar]
+  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @authenticated_api_endpoints
 
   defp check_cookie(conn, _) do
     cookie = conn.params["c"]
@@ -207,7 +207,19 @@ defmodule Trucksu.UserController do
   end
   def resend_verification_email(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    resend_verification_email_to_user(conn, user)
+    case user do
+      nil ->
+        conn
+        |> put_status(401)
+        |> json(%{
+          "ok" => false,
+          "errors" => %{
+            "detail" => "Missing token",
+          },
+        })
+      _ ->
+        resend_verification_email_to_user(conn, user)
+    end
   end
 
   defp resend_verification_email_to_user(conn, user) do
