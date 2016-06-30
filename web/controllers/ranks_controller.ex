@@ -3,7 +3,6 @@ defmodule Trucksu.RanksController do
   alias Trucksu.UserStats
 
   def index(conn, _params) do
-    # TODO: Check params cookie
     stats = Repo.all from us in UserStats,
       join: u in assoc(us, :user),
       where: u.banned == false

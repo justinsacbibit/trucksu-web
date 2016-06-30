@@ -2,6 +2,7 @@ defmodule Trucksu.UserController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    Mailer,
     DiscordAdmin,
     User,
   }
@@ -11,8 +12,8 @@ defmodule Trucksu.UserController do
   plug :check_cookie when action in @admin_endpoints
   plug :check_admin when action in @admin_endpoints
   plug :get_user
-  @api_endpoints [:show, :upload_avatar]
-  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @api_endpoints
+  @authenticated_api_endpoints [:upload_avatar]
+  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @authenticated_api_endpoints
 
   defp check_cookie(conn, _) do
     cookie = conn.params["c"]
@@ -51,7 +52,7 @@ defmodule Trucksu.UserController do
         {id, _} ->
           Repo.get! User, id
         _ ->
-          Repo.get_by! User, username: id_or_username
+          Repo.one! User.by_username(id_or_username)
       end
 
       assign(conn, :user, user)
@@ -196,16 +197,62 @@ defmodule Trucksu.UserController do
     })
   end
 
+  defmodule ResendVerificationEmailUserNotFoundError do
+    @errors [%{usernameOrEmail: "no user exists with that username or email"}]
+    defexception plug_status: 404, errors: []
+    def exception(opts) do
+      %ResendVerificationEmailUserNotFoundError{errors: @errors}
+    end
+  end
+
+  defmodule ResendVerificationEmailUserAlreadyVerifiedError do
+    @errors [%{usernameOrEmail: "already verified"}]
+    defexception plug_status: 400, errors: nil
+    def exception(_opts) do
+      %ResendVerificationEmailUserAlreadyVerifiedError{errors: @errors}
+    end
+  end
+
+  def resend_verification_email(conn, %{"email" => email}) do
+    user = Repo.get_by User, email: email
+    if !user, do: raise ResendVerificationEmailUserNotFoundError, missing: :username
+    resend_verification_email_to_user(conn, user)
+  end
+  def resend_verification_email(conn, %{"username" => username}) do
+    user = Repo.one User.by_username(username)
+    if !user, do: raise ResendVerificationEmailUserNotFoundError, missing: :email
+    resend_verification_email_to_user(conn, user)
+  end
+  def resend_verification_email(conn, _) do
+    user = Guardian.Plug.current_resource(conn)
+    if !user, do: raise ResendVerificationEmailUserNotFoundError, missing: :token
+    resend_verification_email_to_user(conn, user)
+  end
+
+  defp resend_verification_email_to_user(conn, user) do
+    if user.email_verified do
+      raise ResendVerificationEmailUserAlreadyVerifiedError
+    end
+
+    Mailer.send_verification_email(user)
+
+    conn
+    |> json(%{
+      "ok" => true,
+    })
+  end
+
   def show(conn, %{"id" => id}) do
     query = from u in User,
       join: us in assoc(u, :stats),
-      join: sc in assoc(u, :scores),
-      join: ob in assoc(sc, :osu_beatmap),
-      join: obs in assoc(ob, :beatmapset),
+      left_join: sc in assoc(u, :scores),
+      left_join: ob in assoc(sc, :osu_beatmap),
+      left_join: obs in assoc(ob, :beatmapset),
       where: us.user_id == ^id
-        and not is_nil(sc.pp)
-        and sc.pass
-        and us.game_mode == sc.game_mode,
+        and (is_nil(sc.id) or
+          not is_nil(sc.pp)
+          and sc.pass
+          and us.game_mode == sc.game_mode),
       preload: [stats: {us, scores: {sc, osu_beatmap: {ob, [beatmapset: obs]}}}],
       order_by: [desc: sc.pp]
     user = Repo.one! query

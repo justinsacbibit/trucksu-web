@@ -1,10 +1,16 @@
 defmodule Trucksu.ErrorView do
   use Trucksu.Web, :view
 
+  def render("400.json", %{reason: %{errors: [_ | _a] = errors}}) do
+    %{errors: errors}
+  end
   def render("400.json", _assigns) do
     %{errors: %{detail: "Bad request"}}
   end
 
+  def render("404.json", %{reason: %{errors: [_ | _a] = errors}}) do
+    %{errors: errors}
+  end
   def render("404.json", _assigns) do
     %{errors: %{detail: "Page not found"}}
   end

@@ -4,7 +4,12 @@ defmodule Trucksu.SessionView do
   def render("show.json", %{jwt: jwt, user: user}) do
     %{
       jwt: jwt,
-      user: user,
+      user: %{
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        email_verified: user.email_verified,
+      },
     }
   end
 

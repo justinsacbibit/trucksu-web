@@ -45,6 +45,7 @@ defmodule Trucksu.Mixfile do
      {:httpoison, "~> 0.8.0"},
      {:poison, "~> 1.5"},
      {:ex_aws, "~> 0.4.10"},
+     {:mailgun, "~> 0.1.2"},
      {:sweet_xml, "~> 0.5.0"},
      {:ex_rated, "~> 1.2"},
      {:mix_test_watch, "~> 0.2", only: :dev},
