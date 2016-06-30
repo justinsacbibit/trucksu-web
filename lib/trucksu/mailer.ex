@@ -3,6 +3,7 @@ defmodule Trucksu.Mailer do
   @config domain: Application.get_env(:trucksu, :mailgun_domain),
           key: Application.get_env(:trucksu, :mailgun_key)
   use Mailgun.Client, @config
+  require Logger
   alias Trucksu.{
     EmailToken,
     Repo,
@@ -30,10 +31,17 @@ defmodule Trucksu.Mailer do
     changeset = EmailToken.new(user)
     email_token = Repo.insert!(changeset)
 
-    send_email to: user.email,
-               from: @from,
-               subject: "Trucksu Account Verification",
-               html: verification_html(user, email_token.token)
+    result = send_email to: user.email,
+                        from: @from,
+                        subject: "Trucksu Account Verification",
+                        html: verification_html(user, email_token.token)
+
+    case result do
+      {:error, status_code, response} ->
+        Logger.error "Failed to send a verification email to #{user.username}: status code: #{status_code}, response: #{response}"
+      _ ->
+        :ok
+    end
   end
 end
 
