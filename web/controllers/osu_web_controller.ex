@@ -241,7 +241,7 @@ defmodule Trucksu.OsuWebController do
   end
 
   def check_updates(conn, params) do
-    data = case HTTPoison.get("http://osu.ppy.sh/web/check-updates.php", [], params: Enum.to_list(params)) do
+    data = case HTTPoison.get("https://osu.ppy.sh/web/check-updates.php", [], params: Enum.to_list(params)) do
       %HTTPoison.Response{body: body} when byte_size(body) > 0 ->
         body
       _ ->
