@@ -241,14 +241,15 @@ defmodule Trucksu.OsuWebController do
   end
 
   def check_updates(conn, params) do
-    # This probably causes HTTP recursion
-    data = case HTTPoison.get("https://osu.ppy.sh/web/check-updates.php", [], params: Enum.to_list(params)) do
-      {:ok, %HTTPoison.Response{body: body}} when byte_size(body) > 0 ->
-        body
-      _ ->
-        """
-        [{"file_version":"3","filename":"avcodec-51.dll","file_hash":"b22bf1e4ecd4be3d909dc68ccab74eec","filesize":"4409856","timestamp":"2014-08-18 16:16:59","patch_id":"1349","url_full":"http://m1.ppy.sh/r/avcodec-51.dll/f_b22bf1e4ecd4be3d909dc68ccab74eec","url_patch":"http://m1.ppy.sh/r/avcodec-51.dll/p_b22bf1e4ecd4be3d909dc68ccab74eec_734e450dd85c16d62c1844f10c6203c0"}]
-        """
+    data = if Mix.env == :dev do
+      "[]"
+    else
+      case HTTPoison.get("https://osu.ppy.sh/web/check-updates.php", [], params: Enum.to_list(params)) do
+        {:ok, %HTTPoison.Response{body: body}} when byte_size(body) > 0 ->
+          body
+        _ ->
+          "[]"
+      end
     end
     render conn, "response.raw", data: data
   end
