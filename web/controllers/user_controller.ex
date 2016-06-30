@@ -197,32 +197,43 @@ defmodule Trucksu.UserController do
     })
   end
 
+  defmodule ResendVerificationEmailUserNotFoundError do
+    @errors [%{usernameOrEmail: "no user exists with that username or email"}]
+    defexception plug_status: 404, errors: []
+    def exception(opts) do
+      %ResendVerificationEmailUserNotFoundError{errors: @errors}
+    end
+  end
+
+  defmodule ResendVerificationEmailUserAlreadyVerifiedError do
+    @errors [%{usernameOrEmail: "already verified"}]
+    defexception plug_status: 400, errors: nil
+    def exception(_opts) do
+      %ResendVerificationEmailUserAlreadyVerifiedError{errors: @errors}
+    end
+  end
+
   def resend_verification_email(conn, %{"email" => email}) do
-    user = Repo.get_by! User, email: email
+    user = Repo.get_by User, email: email
+    if !user, do: raise ResendVerificationEmailUserNotFoundError, missing: :username
     resend_verification_email_to_user(conn, user)
   end
   def resend_verification_email(conn, %{"username" => username}) do
-    user = Repo.one! User.by_username(username)
+    user = Repo.one User.by_username(username)
+    if !user, do: raise ResendVerificationEmailUserNotFoundError, missing: :email
     resend_verification_email_to_user(conn, user)
   end
   def resend_verification_email(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    case user do
-      nil ->
-        conn
-        |> put_status(401)
-        |> json(%{
-          "ok" => false,
-          "errors" => %{
-            "detail" => "Missing token",
-          },
-        })
-      _ ->
-        resend_verification_email_to_user(conn, user)
-    end
+    if !user, do: raise ResendVerificationEmailUserNotFoundError, missing: :token
+    resend_verification_email_to_user(conn, user)
   end
 
   defp resend_verification_email_to_user(conn, user) do
+    if user.email_verified do
+      raise ResendVerificationEmailUserAlreadyVerifiedError
+    end
+
     Mailer.send_verification_email(user)
 
     conn
