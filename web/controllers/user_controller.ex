@@ -234,13 +234,14 @@ defmodule Trucksu.UserController do
   def show(conn, %{"id" => id}) do
     query = from u in User,
       join: us in assoc(u, :stats),
-      join: sc in assoc(u, :scores),
-      join: ob in assoc(sc, :osu_beatmap),
-      join: obs in assoc(ob, :beatmapset),
+      left_join: sc in assoc(u, :scores),
+      left_join: ob in assoc(sc, :osu_beatmap),
+      left_join: obs in assoc(ob, :beatmapset),
       where: us.user_id == ^id
-        and not is_nil(sc.pp)
-        and sc.pass
-        and us.game_mode == sc.game_mode,
+        and (is_nil(sc.id) or
+          not is_nil(sc.pp)
+          and sc.pass
+          and us.game_mode == sc.game_mode),
       preload: [stats: {us, scores: {sc, osu_beatmap: {ob, [beatmapset: obs]}}}],
       order_by: [desc: sc.pp]
     user = Repo.one! query
