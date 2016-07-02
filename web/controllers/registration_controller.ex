@@ -59,14 +59,11 @@ defmodule Trucksu.RegistrationController do
       preload: [user: u]
 
     changeset = Ecto.Changeset.change(email_token.user, email_verified: true)
-    Repo.update! changeset
+    user = Repo.update! changeset
 
     Repo.delete! email_token
 
-    conn
-    |> json(%{
-      "ok" => true,
-    })
+    render(conn, Trucksu.CurrentUserView, "show.json", user: user)
   end
 end
 
