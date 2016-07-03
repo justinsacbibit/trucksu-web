@@ -26,6 +26,8 @@ defmodule Trucksu.User do
     has_many :known_ips, Trucksu.KnownIp
     has_many :access_points, Trucksu.OsuUserAccessPoint
 
+    many_to_many :groups, Trucksu.Group, join_through: Trucksu.UserGroup
+
     timestamps
   end
 

@@ -34,11 +34,11 @@ defmodule Trucksu.Mixfile do
   defp deps do
     [{:phoenix, "~> 1.1.4"},
      {:phoenix_html, "~> 2.3"},
-     {:postgrex, ">= 0.0.0"},
+     {:postgrex, ">= 0.11.2"},
      {:timex, "~> 2.1.4"},
      {:timex_ecto, "~> 1.0.4"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:phoenix_ecto, "~> 2.0"},
+     {:phoenix_ecto, "~> 3.0"},
      {:guardian, "~> 0.9.0"},
      {:comeonin, "~> 2.0"},
      {:gettext, "~> 0.9"},
