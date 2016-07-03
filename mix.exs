@@ -34,7 +34,6 @@ defmodule Trucksu.Mixfile do
   defp deps do
     [{:phoenix, "~> 1.1.4"},
      {:phoenix_html, "~> 2.3"},
-     {:postgrex, ">= 0.11.2"},
      {:timex, "~> 2.1.4"},
      {:timex_ecto, "~> 1.0.4"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
