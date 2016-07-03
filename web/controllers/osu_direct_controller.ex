@@ -2,7 +2,8 @@ defmodule Trucksu.OsuDirectController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
-    OsuBeatmapset,
+    # OsuBeatmapset,
+    # Session,
   }
 
   @ranking_type_global_selected_mods 2
@@ -18,17 +19,17 @@ defmodule Trucksu.OsuDirectController do
 
   # plug :authenticate when action in [:direct_index] # TODO: add :show_map?
 
-  defp authenticate(conn, _) do
-    username = conn.params["us"] || conn.params["u"]
-    password_md5 = conn.params["ha"] || conn.params["h"]
-    case Session.authenticate(username, password_md5, true) do
-      {:error, reason} ->
-        Logger.warn "#{username} attempted to get scores, but was unable to authenticate: #{reason}"
-        stop_plug(conn, 403)
-      {:ok, user} ->
-        assign(conn, :user, user)
-    end
-  end
+  # defp authenticate(conn, _) do
+  #   username = conn.params["us"] || conn.params["u"]
+  #   password_md5 = conn.params["ha"] || conn.params["h"]
+  #   case Session.authenticate(username, password_md5, true) do
+  #     {:error, reason} ->
+  #       Logger.warn "#{username} attempted to get scores, but was unable to authenticate: #{reason}"
+  #       stop_plug(conn, 403)
+  #     {:ok, user} ->
+  #       assign(conn, :user, user)
+  #   end
+  # end
 
   def direct_index(conn, params) do
     osu_username = Application.get_env(:trucksu, :osu_username)
@@ -73,14 +74,14 @@ defmodule Trucksu.OsuDirectController do
   #   "#{beatmapset.id}.osz|#{artist}|#{title}|#{beatmapset.creator}|#{1}|10.00000|1|#{beatmapset.id}|#{thread_id}|#{has_video}|0|0||#{diffs}|\n"
   # end
 
-  defp stop(conn, status_code) do
-    conn
-    |> put_status(status_code)
-    |> html("")
-  end
+  # defp stop(conn, status_code) do
+  #   conn
+  #   |> put_status(status_code)
+  #   |> html("")
+  # end
 
-  defp stop_plug(conn, status_code) do
-    stop(conn, status_code)
-    |> halt
-  end
+  # defp stop_plug(conn, status_code) do
+  #   stop(conn, status_code)
+  #   |> halt
+  # end
 end

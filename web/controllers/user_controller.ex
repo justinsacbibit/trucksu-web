@@ -191,9 +191,10 @@ defmodule Trucksu.UserController do
   defmodule ResendVerificationEmailUserNotFoundError do
     @errors [%{usernameOrEmail: "no user exists with that username or email"}]
     defexception plug_status: 404, errors: []
-    def exception(opts) do
+    def exception(_opts) do
       %ResendVerificationEmailUserNotFoundError{errors: @errors}
     end
+    def message(_), do: "ResendVerificationEmailUserNotFoundError"
   end
 
   defmodule ResendVerificationEmailUserAlreadyVerifiedError do
@@ -202,6 +203,7 @@ defmodule Trucksu.UserController do
     def exception(_opts) do
       %ResendVerificationEmailUserAlreadyVerifiedError{errors: @errors}
     end
+    def message(_), do: "ResendVerificationEmailUserAlreadyVerifiedError"
   end
 
   def resend_verification_email(conn, %{"email" => email}) do
