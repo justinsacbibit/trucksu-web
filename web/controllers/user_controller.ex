@@ -14,6 +14,7 @@ defmodule Trucksu.UserController do
   plug :get_user
   @authenticated_api_endpoints [:upload_avatar]
   plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @authenticated_api_endpoints
+  plug :scrub_params, "user" when action in [:patch]
 
   defp check_cookie(conn, _) do
     cookie = conn.params["c"]
@@ -157,17 +158,13 @@ defmodule Trucksu.UserController do
     })
   end
 
-  def patch(conn, %{"username" => username}) do
+  def patch(conn, %{"user" => user_params}) do
     user = conn.assigns[:user]
 
-    changeset = User.patch_changeset(user, %{"username" => username})
+    changeset = User.patch_changeset(user, user_params)
     case Repo.update changeset do
-      {:ok, _} ->
-        conn
-        |> json(%{
-          "ok" => true,
-          "username" => username,
-        })
+      {:ok, user} ->
+        render(conn, Trucksu.CurrentUserView, "show.json", user: user)
       {:error, changeset} ->
         conn
         |> put_status(400)
@@ -176,12 +173,6 @@ defmodule Trucksu.UserController do
           "errors" => changeset.errors |> Enum.into(%{}),
         })
     end
-  end
-  def patch(conn, _) do
-    conn
-    |> json(%{
-      "ok" => true,
-    })
   end
 
   def upload_avatar(conn, %{"avatar_file" => %{path: avatar_path}}) do

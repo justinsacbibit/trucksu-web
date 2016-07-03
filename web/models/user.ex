@@ -118,12 +118,19 @@ defmodule Trucksu.User do
   end
 
   def patch_changeset(model, params \\ :empty) do
-    model
-    |> cast(params, ~w(), ~w(username))
+    changeset = model
+    |> cast(params, ~w(), ~w(username email))
     |> validate_format(:username, ~r/^[-_\[\]A-Za-z0-9 ]+$/)
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email, message: "Email already taken", name: :users_lower_email_index)
     |> unique_constraint(:username, message: "Username already taken", name: :users_lower_username_index)
+
+    if get_change(changeset, :email) do
+      changeset
+      |> put_change(:email_verified, false)
+    else
+      changeset
+    end
   end
 
   defp generate_encrypted_password(changeset) do
