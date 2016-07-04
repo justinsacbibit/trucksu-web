@@ -3,8 +3,8 @@ defmodule Trucksu.Repo.Migrations.CreateUserGroup do
 
   def change do
     create table(:user_groups) do
-      add :user_id, references(:users, on_delete: :nothing)
-      add :group_id, references(:groups, on_delete: :nothing)
+      add :user_id, references(:users, on_delete: :nothing), null: false
+      add :group_id, references(:groups, on_delete: :nothing), null: false
 
       timestamps
     end

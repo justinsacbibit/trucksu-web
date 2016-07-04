@@ -27,6 +27,7 @@ defmodule Trucksu.User do
     has_many :access_points, Trucksu.OsuUserAccessPoint
 
     many_to_many :groups, Trucksu.Group, join_through: Trucksu.UserGroup
+    has_many :user_groups, Trucksu.UserGroup, on_replace: :delete
 
     timestamps
   end
@@ -121,11 +122,13 @@ defmodule Trucksu.User do
 
   def patch_changeset(model, params \\ :empty) do
     changeset = model
+    |> Repo.preload(:user_groups)
     |> cast(params, ~w(), ~w(username email))
     |> validate_format(:username, ~r/^[-_\[\]A-Za-z0-9 ]+$/)
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email, message: "Email already taken", name: :users_lower_email_index)
     |> unique_constraint(:username, message: "Username already taken", name: :users_lower_username_index)
+    |> cast_assoc(:user_groups)
 
     if get_change(changeset, :email) do
       changeset
