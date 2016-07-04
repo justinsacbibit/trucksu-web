@@ -44,6 +44,14 @@ defmodule Trucksu.User do
   end
 
   @doc """
+  Checks if a user is in the specified group id.
+  """
+  def is_in_group(user, group_id) do
+    user = Repo.preload(user, :groups)
+    Enum.any(user.groups, fn(group) -> group.id == group_id end)
+  end
+
+  @doc """
   Builds a Map of users who seem to be multiaccounts for the given user, by access point.
   The map returned maps user ids to user structs.
 
