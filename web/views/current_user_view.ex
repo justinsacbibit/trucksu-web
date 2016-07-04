@@ -9,12 +9,7 @@ defmodule Trucksu.CurrentUserView do
       username: user.username,
       email: user.email,
       email_verified: user.email_verified,
-      groups: for group <- user.groups do
-        %{
-          id: group.id,
-          name: group.name,
-        }
-      end,
+      groups: render_many(user.groups, Trucksu.GroupView, "show.json"),
     }
   end
 end

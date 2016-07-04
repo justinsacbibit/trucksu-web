@@ -8,12 +8,7 @@ defmodule Trucksu.UserView do
       id: user.id,
       country: user.country,
       username: user.username,
-      groups: for group <- user.groups do
-        %{
-          id: group.id,
-          name: group.name,
-        }
-      end,
+      groups: render_many(user.groups, Trucksu.GroupView, "show.json"),
       stats: for user_stats <- user.stats do
         %{
           pp: user_stats.pp,
