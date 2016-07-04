@@ -39,7 +39,7 @@ defmodule Trucksu.Mixfile do
      {:timex_ecto, "~> 1.0.4"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:phoenix_ecto, "~> 3.0"},
-     {:guardian, git: "git@github.com:ueberauth/guardian.git"},
+     {:guardian, git: "https://github.com/ueberauth/guardian.git"},
      {:comeonin, "~> 2.5"},
      {:gettext, "~> 0.9"},
      {:httpoison, "~> 0.9.0"},
@@ -49,7 +49,7 @@ defmodule Trucksu.Mixfile do
      {:sweet_xml, "~> 0.5.0"},
      {:ex_rated, "~> 1.2"},
      {:mix_test_watch, "~> 0.2", only: :dev},
-     {:ex_statsd, git: "git@github.com:CargoSense/ex_statsd.git"},
+     {:ex_statsd, git: "https://github.com/CargoSense/ex_statsd.git"},
      {:cors_plug, "~> 1.1"},
      {:cowboy, "~> 1.0"}]
   end
