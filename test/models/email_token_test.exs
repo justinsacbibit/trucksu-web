@@ -3,7 +3,7 @@ defmodule Trucksu.EmailTokenTest do
 
   alias Trucksu.EmailToken
 
-  @valid_attrs %{token: "some content"}
+  @valid_attrs %{token: "some content", user_id: 1}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

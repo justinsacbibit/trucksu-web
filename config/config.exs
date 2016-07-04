@@ -55,6 +55,8 @@ config :trucksu,
   decryption_cookie: "c",
   bot_url: System.get_env("BOT_URL") || ""
 
+config :trucksu, ecto_repos: [Trucksu.Repo]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

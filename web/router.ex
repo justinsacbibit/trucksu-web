@@ -69,7 +69,7 @@ defmodule Trucksu.Router do
   scope "/api", Trucksu do
     pipe_through :api
 
-    scope "v1" do
+    scope "/v1" do
       post "/registrations", RegistrationController, :create
       post "/verify-email", RegistrationController, :verify_email
       post "/resend-verification-email", UserController, :resend_verification_email
@@ -106,7 +106,7 @@ defmodule Trucksu.Router do
       get "/users/:id_or_username/multis", UserController, :multiaccounts
     end
 
-    get "*path", ApiController, :not_found
+    get "/*path", ApiController, :not_found
   end
 
   scope "/ss", Trucksu do

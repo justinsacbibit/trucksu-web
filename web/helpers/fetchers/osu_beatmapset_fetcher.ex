@@ -54,7 +54,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
       # TODO: Record deletion
     end
     case Repo.delete osu_beatmap do
-      {:ok, osu_beatmap} ->
+      {:ok, _osu_beatmap} ->
         :ok
       {:error, error} ->
         Logger.error "Error occurred when trying to delete osu_beatmap: #{inspect error}"

@@ -4,7 +4,7 @@ defmodule Trucksu.Mixfile do
   def project do
     [app: :trucksu,
      version: "0.0.10",
-     elixir: "~> 1.0",
+     elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -32,24 +32,24 @@ defmodule Trucksu.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.1.4"},
+    [{:phoenix, "~> 1.2.0"},
      {:phoenix_html, "~> 2.3"},
-     {:postgrex, ">= 0.0.0"},
      {:timex, "~> 2.1.4"},
+     {:postgrex, "~> 0.11.0"},
      {:timex_ecto, "~> 1.0.4"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:phoenix_ecto, "~> 2.0"},
-     {:guardian, "~> 0.9.0"},
-     {:comeonin, "~> 2.0"},
+     {:phoenix_ecto, "~> 3.0"},
+     {:guardian, git: "git@github.com:ueberauth/guardian.git"},
+     {:comeonin, "~> 2.5"},
      {:gettext, "~> 0.9"},
-     {:httpoison, "~> 0.8.0"},
+     {:httpoison, "~> 0.9.0"},
      {:poison, "~> 1.5"},
      {:ex_aws, "~> 0.4.10"},
      {:mailgun, "~> 0.1.2"},
      {:sweet_xml, "~> 0.5.0"},
      {:ex_rated, "~> 1.2"},
      {:mix_test_watch, "~> 0.2", only: :dev},
-     {:ex_statsd, ">= 0.5.1"},
+     {:ex_statsd, git: "git@github.com:CargoSense/ex_statsd.git"},
      {:cors_plug, "~> 1.1"},
      {:cowboy, "~> 1.0"}]
   end
