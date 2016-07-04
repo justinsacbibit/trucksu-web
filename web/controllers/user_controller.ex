@@ -164,7 +164,6 @@ defmodule Trucksu.UserController do
     changeset = User.patch_changeset(user, user_params)
     case Repo.update changeset do
       {:ok, user} ->
-        user = Repo.preload(user, :groups)
         render(conn, Trucksu.CurrentUserView, "show.json", user: user)
       {:error, changeset} ->
         conn
