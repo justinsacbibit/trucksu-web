@@ -58,9 +58,6 @@ server {
   listen      443 ssl;
   server_name osu.trucksu.com;
 
-  ssl_certificate     /etc/letsencrypt/live/b.trucksu.com/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/b.trucksu.com/privkey.pem;
-
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
   error_log /var/log/nginx/{{ .APP }}-error.log;
@@ -123,9 +120,6 @@ server {
   listen      80;
   listen      443 ssl;
   server_name a.trucksu.com;
-
-  ssl_certificate     /etc/letsencrypt/live/b.trucksu.com/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/b.trucksu.com/privkey.pem;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
