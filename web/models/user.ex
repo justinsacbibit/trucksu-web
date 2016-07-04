@@ -48,7 +48,7 @@ defmodule Trucksu.User do
   """
   def is_in_group(user, group_id) do
     user = Repo.preload(user, :groups)
-    Enum.any(user.groups, fn(group) -> group.id == group_id end)
+    Enum.any?(user.groups, fn(group) -> group.id == group_id end)
   end
 
   @doc """
