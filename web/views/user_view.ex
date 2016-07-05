@@ -2,6 +2,14 @@ defmodule Trucksu.UserView do
   use Trucksu.Web, :view
   alias Trucksu.Repo
 
+  def render("show.json", %{user: user}) do
+    %{
+      id: user.id,
+      country: user.country,
+      username: user.username,
+    }
+  end
+
   def render("user_detail.json", user) do
     user = Repo.preload(user, :groups)
     %{

@@ -87,6 +87,11 @@ defmodule Trucksu.Router do
         patch "/:id_or_username", UserController, :patch
       end
 
+      scope "/groups" do
+        get "/:id", GroupController, :show
+        get "/", GroupController, :index
+      end
+
       scope "/me" do
         post "/avatar", UserController, :upload_avatar
       end
