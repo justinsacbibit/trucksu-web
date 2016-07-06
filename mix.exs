@@ -21,7 +21,7 @@ defmodule Trucksu.Mixfile do
      applications: [:phoenix, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex, :comeonin, :timex,
                     :phoenix_html, :guardian, :httpoison, :ex_aws,
-                    :ex_rated, :ex_statsd]]
+                    :ex_rated, :ex_statsd, :phoenix_pubsub]]
   end
 
   # Specifies which paths to compile per environment.
@@ -33,6 +33,7 @@ defmodule Trucksu.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [{:phoenix, "~> 1.2.0"},
+     {:phoenix_pubsub, "~> 1.0"},
      {:phoenix_html, "~> 2.3"},
      {:timex, "~> 2.1.4"},
      {:postgrex, "~> 0.11.0"},
