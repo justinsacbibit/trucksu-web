@@ -109,6 +109,8 @@ defmodule Trucksu.Router do
       post "/ban", UserController, :ban
       delete "/ban", UserController, :unban
       get "/users/:id_or_username/multis", UserController, :multiaccounts
+
+      post "/bancho-events", BanchoEventController, :create
     end
 
     get "/*path", ApiController, :not_found

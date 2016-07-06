@@ -5,6 +5,7 @@ defmodule Trucksu.UserController do
     Mailer,
     DiscordAdmin,
     User,
+    UserStats,
   }
 
   # admin endpoints
@@ -256,30 +257,10 @@ defmodule Trucksu.UserController do
       |> Enum.uniq_by(&(unique_by_md5.(&1)))
       |> Enum.take(100)
 
+      rank = Repo.one UserStats.get_rank(user.id, stats.game_mode)
+
       game_mode = stats.game_mode
       user_id = user.id
-      rank = Repo.one from us in Trucksu.UserStats,
-        join: s in fragment("
-        SELECT game_rank, id
-        FROM
-          (SELECT
-             row_number()
-             OVER (
-               ORDER BY pp DESC) game_rank,
-             user_id, id
-           FROM (
-             SELECT us.*
-             FROM user_stats us
-             JOIN users u
-               ON u.id = us.user_id
-             WHERE u.banned = FALSE
-              AND us.game_mode = (?)
-           ) sc) sc
-        WHERE user_id = (?)
-      ", ^game_mode, ^user_id),
-        on: s.id == us.id,
-        select: s.game_rank
-
       query = from sc in Trucksu.Score,
         join: sc_ in fragment("
           SELECT id

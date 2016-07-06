@@ -40,6 +40,30 @@ defmodule Trucksu.UserStats do
     timestamps
   end
 
+  def get_rank(user_id, game_mode) do
+    from us in Trucksu.UserStats,
+      join: s in fragment("
+      SELECT game_rank, id
+      FROM
+        (SELECT
+           row_number()
+           OVER (
+             ORDER BY pp DESC) game_rank,
+           user_id, id
+         FROM (
+           SELECT us.*
+           FROM user_stats us
+           JOIN users u
+             ON u.id = us.user_id
+           WHERE u.banned = FALSE
+            AND us.game_mode = (?)
+         ) sc) sc
+      WHERE user_id = (?)
+    ", ^game_mode, ^user_id),
+      on: s.id == us.id,
+      select: s.game_rank
+  end
+
   def create_for_user(user, mode) do
     defaults = %{
       user_id: user.id,

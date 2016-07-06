@@ -2,7 +2,7 @@ defmodule Trucksu.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "users:*", Trucksu.UserChannel
+  channel "users", Trucksu.UserChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
