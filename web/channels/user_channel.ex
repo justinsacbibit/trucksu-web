@@ -10,9 +10,10 @@ defmodule Trucksu.UserChannel do
         user_actions = Poison.decode! user_actions
         users = for user_action <- user_actions do
           user = Repo.get! User, user_action["id"]
+          rank = Repo.one(UserStats.get_rank(user_action["id"], 0))
           user_action
           |> Map.put("username", user.username)
-          |> Map.put("rank", Repo.one(UserStats.get_rank(user_action["id"], 0)))
+          |> Map.put("rank", rank)
         end
         {:ok, %{users: users}, assign(socket, :users, users)}
       {:error, error} ->
