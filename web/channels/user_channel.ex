@@ -4,6 +4,10 @@ defmodule Trucksu.UserChannel do
   require Logger
 
   def join("users", _params, socket) do
+    {:ok, socket}
+  end
+
+  def handle_in("get:users", _, socket) do
     bancho_url = Application.get_env(:trucksu, :bancho_url)
     case HTTPoison.get(bancho_url <> "/api/v1/users") do
       {:ok, %HTTPoison.Response{body: user_actions}} ->
@@ -15,10 +19,10 @@ defmodule Trucksu.UserChannel do
           |> Map.put("username", user.username)
           |> Map.put("rank", rank)
         end
-        {:ok, %{users: users}, assign(socket, :users, users)}
+        {:reply, {:ok, %{users: users}}, socket}
       {:error, error} ->
         Logger.error "Error getting online users from bancho: #{inspect error}"
-        {:error, %{}}
+        {:reply, {:error, %{}}, socket}
     end
   end
 end
