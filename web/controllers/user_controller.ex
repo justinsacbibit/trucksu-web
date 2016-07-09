@@ -51,7 +51,7 @@ defmodule Trucksu.UserController do
 
     if id_or_username do
       user = case Integer.parse(id_or_username) do
-        {id, _} ->
+        {id, ""} ->
           Repo.get! User, id
         _ ->
           Repo.one! User.by_username(id_or_username)
