@@ -6,7 +6,8 @@ defmodule Trucksu.UserSocket do
   channel "users:*", Trucksu.UserChannel
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
+  transport :websocket, Phoenix.Transports.WebSocket,
+    check_origin: ["https://trucksu.com", "http://localhost:4001"]
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can
