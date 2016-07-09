@@ -15,6 +15,10 @@ defmodule Trucksu.BanchoEventController do
     Trucksu.Endpoint.broadcast! "users:#{user["id"]}", event_type, %{user: user}
   end
 
+  defp broadcast_match(match, event_type) do
+    Trucksu.Endpoint.broadcast! "matches", event_type, %{match: match}
+  end
+
   def create(conn, %{"type" => "user_online" = type, "user" => user}) do
     broadcast_user(user, type)
 
@@ -31,6 +35,27 @@ defmodule Trucksu.BanchoEventController do
 
   def create(conn, %{"type" => "user_change_action" = type, "user" => user}) do
     broadcast_user(user, type)
+
+    conn
+    |> json(%{"ok" => true})
+  end
+
+  def create(conn, %{"type" => "match_create" = type, "match" => match}) do
+    broadcast_match(match, type)
+
+    conn
+    |> json(%{"ok" => true})
+  end
+
+  def create(conn, %{"type" => "match_update" = type, "match" => match}) do
+    broadcast_match(match, type)
+
+    conn
+    |> json(%{"ok" => true})
+  end
+
+  def create(conn, %{"type" => "match_destroy" = type, "match" => match}) do
+    broadcast_match(match, type)
 
     conn
     |> json(%{"ok" => true})

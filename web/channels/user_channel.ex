@@ -11,7 +11,7 @@ defmodule Trucksu.UserChannel do
 
   def join("users:" <> user_id, _params, socket) do
     case HTTPoison.get(@bancho_url <> "/api/v1/users/#{user_id}") do
-      {:ok, %HTTPoison.Response{body: user_action} = resp} ->
+      {:ok, %HTTPoison.Response{body: user_action}} ->
         user_action = Poison.decode! user_action
         case user_action do
           %{"ok" => false} ->

@@ -4,6 +4,7 @@ defmodule Trucksu.UserSocket do
   ## Channels
   channel "users", Trucksu.UserChannel
   channel "users:*", Trucksu.UserChannel
+  channel "matches", Trucksu.MatchChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket,
