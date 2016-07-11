@@ -28,6 +28,8 @@ defmodule Trucksu.RegistrationController do
 
           Mailer.send_verification_email(user)
 
+          ExStatsD.increment "registrations"
+
           conn
           |> put_status(:created)
           |> render(Trucksu.SessionView, "show.json", jwt: jwt, user: user)

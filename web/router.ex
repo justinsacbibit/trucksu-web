@@ -13,19 +13,35 @@ defmodule Trucksu.Router do
     plug :accepts, ["json"]
     plug Guardian.Plug.VerifyHeader
     plug Guardian.Plug.LoadResource
+    plug Trucksu.Plug.IncrementStat, name: "api.requests"
+  end
+
+  pipeline :screenshots do
+    plug Trucksu.Plug.IncrementStat, name: "screenshots.requests"
+  end
+
+  pipeline :avatars do
+    plug Trucksu.Plug.IncrementStat, name: "avatars.requests"
+  end
+
+  pipeline :osu_ppy do
+    plug Trucksu.Plug.IncrementStat, name: "osu.ppy.requests"
   end
 
   scope "/", Trucksu do
-    # pipe_through :api
   end
 
   # ss.trucksu.com
   scope "/ss", Trucksu do
+    pipe_through :screenshots
+
     get "/:id", ScreenshotController, :show
   end
 
   # The following calls go to osu.ppy.sh
   scope "/osu", Trucksu do
+    pipe_through :osu_ppy
+
     scope "/web" do
       get "/bancho_connect.php", OsuWebController, :bancho_connect
       get "/osu-osz2-getscores.php", OsuWebController, :get_scores
@@ -41,8 +57,6 @@ defmodule Trucksu.Router do
 
       post "/osu-submit-modular.php", ScoreController, :create
       post "/osu-screenshot.php", ScreenshotController, :create
-
-      get "/status", OsuWebController, :status
     end
 
     scope "/pages" do
@@ -58,10 +72,14 @@ defmodule Trucksu.Router do
     # beatmap page
     get "/b/:beatmap_id", OsuBeatmapPageController, :show_beatmap
     get "/s/:beatmapset_id", OsuBeatmapPageController, :show_beatmapset
+
+    get "/*path", ApiController, :redirect_to_trucksu
   end
 
   # The following calls go to a.ppy.sh
   scope "/a", Trucksu do
+    pipe_through :avatars
+
     get "/:user_id", AvatarController, :show
   end
 
@@ -114,9 +132,5 @@ defmodule Trucksu.Router do
     end
 
     get "/*path", ApiController, :not_found
-  end
-
-  scope "/ss", Trucksu do
-    get "/:id", ScreenshotController, :show
   end
 end

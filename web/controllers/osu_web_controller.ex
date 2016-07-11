@@ -322,14 +322,6 @@ defmodule Trucksu.OsuWebController do
     end
   end
 
-  def status(conn, _) do
-    query = from s in Score,
-      limit: 1
-    Repo.one query
-
-    json(conn, %{})
-  end
-
   # def screenshot(conn, %{"ss_file" => ss_file, "i" => user_id} = params) do
   #   IO.inspect params, [limit: :infinity]
   #   # TODO: Process list
