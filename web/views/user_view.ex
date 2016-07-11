@@ -17,6 +17,7 @@ defmodule Trucksu.UserView do
       country: user.country,
       username: user.username,
       groups: render_many(user.groups, Trucksu.GroupView, "show.json"),
+      inserted_at: user.inserted_at,
       stats: for user_stats <- user.stats do
         %{
           pp: user_stats.pp,
