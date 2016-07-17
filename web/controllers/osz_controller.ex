@@ -3,6 +3,8 @@ defmodule Trucksu.OszController do
   require Logger
   alias Trucksu.OsuOszFetcher
 
+  @bucket Application.get_env(:trucksu, :osz_file_bucket)
+
   # TODO: If no username/password is specified, redirect to Trucksu website to allow for download
   # plug Trucksu.Plugs.EnsureOsuClientAuthenticated when action == :osu_client_download
   # plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action == :download
@@ -27,21 +29,30 @@ defmodule Trucksu.OszController do
     # TODO: Rate limit
     # user = Guardian.Plug.current_resource(conn)
 
-    case OsuOszFetcher.fetch(beatmapset_id) do
-      {:ok, _headers, _osz_file_content} ->
-        bucket = Application.get_env(:trucksu, :osz_file_bucket)
-        object = "#{beatmapset_id}.osz"
-        case ExAws.S3.presigned_url(:get, bucket, object) do
-          {:ok, url} ->
-            redirect(conn, external: url)
-          {:error, error} ->
-            Logger.error "Failed to generate presigned url for beatmapset #{beatmapset_id} : #{inspect error}"
-            json(conn, %{"ok" => false})
-        end
-      {:error, :no_content_length} ->
-        json(conn, %{"ok" => false, "detail" => "Beatmap is no longer available for download (probably due to copyright)"})
-      {:error, _reason} ->
-        json(conn, %{"ok" => false})
+    has_task = Task.async(fn -> OsuOszFetcher.has?(beatmapset_id) end)
+    fetch_task = Task.async(fn ->
+      case OsuOszFetcher.fetch(beatmapset_id) do
+        {:ok, headers, osz_file_content} ->
+          send_osz(conn, headers, osz_file_content)
+        {:error, :no_content_length} ->
+          json(conn, %{"ok" => false, "detail" => "Beatmap is no longer available for download (probably due to copyright)"})
+        {:error, _reason} ->
+          json(conn, %{"ok" => false})
+      end
+    end)
+
+    if Task.await(has_task) do
+      Task.shutdown(fetch_task)
+      object = "#{beatmapset_id}.osz"
+      case ExAws.S3.presigned_url(:get, @bucket, object) do
+        {:ok, url} ->
+          redirect(conn, external: url)
+        {:error, error} ->
+          Logger.error "Failed to generate presigned url for beatmapset #{beatmapset_id} : #{inspect error}"
+          json(conn, %{"ok" => false})
+      end
+    else
+      Task.await(fetch_task)
     end
   end
 

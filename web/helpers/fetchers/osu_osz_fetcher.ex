@@ -2,6 +2,26 @@ defmodule Trucksu.OsuOszFetcher do
   require Logger
   alias Trucksu.OsuBeatmapsetFetcher
 
+  @bucket Application.get_env(:trucksu, :osz_file_bucket)
+  @osu_username Application.get_env(:trucksu, :osu_username)
+  @osu_password_md5 Application.get_env(:trucksu, :osu_password_md5)
+
+  defp object_name(beatmapset_id), do: "#{beatmapset_id}.osz"
+
+  @doc """
+  Checks if a beatmapset is present in S3.
+
+  Useful for returning an presigned S3 URL.
+  """
+  def has?(beatmapset_id) do
+    case ExAws.S3.head_object(@bucket, object_name(beatmapset_id)) do
+      {:ok, _} ->
+        true
+      _ ->
+        false
+    end
+  end
+
   def fetch(beatmapset_id) do
 
     # Update our local copy of the beatmapset. This function will take care of
@@ -10,15 +30,12 @@ defmodule Trucksu.OsuOszFetcher do
 
     # TODO: Novideo
 
-    bucket = Application.get_env(:trucksu, :osz_file_bucket)
-    object = "#{beatmapset_id}.osz"
-    case ExAws.S3.get_object(bucket, object) do
+    object = object_name(beatmapset_id)
+    case ExAws.S3.get_object(@bucket, object) do
       {:error, {:http_error, 404, _}} ->
         Logger.warn "Downloading beatmapset #{beatmapset_id} from osu!"
         ExStatsD.increment "osu.osz_downloads.attempted"
-        osu_username = Application.get_env(:trucksu, :osu_username)
-        osu_password_md5 = Application.get_env(:trucksu, :osu_password_md5)
-        response = HTTPoison.get("https://osu.ppy.sh/d/#{beatmapset_id}", [], follow_redirect: true, params: [{"u", osu_username}, {"h", osu_password_md5}])
+        response = HTTPoison.get("https://osu.ppy.sh/d/#{beatmapset_id}", [], follow_redirect: true, params: [{"u", @osu_username}, {"h", @osu_password_md5}])
         Logger.debug inspect response
         case response do
           {:ok, %HTTPoison.Response{body: osz_file_content, headers: headers} = resp} ->
@@ -39,7 +56,7 @@ defmodule Trucksu.OsuOszFetcher do
                   content_disposition = Enum.find(headers, &(elem(&1, 0) == "Content-Disposition")) |> elem(1)
                   opts = [content_type: content_type, content_length: content_length, content_disposition: content_disposition]
                   # TODO: Multipart upload
-                  case ExAws.S3.put_object(bucket, object, osz_file_content, opts) do
+                  case ExAws.S3.put_object(@bucket, object, osz_file_content, opts) do
                     {:ok, _} ->
                       Logger.debug "Put beatmapset #{beatmapset_id} to S3"
                     {:error, error} ->
