@@ -15,7 +15,7 @@ defmodule Trucksu.AvatarController do
         |> Plug.Conn.send_file(200, @default_path)
 
       {:ok, %{body: avatar_file_content, headers: headers}} ->
-        case find_etag(headers) do
+        conn = case find_etag(headers) do
           nil ->
             conn
           etag ->
