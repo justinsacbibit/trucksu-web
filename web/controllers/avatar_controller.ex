@@ -13,6 +13,7 @@ defmodule Trucksu.AvatarController do
       [etag] ->
         if AvatarAgent.matches?(user_id, etag) do
           conn
+          |> put_cache_headers(etag)
           |> Plug.Conn.send_resp(304, "")
         else
           get_avatar(conn, user_id)
