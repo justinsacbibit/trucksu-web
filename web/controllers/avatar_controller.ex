@@ -41,7 +41,7 @@ defmodule Trucksu.AvatarController do
 
   defp put_cache_headers(conn, etag) do
     conn
-    |> Plug.Conn.put_resp_header("cache-control", "public, max-age=31536000")
+    |> Plug.Conn.put_resp_header("cache-control", "public, max-age=30")
     |> Plug.Conn.put_resp_header("ETag", etag)
   end
 end
