@@ -2,6 +2,7 @@ defmodule Trucksu.UserController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    AvatarAgent,
     Mailer,
     DiscordAdmin,
     User,
@@ -179,6 +180,8 @@ defmodule Trucksu.UserController do
     avatar_file_content = File.read!(avatar_path)
     bucket = Application.get_env(:trucksu, :avatar_file_bucket)
     ExAws.S3.put_object!(bucket, "#{user.id}", avatar_file_content)
+
+    AvatarAgent.delete("#{user.id}")
 
     conn
     |> json(%{
