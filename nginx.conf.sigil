@@ -24,7 +24,7 @@ server {
     proxy_redirect off;
   }
 
-  rewrite ^(.*)$ /socket$1 break;
+  #rewrite ^(.*)$ /socket$1 break;
 
   include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
 }
@@ -49,7 +49,7 @@ server {
     proxy_redirect off;
   }
 
-  rewrite ^(.*)$ /ss$1 break;
+  #rewrite ^(.*)$ /ss$1 break;
 
   include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
 }
@@ -74,7 +74,7 @@ server {
     proxy_redirect off;
   }
 
-  rewrite ^(.*)$ /api$1 break;
+  #rewrite ^(.*)$ /api$1 break;
 
   include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
 }
@@ -102,7 +102,7 @@ server {
     proxy_redirect off;
   }
 
-  rewrite ^(.*)$ /osu$1 break;
+  #rewrite ^(.*)$ /osu$1 break;
 
   include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
 }
@@ -168,7 +168,7 @@ server {
     proxy_redirect off;
   }
 
-  rewrite ^(.*)$ /a$1 break;
+  #rewrite ^(.*)$ /a$1 break;
 
   include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
 }
