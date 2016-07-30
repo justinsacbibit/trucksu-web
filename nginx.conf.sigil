@@ -5,7 +5,7 @@ upstream {{ .APP }} {
 }
 server {
   listen      80;
-  listen      443 ssl;
+  listen      443 ssl http2;
   server_name rt.trucksu.com;
 
   ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
@@ -34,7 +34,7 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl;
+  listen      443 ssl http2;
   server_name ss.trucksu.com;
 
   ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
@@ -63,7 +63,7 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl;
+  listen      443 ssl http2;
   server_name api.trucksu.com;
 
   ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
@@ -92,7 +92,7 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl;
+  listen      443 ssl http2;
   server_name osu.trucksu.com;
 
   ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
@@ -158,7 +158,7 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl;
+  listen      443 ssl http2;
   server_name a.trucksu.com;
 
   ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
