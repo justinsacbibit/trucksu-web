@@ -8,7 +8,7 @@ server {
   listen      443 ssl;
   server_name rt.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
   ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-ss-access.log;
@@ -37,7 +37,7 @@ server {
   listen      443 ssl;
   server_name ss.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
   ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-ss-access.log;
@@ -66,7 +66,7 @@ server {
   listen      443 ssl;
   server_name api.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
   ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-api-access.log;
@@ -95,7 +95,7 @@ server {
   listen      443 ssl;
   server_name osu.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
   ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
@@ -161,7 +161,7 @@ server {
   listen      443 ssl;
   server_name a.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
   ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
