@@ -6,13 +6,15 @@ defmodule Trucksu.PerformanceController do
     OsuBeatmapFetcher,
   }
 
+  @server_cookie Application.get_env(:trucksu, :server_cookie)
+
   plug :check_cookie
 
   defp check_cookie(conn, _) do
     cookie = conn.params["c"]
-    expected_cookie = Application.get_env(:trucksu, :server_cookie)
+    server_cookie = @server_cookie
     case cookie do
-      ^expected_cookie -> conn
+      ^server_cookie -> conn
       _ -> stop_plug(conn, 403)
     end
   end
@@ -48,8 +50,7 @@ defmodule Trucksu.PerformanceController do
         json(conn, data)
 
       error ->
-        Logger.error "Failed to calculate pp for identifier=#{identifier}"
-        Logger.error inspect error
+        Logger.error "Failed to calculate pp for identifier=#{identifier}: #{inspect error}"
 
         conn
         |> put_status(500)
