@@ -26,10 +26,11 @@ defmodule Trucksu.OsuWebController do
   @everything_is_ranked true
 
   plug :authenticate when action in [:get_scores, :search_set] # TODO: add :show_map?
-  # TODO: Uncomment when rate limiting is implemented
+  # TODO: Implement rate limiting
   plug :fetch_osu_beatmap when action == :get_scores
 
   def show_map(conn, %{"filename" => filename}) do
+    # TODO: Should this use OsuBeatmapFetcher first?
     osu_beatmap = Repo.get_by! OsuBeatmap, filename: filename
     {:ok, osu_file_content} = OsuBeatmapFileFetcher.fetch(osu_beatmap.id)
     # TODO: Content-Type header?

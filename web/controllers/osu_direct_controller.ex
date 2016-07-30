@@ -6,6 +6,9 @@ defmodule Trucksu.OsuDirectController do
     # Session,
   }
 
+  @osu_username Application.get_env(:trucksu, :osu_username)
+  @osu_password_md5 Application.get_env(:trucksu, :osu_password_md5)
+
   @ranking_type_global_selected_mods 2
   @ranking_type_global 1
   @ranking_type_country 4
@@ -32,11 +35,9 @@ defmodule Trucksu.OsuDirectController do
   # end
 
   def direct_index(conn, params) do
-    osu_username = Application.get_env(:trucksu, :osu_username)
-    osu_password_md5 = Application.get_env(:trucksu, :osu_password_md5)
     params = params
-    |> Map.put("u", osu_username)
-    |> Map.put("h", osu_password_md5)
+    |> Map.put("u", @osu_username)
+    |> Map.put("h", @osu_password_md5)
     ExStatsD.increment "osu.direct.searches.attempted"
     case HTTPoison.get("https://osu.ppy.sh/web/osu-search.php", [], follow_redirect: true, params: Enum.to_list(params)) do
       {:ok, %HTTPoison.Response{body: body}} ->

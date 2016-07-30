@@ -7,6 +7,9 @@ defmodule Trucksu.ScreenshotController do
     Screenshot,
   }
 
+  @env Application.get_env(:trucksu, :env)
+  @screenshot_file_bucket Application.get_env(:trucksu, :screenshot_file_bucket)
+
   plug :authenticate when action in [:create]
 
   defp authenticate(%Plug.Conn{params: %{"u" => username, "p" => password_md5}} = conn, _) do
@@ -28,9 +31,8 @@ defmodule Trucksu.ScreenshotController do
       changeset = Screenshot.new(user.id)
       screenshot = Repo.insert! changeset
 
-      bucket = Application.get_env(:trucksu, :screenshot_file_bucket)
       screenshot_file_content = File.read!(ss_path)
-      ExAws.S3.put_object!(bucket, "#{screenshot.id}", screenshot_file_content)
+      ExAws.S3.put_object!(@screenshot_file_bucket, "#{screenshot.id}", screenshot_file_content)
 
       screenshot.id
     end)
@@ -39,13 +41,16 @@ defmodule Trucksu.ScreenshotController do
   end
 
   def show(%Plug.Conn{host: "osu.ppy.sh"} = conn, %{"id" => id}) do
-    base = if Mix.env == :dev do "http://localhost/ss" else "https://ss.trucksu.com" end
+    base = if @env == :dev do
+      "http://localhost/ss"
+    else
+      "https://ss.trucksu.com"
+    end
     redirect conn, external: "#{base}/#{id}"
   end
 
   def show(conn, %{"id" => id}) do
-    bucket = Application.get_env(:trucksu, :screenshot_file_bucket)
-    case ExAws.S3.get_object(bucket, id) do
+    case ExAws.S3.get_object(@screenshot_file_bucket, id) do
       {:error, {:http_error, 404, _}} ->
 
         conn
