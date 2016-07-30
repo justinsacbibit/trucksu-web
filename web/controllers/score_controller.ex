@@ -368,6 +368,8 @@ defmodule Trucksu.ScoreController do
           end
         end
 
+        ExStatsD.increment "scores.submissions.succeeded"
+
         # TODO: Don't call render func
         render conn, "response.raw", data: build_response(score)
       true ->
