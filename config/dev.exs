@@ -24,6 +24,7 @@ config :trucksu, Trucksu.Endpoint,
 config :phoenix, :stacktrace_depth, 20
 
 config :trucksu,
+  env: :dev,
   performance_url: "http://localhost:5000",
   bancho_url: "http://localhost:4002",
   website_url: "http://localhost:4001",

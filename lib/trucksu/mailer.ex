@@ -2,6 +2,7 @@ defmodule Trucksu.Mailer do
   @website_url Application.get_env(:trucksu, :website_url)
   @config domain: Application.get_env(:trucksu, :mailgun_domain),
           key: Application.get_env(:trucksu, :mailgun_key)
+  @env Application.get_env(:trucksu, :env)
   use Mailgun.Client, @config
   require Logger
   alias Trucksu.{
@@ -27,7 +28,7 @@ defmodule Trucksu.Mailer do
     "#{@website_url}/verify-email?t=#{token}"
   end
 
-  def send_verification_email(user) do
+  def send_verification_email(user) when @env == :prod do
     changeset = EmailToken.new(user)
     email_token = Repo.insert!(changeset)
 
@@ -43,5 +44,7 @@ defmodule Trucksu.Mailer do
         :ok
     end
   end
+
+  def send_verification_email(_user), do: :ok
 end
 

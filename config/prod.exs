@@ -37,6 +37,7 @@ config :guardian, Guardian,
 config :logger, level: :info
 
 config :trucksu,
+  env: :prod,
   decryption_url: System.get_env("DECRYPTION_URL"),
   decryption_cookie: System.get_env("DECRYPTION_COOKIE"),
   performance_url: System.get_env("PERFORMANCE_URL"),

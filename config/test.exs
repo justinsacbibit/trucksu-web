@@ -9,6 +9,9 @@ config :trucksu, Trucksu.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+config :trucksu,
+  env: :test,
+
 # Configure your database
 config :trucksu, Trucksu.Repo,
   adapter: Ecto.Adapters.Postgres,
