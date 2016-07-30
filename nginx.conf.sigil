@@ -183,7 +183,7 @@ server {
     proxy_redirect off;
   }
 
-  #rewrite ^(.*)$ /a$1 break;
+  rewrite ^(.*)$ /a$1 break;
 
   include {{ .DOKKU_ROOT }}/{{ .APP }}/nginx.conf.d/*.conf;
 }
