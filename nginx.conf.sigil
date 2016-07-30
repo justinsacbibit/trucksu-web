@@ -63,7 +63,7 @@ server {
 }
 server {
   listen      80;
-  listn       443 ssl;
+  listen      443 ssl;
   server_name api.trucksu.com;
 
   ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
