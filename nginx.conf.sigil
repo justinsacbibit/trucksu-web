@@ -5,7 +5,11 @@ upstream {{ .APP }} {
 }
 server {
   listen      80;
+  listen      443 ssl;
   server_name rt.trucksu.com;
+
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-ss-access.log;
   error_log   /var/log/nginx/{{ .APP }}-ss-error.log;
@@ -30,7 +34,11 @@ server {
 }
 server {
   listen      80;
+  listen      443 ssl;
   server_name ss.trucksu.com;
+
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-ss-access.log;
   error_log   /var/log/nginx/{{ .APP }}-ss-error.log;
@@ -55,7 +63,11 @@ server {
 }
 server {
   listen      80;
+  listn       443 ssl;
   server_name api.trucksu.com;
+
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-api-access.log;
   error_log   /var/log/nginx/{{ .APP }}-api-error.log;
@@ -80,8 +92,11 @@ server {
 }
 server {
   listen      80;
-  #listen      443 ssl;
+  listen      443 ssl;
   server_name osu.trucksu.com;
+
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
@@ -143,11 +158,11 @@ server {
 }
 server {
   listen      80;
-  #listen      443 ssl;
+  listen      443 ssl;
   server_name a.trucksu.com;
 
-  #ssl_certificate     /etc/letsencrypt/live/b.trucksu.com/fullchain.pem;
-  #ssl_certificate_key /etc/letsencrypt/live/b.trucksu.com/privkey.pem;
+  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/cert.pem;
+  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
