@@ -52,7 +52,8 @@ defmodule Trucksu.OszController do
           json(conn, %{"ok" => false})
       end
     else
-      Task.await(fetch_task)
+      # wait for 30 seconds
+      Task.await(fetch_task, 30_000)
     end
   end
 
