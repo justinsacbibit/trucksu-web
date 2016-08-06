@@ -51,6 +51,7 @@ defmodule Trucksu.UserView do
       geki_count: score.geki_count,
       miss_count: score.miss_count,
       time: score.time,
+      unix_time: parse_osu_time(score.time),
       game_mode: score.game_mode,
       accuracy: score.accuracy,
       pass: score.pass,
@@ -59,6 +60,21 @@ defmodule Trucksu.UserView do
       has_replay: score.has_replay,
       rank: score.rank,
     }
+  end
+
+  defp parse_osu_time(time) do
+    case Timex.parse(time, "{YY}{0M}{0D}{h24}{m}{s}") do
+      {:ok, datetime} ->
+        case Timex.format(datetime, "{s-epoch}") do
+          {:ok, unix_time} ->
+            case Integer.parse(unix_time) do
+              {int, _} -> int
+              _ -> nil
+            end
+          _ -> nil
+        end
+      _ -> nil
+    end
   end
 end
 
