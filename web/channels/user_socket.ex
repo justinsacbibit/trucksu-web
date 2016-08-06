@@ -8,7 +8,7 @@ defmodule Trucksu.UserSocket do
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket,
-    check_origin: ["https://trucksu.com", "http://localhost:4001"]
+    check_origin: ["https://trucksu.com", "http://localhost:4001", "http://trucksu.plsenjoy.tk", "https://trucksu.plsenjoy.tk"]
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can
