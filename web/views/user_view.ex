@@ -15,6 +15,7 @@ defmodule Trucksu.UserView do
     %{
       id: user.id,
       country: user.country,
+      country_name: country_name(user.country),
       username: user.username,
       groups: render_many(user.groups, Trucksu.GroupView, "show.json"),
       inserted_at: user.inserted_at,
@@ -60,6 +61,15 @@ defmodule Trucksu.UserView do
       has_replay: score.has_replay,
       rank: score.rank,
     }
+  end
+
+  defp country_name(country_code) do
+    case Countries.filter_by(:alpha2, country_code) do
+      [%{name: name}] ->
+        to_string(name)
+      _ ->
+        nil
+    end
   end
 
   defp parse_osu_time(time) do

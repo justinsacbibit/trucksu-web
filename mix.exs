@@ -10,7 +10,9 @@ defmodule Trucksu.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      aliases: aliases,
-     deps: deps]
+     deps: deps,
+     dialyzer: [plt_add_apps: [:httpoison, :plug, :phoenix]]
+   ]
   end
 
   # Configuration for the OTP application.
@@ -35,9 +37,12 @@ defmodule Trucksu.Mixfile do
     [{:phoenix, "~> 1.2.0"},
      {:phoenix_pubsub, "~> 1.0"},
      {:phoenix_html, "~> 2.3"},
+     {:dialyxir, "~> 0.3.5", only: [:dev]},
      {:timex, "~> 2.1.4"},
      {:postgrex, "~> 0.11.0"},
      {:timex_ecto, "~> 1.0.4"},
+     {:yamerl, github: "yakaz/yamerl"},
+     {:countries, github: "SebastianSzturo/countries"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:phoenix_ecto, "~> 3.0"},
      {:guardian, git: "https://github.com/ueberauth/guardian.git"},
