@@ -37,7 +37,7 @@ defmodule Trucksu.UserView do
           graphs: graphs[user_stats.game_mode]
           |> Enum.map(fn({key, val}) ->
             %{
-              stat: "pp",
+              stat: key,
               points: render(GraphView, "show.json", points: val),
             }
           end),

@@ -265,11 +265,6 @@ defmodule Trucksu.UserController do
   def remove_friend(conn, %{"friend_id" => friend_id}) do
     user = Guardian.Plug.current_resource(conn)
 
-    changeset = Friendship.changeset(%Friendship{}, %{
-      requester_id: user.id,
-      receiver_id: friend_id,
-    })
-
     user_id = user.id
     query = from f in Friendship,
       where: f.requester_id == ^user_id

@@ -26,7 +26,6 @@ defmodule Trucksu.UserChannel do
   end
 
   def handle_in("get:users", _, socket) do
-    bancho_url = Application.get_env(:trucksu, :bancho_url)
     case HTTPoison.get(@bancho_url <> "/api/v1/users") do
       {:ok, %HTTPoison.Response{body: user_actions}} ->
         user_actions = Poison.decode! user_actions
