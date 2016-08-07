@@ -4,6 +4,7 @@ defmodule Trucksu.ScoreController do
   use Bitwise
   alias Trucksu.{
     OsuBeatmapFetcher,
+    PerformanceGraph,
     Performance,
     Session,
     Constants,
