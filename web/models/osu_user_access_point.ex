@@ -20,7 +20,7 @@ defmodule Trucksu.OsuUserAccessPoint do
   If no params are provided, an invalid changeset is returned
   with no validation performed.
   """
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     base_16_validator = fn(key, base16) ->
       case Base.decode16(base16, case: :lower) do
         {:ok, _} ->

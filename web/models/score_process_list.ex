@@ -19,7 +19,7 @@ defmodule Trucksu.ScoreProcessList do
   If no params are provided, an invalid changeset is returned
   with no validation performed.
   """
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields, @optional_fields)
     |> update_change(:process_list, &String.slice(&1, 0, 8500))

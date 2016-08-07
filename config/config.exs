@@ -8,7 +8,6 @@ use Mix.Config
 # Configures the endpoint
 config :trucksu, Trucksu.Endpoint,
   url: [host: "localhost"],
-  root: Path.dirname(__DIR__),
   secret_key_base: "e2z2aq3mz7GAiStke74ROQ13+nqNmNvXf6EuZNIsK8a8w00VOTLmEpGRBtdKhb5q",
   render_errors: [accepts: ~w(json)],
   pubsub: [name: Trucksu.PubSub,

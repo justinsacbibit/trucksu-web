@@ -32,8 +32,10 @@ defmodule Trucksu.ChannelCase do
   end
 
   setup tags do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Trucksu.Repo)
+
     unless tags[:async] do
-      Ecto.Adapters.SQL.restart_test_transaction(Trucksu.Repo, [])
+      Ecto.Adapters.SQL.Sandbox.mode(Trucksu.Repo, {:shared, self()})
     end
 
     :ok
