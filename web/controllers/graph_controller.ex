@@ -3,7 +3,7 @@ defmodule Trucksu.GraphController do
   alias Trucksu.PerformanceGraph
 
   def show_pp(conn, %{"id" => id}) do
-    {id, ""} = Integer.parse(id)
+    # TODO: Non-std game modes
     points = PerformanceGraph.Server.get(id)
     render(conn, "show.json", points: points)
   end
