@@ -386,23 +386,28 @@ defmodule Trucksu.ScoreController do
       "time" => score.time,
     }
     json = Poison.encode! data
-    response = HTTPoison.post(@bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
 
-    case response do
-      {:ok, _response} ->
-        Logger.warn "Sent pp event to Bancho: #{inspect data}"
-      {:error, response} ->
-        Logger.error "Failed to send pp event to Bancho: #{inspect response}"
-    end
+    Task.start(fn ->
+      response = HTTPoison.post(@bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
 
-    response = HTTPoison.post(@bot_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
+      case response do
+        {:ok, _response} ->
+          Logger.warn "Sent pp event to Bancho: #{inspect data}"
+        {:error, response} ->
+          Logger.error "Failed to send pp event to Bancho: #{inspect response}"
+      end
+    end)
 
-    case response do
-      {:ok, _response} ->
-        Logger.warn "Sent pp event to Bot: #{inspect data}"
-      {:error, response} ->
-        Logger.error "Failed to send pp event to Bot: #{inspect response}"
-    end
+    Task.start(fn ->
+      response = HTTPoison.post(@bot_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
+
+      case response do
+        {:ok, _response} ->
+          Logger.warn "Sent pp event to Bot: #{inspect data}"
+        {:error, response} ->
+          Logger.error "Failed to send pp event to Bot: #{inspect response}"
+      end
+    end)
   end
 
   defp build_response(score) do
