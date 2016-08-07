@@ -28,6 +28,10 @@ defmodule Trucksu.Router do
     plug Trucksu.Plug.IncrementStat, name: "osu.ppy.requests"
   end
 
+  pipeline :ensure_authenticated do
+    plug Guardian.Plug.EnsureAuthenticated, handler: Trucksu.SessionController
+  end
+
   scope "/", Trucksu do
   end
 
@@ -116,7 +120,15 @@ defmodule Trucksu.Router do
       end
 
       scope "/me" do
+        pipe_through :ensure_authenticated
+
         post "/avatar", UserController, :upload_avatar
+
+        scope "/friendships" do
+          get "/", UserController, :friends_index
+          post "/", UserController, :add_friend
+          delete "/:friend_id", UserController, :remove_friend
+        end
       end
 
       scope "/beatmaps" do

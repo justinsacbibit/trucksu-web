@@ -21,5 +21,7 @@ defmodule Trucksu.Friendship do
   def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields, @optional_fields)
+    |> unique_constraint(:receiver_id, name: :friendships_requester_id_receiver_id_index)
+    |> foreign_key_constraint(:receiver_id)
   end
 end

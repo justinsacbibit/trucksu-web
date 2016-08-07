@@ -2,6 +2,7 @@ defmodule Trucksu.UserController do
   use Trucksu.Web, :controller
   require Logger
   alias Trucksu.{
+    Friendship,
     AvatarAgent,
     Mailer,
     DiscordAdmin,
@@ -15,8 +16,6 @@ defmodule Trucksu.UserController do
   plug :check_cookie when action in @admin_endpoints
   plug :check_admin when action in @admin_endpoints
   plug :get_user
-  @authenticated_api_endpoints [:upload_avatar]
-  plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action in @authenticated_api_endpoints
   plug :scrub_params, "user" when action in [:patch]
 
   defp check_cookie(conn, _) do
@@ -190,6 +189,113 @@ defmodule Trucksu.UserController do
     })
   end
 
+  def friends_index(conn, _) do
+    user = Guardian.Plug.current_resource(conn)
+    user_id = user.id
+
+    query = from f in Friendship,
+      join: u in assoc(f, :receiver),
+      where: f.requester_id == ^user_id,
+      select: u
+    friends = Repo.all query
+
+    friend_maps = friends
+    |> Enum.map(&process_friend_to_task(&1, user_id))
+    |> Enum.map(&Task.await/1)
+
+    render(conn, "friends.json", friends: friend_maps)
+  end
+
+  defp process_friend_to_task(friend, logged_in_user_id) do
+    Task.async(fn ->
+      friend_id = friend.id
+      reverse_query = from f in Friendship,
+        where: f.requester_id == ^friend_id
+        and f.receiver_id == ^logged_in_user_id
+      reverse_friendship = Repo.one reverse_query
+      is_mutual = not is_nil(reverse_friendship)
+
+      %{id: friend.id, username: friend.username, mutual: is_mutual}
+    end)
+  end
+
+  def add_friend(conn, %{"friend_id" => friend_id}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    changeset = Friendship.changeset(%Friendship{}, %{
+      requester_id: user.id,
+      receiver_id: friend_id,
+    })
+
+    case Repo.insert changeset do
+      {:error, %{errors: errors} = changeset} ->
+        fun = fn({key, {message, _}}) ->
+          key == :receiver_id and message == "has already been taken"
+        end
+        already_friends = Enum.any?(errors, fun)
+        if already_friends do
+          conn
+          |> json(%{
+            "ok" => true,
+            "had_friendship" => true,
+          })
+        else
+          conn
+          |> put_status(400)
+          |> render(Trucksu.ErrorView, "400.json", reason: changeset)
+        end
+      _ ->
+        conn
+        |> json(%{
+          "ok" => true,
+          "had_friendship" => false,
+        })
+    end
+  end
+  def add_friend(conn, _) do
+    conn
+    |> put_status(400)
+    |> render(Trucksu.ErrorView, "400.json", reason: %{
+      errors: [
+        {"friend_id", {"can't be blank", nil}},
+      ]
+    })
+  end
+
+  def remove_friend(conn, %{"friend_id" => friend_id}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    changeset = Friendship.changeset(%Friendship{}, %{
+      requester_id: user.id,
+      receiver_id: friend_id,
+    })
+
+    user_id = user.id
+    query = from f in Friendship,
+      where: f.requester_id == ^user_id
+        and f.receiver_id == ^friend_id
+    friendship = Repo.one query
+
+    if friendship do
+      Repo.delete! friendship
+    end
+
+    conn
+    |> json(%{
+      "ok" => true,
+      "had_friendship" => not is_nil(friendship),
+    })
+  end
+  def remove_friend(conn, _) do
+    conn
+    |> put_status(400)
+    |> render(Trucksu.ErrorView, "400.json", reason: %{
+      errors: [
+        {"friend_id", {"can't be blank", nil}},
+      ]
+    })
+  end
+
   defmodule ResendVerificationEmailUserNotFoundError do
     @errors [%{usernameOrEmail: "no user exists with that username or email"}]
     defexception plug_status: 404, errors: []
@@ -238,6 +344,33 @@ defmodule Trucksu.UserController do
   end
 
   def show(conn, %{"id" => id}) do
+    logged_in_user = Guardian.Plug.current_resource(conn)
+    # TODO: Use task to execute queries in parallel
+    friendship_type = if logged_in_user do
+      logged_in_user_id = logged_in_user.id
+
+      friendship_query = from f in Friendship,
+        where: f.requester_id == ^logged_in_user_id
+          and f.receiver_id == ^id
+      friendship = Repo.one friendship_query
+      is_friend = not is_nil(friendship)
+
+      # TODO: Execute in parallel
+      reverse_query = from f in Friendship,
+        where: f.requester_id == ^id
+          and f.receiver_id == ^logged_in_user_id
+      reverse_friendship = Repo.one reverse_query
+      is_mutual = is_friend and not is_nil(reverse_friendship)
+
+      cond do
+        is_mutual -> "mutual"
+        is_friend -> "friend"
+        true -> "none"
+      end
+    else
+      nil
+    end
+
     query = from u in User,
       join: us in assoc(u, :stats),
       left_join: sc in assoc(u, :scores),
@@ -297,6 +430,7 @@ defmodule Trucksu.UserController do
       %{stats | scores: scores, rank: rank, first_place_scores: first_place_scores}
     end
     user = %{user | stats: stats}
+    user = Repo.preload(user, :groups)
 
     # TODO: Support other game modes
     # TODO: Execute in parallel
@@ -313,6 +447,7 @@ defmodule Trucksu.UserController do
 
     render conn, "user_detail.json",
       user: user,
+      friendship: friendship_type,
       graphs: graphs
   end
 

@@ -1,9 +1,16 @@
 defmodule Trucksu.UserView do
   use Trucksu.Web, :view
   alias Trucksu.{
-    Repo, # TODO: Extract to controller
     GraphView,
   }
+
+  def render("friends.json", %{friends: friends}) do
+    render_many(friends, __MODULE__, "friend.json", as: :friend)
+  end
+
+  def render("friend.json", %{friend: friend}) do
+    friend
+  end
 
   def render("show.json", %{user: user}) do
     %{
@@ -15,10 +22,10 @@ defmodule Trucksu.UserView do
 
   def render("user_detail.json", %{
     user: user,
+    friendship: friendship,
     graphs: graphs
   }) do
-    user = Repo.preload(user, :groups)
-    %{
+    data = %{
       id: user.id,
       country: user.country,
       country_name: country_name(user.country),
@@ -49,6 +56,14 @@ defmodule Trucksu.UserView do
         }
       end,
     }
+
+    data = if not is_nil(friendship) do
+      Map.put(data, :friendship, friendship)
+    else
+      data
+    end
+
+    data
   end
 
   def render("score.json", %{score: score}) do
