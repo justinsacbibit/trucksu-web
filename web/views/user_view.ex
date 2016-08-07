@@ -1,6 +1,9 @@
 defmodule Trucksu.UserView do
   use Trucksu.Web, :view
-  alias Trucksu.Repo
+  alias Trucksu.{
+    Repo, # TODO: Extract to controller
+    GraphView,
+  }
 
   def render("show.json", %{user: user}) do
     %{
@@ -10,7 +13,10 @@ defmodule Trucksu.UserView do
     }
   end
 
-  def render("user_detail.json", user) do
+  def render("user_detail.json", %{
+    user: user,
+    graphs: graphs
+  }) do
     user = Repo.preload(user, :groups)
     %{
       id: user.id,
@@ -21,6 +27,11 @@ defmodule Trucksu.UserView do
       inserted_at: user.inserted_at,
       stats: for user_stats <- user.stats do
         %{
+          graphs: graphs[user_stats.game_mode]
+          |> Enum.map(fn({key, val}) ->
+            {key, render(GraphView, "show.json", points: val)}
+          end)
+          |> Enum.into(%{}),
           pp: user_stats.pp,
           rank: user_stats.rank,
           game_mode: user_stats.game_mode,

@@ -7,6 +7,7 @@ defmodule Trucksu.UserController do
     DiscordAdmin,
     User,
     UserStats,
+    PerformanceGraph,
   }
 
   # admin endpoints
@@ -297,7 +298,22 @@ defmodule Trucksu.UserController do
     end
     user = %{user | stats: stats}
 
-    render conn, "user_detail.json", user
+    # TODO: Support other game modes
+    # TODO: Execute in parallel
+    game_mode = 0
+    pp_graph = PerformanceGraph.Server.get(id, game_mode)
+    graphs = %{
+      game_mode => %{
+        pp: pp_graph,
+      },
+      1 => %{},
+      2 => %{},
+      3 => %{},
+    }
+
+    render conn, "user_detail.json",
+      user: user,
+      graphs: graphs
   end
 
   def show_osu_user(conn, %{"user_id" => user_id}) do

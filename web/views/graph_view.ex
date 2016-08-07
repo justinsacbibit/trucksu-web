@@ -5,10 +5,11 @@ defmodule Trucksu.GraphView do
     render_many(points, __MODULE__, "point.json", as: :point)
   end
 
-  def render("point.json", %{point: {date, pp}}) do
+  def render("point.json", %{point: {date, value}}) do
     %{
       date: Timex.format!(date, "{ISOdate}"),
-      pp: pp,
+      unix_time: Timex.format!(date, "{s-epoch}") |> Integer.parse |> elem(0),
+      value: value,
     }
   end
 end
