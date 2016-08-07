@@ -99,7 +99,12 @@ defmodule Trucksu.Router do
       get "/pp-calc", PerformanceController, :calculate
 
       scope "/users" do
-        get "/:id", UserController, :show
+        scope "/:id" do
+          get "/", UserController, :show
+          scope "/graphs" do
+            get "/pp", GraphController, :show_pp
+          end
+        end
 
         # admin
         patch "/:id_or_username", UserController, :patch

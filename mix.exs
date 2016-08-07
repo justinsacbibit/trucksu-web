@@ -23,7 +23,7 @@ defmodule Trucksu.Mixfile do
      applications: [:phoenix, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex, :comeonin, :timex,
                     :phoenix_html, :guardian, :httpoison, :ex_aws,
-                    :ex_rated, :ex_statsd, :phoenix_pubsub]]
+                    :ex_rated, :ex_statsd, :phoenix_pubsub, :cachex]]
   end
 
   # Specifies which paths to compile per environment.
@@ -39,6 +39,7 @@ defmodule Trucksu.Mixfile do
      {:phoenix_html, "~> 2.3"},
      {:dialyxir, "~> 0.3.5", only: [:dev]},
      {:timex, "~> 2.1.4"},
+     {:cachex, "~> 1.2.2"},
      {:postgrex, "~> 0.11.0"},
      {:timex_ecto, "~> 1.0.4"},
      {:yamerl, github: "yakaz/yamerl"},

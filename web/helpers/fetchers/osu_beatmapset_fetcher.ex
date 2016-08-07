@@ -3,6 +3,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
   import Ecto.Query, only: [from: 2]
   alias Trucksu.{
     Osu,
+    PerformanceGraph,
 
     OsuBeatmapset,
     Repo,
@@ -50,8 +51,10 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
   defp delete_beatmap(osu_beatmap) do
     osu_beatmap = Repo.preload osu_beatmap, :scores
     osu_beatmap = Repo.preload osu_beatmap, :beatmapset
-    for _score <- osu_beatmap.scores do
-      # TODO: Record deletion
+    for score <- osu_beatmap.scores do
+      # TODO: Record deletion?
+      # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
+      PerformanceGraph.Server.invalidate(score.user_id, score.game_mode)
     end
     case Repo.delete osu_beatmap do
       {:ok, _osu_beatmap} ->

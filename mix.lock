@@ -1,4 +1,5 @@
 %{"base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], []},
+  "cachex": {:hex, :cachex, "1.2.2", "4a74564b6611fae2478d7604f1159749c9c6d1e884c849218db29e8d11a61bba", [:mix], [{:eternal, "~> 1.0", [hex: :eternal, optional: false]}]},
   "certifi": {:hex, :certifi, "0.4.0", "a7966efb868b179023618d29a407548f70c52466bf1849b9e8ebd0e34b7ea11f", [:rebar3], []},
   "combine": {:hex, :combine, "0.7.0", "2ac6ae852a9835fe8189af18121cddd5bed2677f5df706dc0d208af668ab845d", [:mix], []},
   "comeonin": {:hex, :comeonin, "2.5.1", "b39cc11fa7fde5c4498dc822ddf8db9319921ea29286784cd499c4d2618018e1", [:mix, :make, :make], []},
@@ -11,6 +12,7 @@
   "decimal": {:hex, :decimal, "1.1.2", "79a769d4657b2d537b51ef3c02d29ab7141d2b486b516c109642d453ee08e00c", [:mix], []},
   "dialyxir": {:hex, :dialyxir, "0.3.5", "eaba092549e044c76f83165978979f60110dc58dd5b92fd952bf2312f64e9b14", [:mix], []},
   "ecto": {:hex, :ecto, "2.0.2", "b02331c1f20bbe944dbd33c8ecd8f1ccffecc02e344c4471a891baf3a25f5406", [:mix], [{:db_connection, "~> 1.0-rc.2", [hex: :db_connection, optional: true]}, {:decimal, "~> 1.0", [hex: :decimal, optional: false]}, {:mariaex, "~> 0.7.7", [hex: :mariaex, optional: true]}, {:poison, "~> 1.5 or ~> 2.0", [hex: :poison, optional: true]}, {:poolboy, "~> 1.5", [hex: :poolboy, optional: false]}, {:postgrex, "~> 0.11.2", [hex: :postgrex, optional: true]}, {:sbroker, "~> 1.0-beta", [hex: :sbroker, optional: true]}]},
+  "eternal": {:hex, :eternal, "1.0.3", "daa23eabd206065f455cee62aee436fbd97a8dcab1e50be4ee68f9b218e8610a", [:mix], []},
   "ex2ms": {:hex, :ex2ms, "1.4.0", "e43b410888b45ba363ea6650db3736db3e455a0a412ec244ac633fede857bcb2", [:mix], []},
   "ex_aws": {:hex, :ex_aws, "0.4.18", "7571cae7e04feaa3b9fcc799230501e9730720daafd55a20d5a41a102fd0cf25", [:mix], [{:httpoison, "~> 0.7", [hex: :httpoison, optional: true]}, {:httpotion, "~> 2.0", [hex: :httpotion, optional: true]}, {:jsx, "~> 2.5", [hex: :jsx, optional: true]}, {:poison, "~> 1.2", [hex: :poison, optional: true]}, {:sweet_xml, "~> 0.5", [hex: :sweet_xml, optional: true]}]},
   "ex_rated": {:hex, :ex_rated, "1.2.2", "0d177d341f6febf648db73459b9e15ef57d619de5526f9b9d0283d5ee39b62cd", [:mix], [{:ex2ms, "~> 1.4.0", [hex: :ex2ms, optional: false]}]},

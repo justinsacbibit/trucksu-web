@@ -28,6 +28,10 @@ defmodule Trucksu.Performance do
       order_by: [desc: s.pp],
       preload: [osu_beatmap: ob]
 
+    calculate_stats_for_scores(scores)
+  end
+
+  def calculate_stats_for_scores(scores) do
     # TODO: Filter in SQL using a subquery
     unique_by_md5 = fn %Score{file_md5: file_md5} ->
       file_md5
@@ -39,10 +43,6 @@ defmodule Trucksu.Performance do
     # re-sort in descending order by pp
     scores = Enum.sort_by(scores, fn(score) -> score.pp end, &>=/2)
 
-    calculate_stats_for_scores(scores)
-  end
-
-  defp calculate_stats_for_scores(scores) do
     accuracy = Accuracy.from_accuracies(Enum.map scores, fn %Score{accuracy: accuracy} -> accuracy end)
     pp = from_pps(Enum.map scores, fn %Score{pp: pp} -> pp end)
 
