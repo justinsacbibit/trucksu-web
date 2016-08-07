@@ -18,6 +18,13 @@ defmodule Trucksu.ScoreController do
   }
   alias Trucksu.Helpers.Mods
 
+  @bancho_url Application.get_env(:trucksu, :bancho_url)
+  @bot_url Application.get_env(:trucksu, :bot_url)
+  @server_cookie Application.get_env(:trucksu, :server_cookie)
+  @decryption_url Application.get_env(:trucksu, :decryption_url)
+  @decryption_cookie Application.get_env(:trucksu, :decryption_cookie)
+  @replay_file_bucket Application.get_env(:trucksu, :replay_file_bucket)
+
   def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
 
@@ -31,11 +38,9 @@ defmodule Trucksu.ScoreController do
   end
 
   defp decrypt(ciphertext, key, iv) do
-    url = Application.get_env(:trucksu, :decryption_url)
-    cookie = Application.get_env(:trucksu, :decryption_cookie)
-    plaintext = if url do
-      body = {:form, [{"c", ciphertext}, {"iv", iv}, {"k", key}, {"cookie", cookie}]}
-      %HTTPoison.Response{body: plaintext} = HTTPoison.post!(url, body)
+    plaintext = if @decryption_url do
+      body = {:form, [{"c", ciphertext}, {"iv", iv}, {"k", key}, {"cookie", @decryption_cookie}]}
+      %HTTPoison.Response{body: plaintext} = HTTPoison.post!(@decryption_url, body)
       plaintext
     else
       {plaintext, 0} = System.cmd("php", ["score.php", key, ciphertext, iv])
@@ -159,21 +164,7 @@ defmodule Trucksu.ScoreController do
       nil
     end
 
-    changeset = OsuUserAccessPoint.changeset(%OsuUserAccessPoint{}, %{
-      osu_md5: osu_md5,
-      mac_md5: mac_md5,
-      unique_md5: unique_md5,
-      disk_md5: disk_md5,
-      user_id: user.id,
-    })
-    case Repo.insert changeset do
-      {:error, %{constraints: [%{field: :osu_md5, type: :unique}]}} ->
-        Logger.debug "Ignoring duplicate access point"
-      {:error, error} ->
-        Logger.error "Unable to save access point for #{user.username}: #{inspect error}"
-      _ ->
-        :ok
-    end
+    Task.start(fn -> save_access_point(osu_md5, mac_md5, unique_md5, disk_md5, user) end)
 
     if pass do
       case String.length(process_list) do
@@ -267,18 +258,7 @@ defmodule Trucksu.ScoreController do
             Logger.error "#{username} submitted a score with bad_flag! score.id=#{score.id}, bad_flag=#{bad_flag}"
           end
 
-          changeset = ScoreProcessList.changeset(%ScoreProcessList{}, %{
-            user_id: user.id,
-            score_id: score.id,
-            process_list: process_list,
-            version: version,
-          })
-          case Repo.insert changeset do
-            {:error, error} ->
-              Logger.error "Unable to save process list for #{user.username} score with id #{score.id}: #{inspect error}"
-            _ ->
-              :ok
-          end
+          Task.start(fn -> save_process_list(user, score, process_list, version) end)
 
           score = case Performance.calculate(score) do
             {:ok, nil} ->
@@ -296,12 +276,7 @@ defmodule Trucksu.ScoreController do
               score
           end
 
-          bucket = Application.get_env(:trucksu, :replay_file_bucket)
-          replay_file_content = File.read!(replay.path)
-          ExAws.S3.put_object!(bucket, "#{score.id}", replay_file_content)
-          Logger.info "Uploaded replay for #{user.username}, score id #{score.id}, byte size: #{replay_file_content |> byte_size}"
-
-          Logger.info "Inserting score: #{inspect score}"
+          Task.start(fn -> upload_replay(replay.path, score.id, user.username) end)
 
           user_id = user.id
 
@@ -320,53 +295,10 @@ defmodule Trucksu.ScoreController do
           score
         end
 
-        bancho_url = Application.get_env(:trucksu, :bancho_url)
-        bot_url = Application.get_env(:trucksu, :bot_url)
-        cookie = Application.get_env(:trucksu, :server_cookie)
+        Logger.info "Inserted score: #{inspect score}"
+
         if score.pp do
-          file_md5 = score.file_md5
-          osu_beatmap = Repo.one! from ob in OsuBeatmap,
-            join: obs in assoc(ob, :beatmapset),
-            where: ob.file_md5 == ^file_md5,
-            preload: [beatmapset: obs]
-          # TODO: Error logging
-          data = %{
-            "cookie" => cookie,
-            "event_type" => "pp",
-            "pp" => "#{round score.pp}",
-            "user_id" => user.id,
-            "username" => user.username,
-            "beatmap_id" => "#{osu_beatmap.id}",
-            "version" => osu_beatmap.version,
-            "artist" => osu_beatmap.beatmapset.artist,
-            "title" => osu_beatmap.beatmapset.title,
-            "creator" => osu_beatmap.beatmapset.creator,
-            "mods" => score.mods,
-            "rank" => score.rank,
-            "accuracy" => score.accuracy,
-            "max_combo" => score.max_combo,
-            "time" => score.time,
-          }
-          json = Poison.encode! data
-          response = HTTPoison.post bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000
-
-          case response do
-            {:ok, _response} ->
-              :ok
-              Logger.warn "Sent pp event to Bancho: #{inspect data}"
-            {:error, response} ->
-              Logger.error "Failed to send pp event to Bancho: #{inspect response}"
-          end
-
-          response = HTTPoison.post bot_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000
-
-          case response do
-            {:ok, _response} ->
-              :ok
-              Logger.warn "Sent pp event to Bot: #{inspect data}"
-            {:error, response} ->
-              Logger.error "Failed to send pp event to Bot: #{inspect response}"
-          end
+          Task.start(fn -> notify_services_of_score(score, user) end)
         end
 
         ExStatsD.increment "scores.submissions.succeeded"
@@ -384,8 +316,92 @@ defmodule Trucksu.ScoreController do
 
         Repo.update! user_stats
 
-        # TODO: Don't call render func
-        render conn, "response.raw", data: <<>>
+        conn
+        |> html("")
+    end
+  end
+
+  defp save_access_point(osu_md5, mac_md5, unique_md5, disk_md5, user) do
+    changeset = OsuUserAccessPoint.changeset(%OsuUserAccessPoint{}, %{
+      osu_md5: osu_md5,
+      mac_md5: mac_md5,
+      unique_md5: unique_md5,
+      disk_md5: disk_md5,
+      user_id: user.id,
+    })
+    case Repo.insert changeset do
+      {:error, %{constraints: [%{field: :osu_md5, type: :unique}]}} ->
+        Logger.debug "Ignoring duplicate access point"
+      {:error, error} ->
+        Logger.error "Unable to save access point for #{user.username}: #{inspect error}"
+      _ ->
+        :ok
+    end
+  end
+
+  defp save_process_list(user, score, process_list, version) do
+    changeset = ScoreProcessList.changeset(%ScoreProcessList{}, %{
+      user_id: user.id,
+      score_id: score.id,
+      process_list: process_list,
+      version: version,
+    })
+    case Repo.insert changeset do
+      {:error, error} ->
+        Logger.error "Unable to save process list for #{user.username} score with id #{score.id}: #{inspect error}"
+      _ ->
+        :ok
+    end
+  end
+
+  defp upload_replay(replay_path, score_id, username) do
+    replay_file_content = File.read!(replay_path)
+    ExAws.S3.put_object!(@replay_file_bucket, "#{score_id}", replay_file_content)
+    Logger.info "Uploaded replay for #{username}, score id #{score_id}, byte size: #{replay_file_content |> byte_size}"
+  end
+
+  defp notify_services_of_score(score, user) do
+    file_md5 = score.file_md5
+    osu_beatmap = Repo.one! from ob in OsuBeatmap,
+      join: obs in assoc(ob, :beatmapset),
+      where: ob.file_md5 == ^file_md5,
+      preload: [beatmapset: obs]
+
+    # TODO: Error logging
+    data = %{
+      "cookie" => @server_cookie,
+      "event_type" => "pp",
+      "pp" => "#{round score.pp}",
+      "user_id" => user.id,
+      "username" => user.username,
+      "beatmap_id" => "#{osu_beatmap.id}",
+      "version" => osu_beatmap.version,
+      "artist" => osu_beatmap.beatmapset.artist,
+      "title" => osu_beatmap.beatmapset.title,
+      "creator" => osu_beatmap.beatmapset.creator,
+      "mods" => score.mods,
+      "rank" => score.rank,
+      "accuracy" => score.accuracy,
+      "max_combo" => score.max_combo,
+      "time" => score.time,
+    }
+    json = Poison.encode! data
+    response = HTTPoison.post(@bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
+
+    case response do
+      {:ok, _response} ->
+        Logger.warn "Sent pp event to Bancho: #{inspect data}"
+      {:error, response} ->
+        Logger.error "Failed to send pp event to Bancho: #{inspect response}"
+    end
+
+    response = HTTPoison.post(@bot_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
+
+    case response do
+      {:ok, _response} ->
+        Logger.warn "Sent pp event to Bot: #{inspect data}"
+      {:error, response} ->
+        Logger.error "Failed to send pp event to Bot: #{inspect response}"
     end
   end
 
