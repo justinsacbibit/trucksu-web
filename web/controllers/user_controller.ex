@@ -5,7 +5,9 @@ defmodule Trucksu.UserController do
     Friendship,
     AvatarAgent,
     Mailer,
+    Score,
     DiscordAdmin,
+    OsuBeatmap,
     User,
     UserStats,
     PerformanceGraph,
@@ -340,110 +342,131 @@ defmodule Trucksu.UserController do
 
   def show(conn, %{"id" => id}) do
     logged_in_user = Guardian.Plug.current_resource(conn)
-    # TODO: Use task to execute queries in parallel
-    friendship_type = if logged_in_user do
-      logged_in_user_id = logged_in_user.id
+    friendship_type_task = Task.async(fn ->
+      if logged_in_user do
+        logged_in_user_id = logged_in_user.id
 
-      friendship_query = from f in Friendship,
-        where: f.requester_id == ^logged_in_user_id
-          and f.receiver_id == ^id
-      friendship = Repo.one friendship_query
-      is_friend = not is_nil(friendship)
+        friendship_query = from f in Friendship,
+          where: f.requester_id == ^logged_in_user_id
+            and f.receiver_id == ^id
+        friendship_task = Task.async(fn -> Repo.one friendship_query end)
 
-      # TODO: Execute in parallel
-      reverse_query = from f in Friendship,
-        where: f.requester_id == ^id
-          and f.receiver_id == ^logged_in_user_id
-      reverse_friendship = Repo.one reverse_query
-      is_mutual = is_friend and not is_nil(reverse_friendship)
+        reverse_query = from f in Friendship,
+          where: f.requester_id == ^id
+            and f.receiver_id == ^logged_in_user_id
+        reverse_friendship_task = Task.async(fn -> Repo.one reverse_query end)
 
-      cond do
-        is_mutual -> "mutual"
-        is_friend -> "friend"
-        true -> "none"
+        friendship = Task.await(friendship_task)
+        is_friend = not is_nil(friendship)
+
+        reverse_friendship = Task.await(reverse_friendship_task)
+        is_mutual = is_friend and not is_nil(reverse_friendship)
+
+        cond do
+          is_mutual -> "mutual"
+          is_friend -> "friend"
+          true -> "none"
+        end
+      else
+        nil
       end
-    else
-      nil
-    end
+    end)
 
-    query = from u in User,
-      join: us in assoc(u, :stats),
-      left_join: sc in assoc(u, :scores),
-      left_join: ob in assoc(sc, :osu_beatmap),
-      left_join: obs in assoc(ob, :beatmapset),
-      where: us.user_id == ^id
-        and (is_nil(sc.id) or
-          not is_nil(sc.pp)
-          and sc.pass
-          and us.game_mode == sc.game_mode),
-      preload: [stats: {us, scores: {sc, osu_beatmap: {ob, [beatmapset: obs]}}}],
-      order_by: [desc: sc.pp]
-    user = Repo.one! query
+    user_task = Task.async(fn ->
+      user = Repo.get!(User, id)
+      |> Repo.preload(:groups)
 
-    # TODO: Filter in SQL using a subquery
-    unique_by_md5 = fn %Trucksu.Score{file_md5: file_md5} ->
-      file_md5
-    end
-    stats = for stats <- user.stats do
-      scores = stats.scores
-      |> Enum.uniq_by(&(unique_by_md5.(&1)))
-      |> Enum.take(100)
+      game_mode_range = 0..3
+      stats = game_mode_range
+      |> Enum.map(fn(game_mode) ->
+        Task.async(fn ->
+          inner_score_query = from sc in Score,
+            where: sc.user_id == ^id
+              and sc.game_mode == ^game_mode
+              and sc.pass,
+            order_by: [desc: sc.pp]
+          query = from sc in subquery(inner_score_query),
+            distinct: [sc.file_md5],
+            limit: 100
 
-      rank = Repo.one UserStats.get_rank(user.id, stats.game_mode)
+          scores_task = Task.async(fn ->
+            scores = Repo.all(query)
+            |> Repo.preload(osu_beatmap: [:beatmapset])
+            |> Enum.sort_by(fn(score) -> score.pp end, &>=/2)
+          end)
 
-      game_mode = stats.game_mode
-      user_id = user.id
-      query = from sc in Trucksu.Score,
-        join: sc_ in fragment("
-          SELECT id
-          FROM (
-                  SELECT
-                     sc.id,
-                     user_id,
-                     sc.game_mode,
-                     row_number()
-                     OVER (PARTITION BY sc.file_md5, sc.game_mode
-                        ORDER BY score DESC) score_rank
-                  FROM scores sc
-                  JOIN osu_beatmaps ob
-                    on sc.file_md5 = ob.file_md5
-                  JOIN users u
-                    on sc.user_id = u.id
-                  WHERE sc.pass AND NOT u.banned
-               ) x
-          WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
-        ", ^user_id, ^game_mode),
-          on: sc_.id == sc.id,
-        join: u in assoc(sc, :user),
-        join: us in assoc(u, :stats),
-        join: ob in assoc(sc, :osu_beatmap),
-        join: obs in assoc(ob, :beatmapset),
-        preload: [osu_beatmap: {ob, [beatmapset: obs]}],
-        order_by: [desc: sc.score]
-      first_place_scores = Repo.all query
+          us_query = from us in UserStats,
+            where: us.user_id == ^id
+              and us.game_mode == ^game_mode
+          stats_for_game_mode = Repo.one!(us_query)
 
-      %{stats | scores: scores, rank: rank, first_place_scores: first_place_scores}
-    end
-    user = %{user | stats: stats}
-    user = Repo.preload(user, :groups)
+          user_id = user.id
+          rank_task = Task.async(fn ->
+            Repo.one UserStats.get_rank(user_id, game_mode)
+          end)
 
-    # TODO: Support other game modes
-    # TODO: Execute in parallel
-    game_mode = 0
-    pp_graph = PerformanceGraph.Server.get(id, game_mode)
-    graphs = %{
-      game_mode => %{
-        pp: pp_graph,
-      },
-      1 => %{},
-      2 => %{},
-      3 => %{},
-    }
+          inner_query = from sc in inner_score_query,
+            join: sc_ in fragment("
+              SELECT id
+              FROM (
+                SELECT
+                   sc.id,
+                   user_id,
+                   sc.game_mode,
+                   row_number()
+                   OVER (PARTITION BY sc.file_md5, sc.game_mode
+                      ORDER BY score DESC) score_rank
+                FROM scores sc
+                JOIN osu_beatmaps ob
+                  on sc.file_md5 = ob.file_md5
+                JOIN users u
+                  on sc.user_id = u.id
+                WHERE sc.pass AND NOT u.banned
+              ) x
+              WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
+            ", ^user_id, ^game_mode),
+              on: sc_.id == sc.id
+          query = from sc in subquery(inner_query),
+            distinct: [sc.file_md5],
+            limit: 100
+
+          first_place_scores_task = Task.async(fn ->
+            first_place_scores = Repo.all(query)
+            |> Repo.preload(osu_beatmap: [:beatmapset])
+            |> Enum.sort_by(fn(score) -> score.pp end, &>=/2)
+          end)
+
+          %{stats_for_game_mode |
+            scores: Task.await(scores_task),
+            rank: Task.await(rank_task),
+            first_place_scores: Task.await(first_place_scores_task),
+          }
+        end)
+      end)
+      |> Enum.map(&Task.await/1)
+      user = %{user | stats: stats}
+      user
+    end)
+
+    graphs_task = Task.async(fn ->
+      # TODO: Support other game modes
+      game_mode = 0
+      pp_graph = PerformanceGraph.Server.get(id, game_mode)
+      graphs = %{
+        game_mode => %{
+          pp: pp_graph,
+        },
+        1 => %{},
+        2 => %{},
+        3 => %{},
+      }
+      graphs
+    end)
 
     render conn, "user_detail.json",
-      user: user,
-      friendship: friendship_type,
-      graphs: graphs
+      user: Task.await(user_task),
+      friendship: Task.await(friendship_type_task),
+      graphs: Task.await(graphs_task)
   end
 
   def show_osu_user(conn, %{"user_id" => user_id}) do

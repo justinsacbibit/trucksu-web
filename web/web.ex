@@ -32,7 +32,7 @@ defmodule Trucksu.Web do
 
       alias Trucksu.Repo
       import Ecto
-      import Ecto.Query, only: [from: 1, from: 2]
+      import Ecto.Query, only: [from: 1, from: 2, subquery: 1]
 
       import Trucksu.Router.Helpers
       import Trucksu.Gettext
