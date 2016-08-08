@@ -55,6 +55,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
       # TODO: Record deletion?
       # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
       PerformanceGraph.Server.invalidate(score.user_id, score.game_mode)
+      Trucksu.UserScoresCache.invalidate(score.user_id, score.game_mode)
     end
     case Repo.delete osu_beatmap do
       {:ok, _osu_beatmap} ->

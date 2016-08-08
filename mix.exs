@@ -45,7 +45,7 @@ defmodule Trucksu.Mixfile do
      {:yamerl, github: "yakaz/yamerl"},
      {:countries, github: "SebastianSzturo/countries"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:phoenix_ecto, "~> 3.0"},
+     {:phoenix_ecto, "~> 3.0.1"},
      {:guardian, git: "https://github.com/ueberauth/guardian.git"},
      {:comeonin, "~> 2.5"},
      {:gettext, "~> 0.9"},
