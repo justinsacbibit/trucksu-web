@@ -395,13 +395,11 @@ defmodule Trucksu.UserController do
           stats_for_game_mode = Repo.one!(us_query)
 
           user_id = user.id
-          rank_task = Task.async(fn ->
-            start = Timex.DateTime.now
-            rank = Repo.one UserStats.get_rank(user_id, game_mode)
-            finish = Timex.DateTime.now
-            Logger.info "rank query: #{Timex.diff(finish, start)}"
-            rank
-          end)
+          the_fn = fn ->
+            Repo.one UserStats.get_rank(user_id, game_mode)
+          end
+          Logger.info "rank query: #{Trucksu.Benchmark.measure(the_fn)}"
+          rank_task = Task.async(the_fn)
 
           query = from sc in score_query,
             join: sc_ in fragment("
@@ -461,16 +459,14 @@ defmodule Trucksu.UserController do
   end
 
   defp create_scores_task(query, name) do
-    Task.async(fn ->
-      start = Timex.DateTime.now
-      scores = Repo.all(query)
+    the_fn = fn ->
+      Repo.all(query)
       |> Repo.preload(osu_beatmap: [:beatmapset])
       |> Enum.uniq_by(fn(score) -> score.file_md5 end)
       |> Enum.take(100)
-      finish = Timex.DateTime.now
-      Logger.info "#{name} query: #{Timex.diff(finish, start)}"
-      scores
-    end)
+    end
+    Logger.info "#{name} query: #{Trucksu.Benchmark.measure(the_fn)}"
+    Task.async(the_fn)
   end
 
   def show_osu_user(conn, %{"user_id" => user_id}) do
