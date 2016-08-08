@@ -36,11 +36,11 @@ defmodule Trucksu.UserView do
         %{
           graphs: graphs[user_stats.game_mode]
           |> Enum.map(fn({key, val}) ->
-            %{
-              stat: key,
+            {key, %{
               points: render(GraphView, "show.json", points: val),
-            }
-          end),
+            }}
+          end)
+          |> Enum.into(%{}),
           pp: user_stats.pp,
           rank: user_stats.rank,
           game_mode: user_stats.game_mode,
