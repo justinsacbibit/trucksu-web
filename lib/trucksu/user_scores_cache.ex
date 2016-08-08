@@ -13,7 +13,7 @@ defmodule Trucksu.UserScoresCache do
     # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
     {status, result} = Cachex.get(@cache_name, key(user_id, game_mode), fallback: fn(_key) ->
       calculate(user_id, game_mode)
-    end, ttl: :timer.hours(7 * 24))
+    end, ttl: :timer.hours(7 * 24)) # TODO: First place ranks don't get invalidated
     case status do
       :loaded ->
         Logger.info "User scores cache miss"

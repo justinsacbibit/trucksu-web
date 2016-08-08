@@ -383,11 +383,11 @@ defmodule Trucksu.UserController do
       stats = game_mode_range
       |> Enum.map(fn(game_mode) ->
         Task.async(fn ->
-          {stats_for_game_mode, scores, first_place_scores} = Trucksu.UserScoresCache.get(user_id, game_mode)
-
           rank_task = Task.async(fn ->
             Repo.one UserStats.get_rank(user_id, game_mode)
           end)
+
+          {stats_for_game_mode, scores, first_place_scores} = Trucksu.UserScoresCache.get(user_id, game_mode)
 
           %{stats_for_game_mode |
             scores: scores,
@@ -416,10 +416,13 @@ defmodule Trucksu.UserController do
       graphs
     end)
 
+    user = Task.await(user_task)
+    friendship = Task.await(friendship_type_task)
+    graphs = Task.await(graphs_task)
     render conn, "user_detail.json",
-      user: Task.await(user_task),
-      friendship: Task.await(friendship_type_task),
-      graphs: Task.await(graphs_task)
+      user: user,
+      friendship: friendship,
+      graphs: graphs
   end
 
   def show_osu_user(conn, %{"user_id" => user_id}) do
