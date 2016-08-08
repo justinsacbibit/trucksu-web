@@ -380,12 +380,16 @@ defmodule Trucksu.UserController do
       stats = game_mode_range
       |> Enum.map(fn(game_mode) ->
         Task.async(fn ->
-          {stats_for_game_mode, scores, first_place_scores, rank} = Trucksu.UserScoresCache.get(user.id, game_mode)
+          {stats_for_game_mode, scores, first_place_scores} = Trucksu.UserScoresCache.get(user.id, game_mode)
+
+          rank_task = Task.async(fn ->
+            Repo.one UserStats.get_rank(user.id, game_mode)
+          end)
 
           %{stats_for_game_mode |
             scores: scores,
             first_place_scores: first_place_scores,
-            rank: rank,
+            rank: Task.await(rank_task),
           }
         end)
       end)

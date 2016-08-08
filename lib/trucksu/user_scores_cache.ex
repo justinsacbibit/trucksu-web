@@ -72,11 +72,7 @@ defmodule Trucksu.UserScoresCache do
         and us.game_mode == ^game_mode
     stats_for_game_mode = Repo.one!(us_query)
 
-    rank_task = Task.async(fn ->
-      Repo.one UserStats.get_rank(user_id, game_mode)
-    end)
-
-    {stats_for_game_mode, Task.await(scores_task), Task.await(first_place_scores_task), Task.await(rank_task)}
+    {stats_for_game_mode, Task.await(scores_task), Task.await(first_place_scores_task)}
   end
 
   defp create_scores_task(query) do
