@@ -380,19 +380,18 @@ defmodule Trucksu.UserController do
       stats = game_mode_range
       |> Enum.map(fn(game_mode) ->
         Task.async(fn ->
-          inner_score_query = from sc in Score,
+          score_query = from sc in Score,
             where: sc.user_id == ^id
               and sc.game_mode == ^game_mode
-              and sc.pass,
+              and sc.pass
+              and not is_nil(sc.pp),
             order_by: [desc: sc.pp]
-          query = from sc in subquery(inner_score_query),
-            distinct: [sc.file_md5],
-            limit: 100
 
           scores_task = Task.async(fn ->
-            scores = Repo.all(query)
+            scores = Repo.all(score_query)
             |> Repo.preload(osu_beatmap: [:beatmapset])
-            |> Enum.sort_by(fn(score) -> score.pp end, &>=/2)
+            |> Enum.uniq_by(fn(score) -> score.file_md5 end)
+            |> Enum.take(100)
           end)
 
           us_query = from us in UserStats,
@@ -405,7 +404,7 @@ defmodule Trucksu.UserController do
             Repo.one UserStats.get_rank(user_id, game_mode)
           end)
 
-          inner_query = from sc in inner_score_query,
+          query = from sc in score_query,
             join: sc_ in fragment("
               SELECT id
               FROM (
@@ -426,14 +425,12 @@ defmodule Trucksu.UserController do
               WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
             ", ^user_id, ^game_mode),
               on: sc_.id == sc.id
-          query = from sc in subquery(inner_query),
-            distinct: [sc.file_md5],
-            limit: 100
 
           first_place_scores_task = Task.async(fn ->
             first_place_scores = Repo.all(query)
             |> Repo.preload(osu_beatmap: [:beatmapset])
-            |> Enum.sort_by(fn(score) -> score.pp end, &>=/2)
+            |> Enum.uniq_by(fn(score) -> score.file_md5 end)
+            |> Enum.take(100)
           end)
 
           %{stats_for_game_mode |
