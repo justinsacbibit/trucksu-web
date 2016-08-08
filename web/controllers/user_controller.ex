@@ -387,12 +387,7 @@ defmodule Trucksu.UserController do
               and not is_nil(sc.pp),
             order_by: [desc: sc.pp]
 
-          scores_task = Task.async(fn ->
-            scores = Repo.all(score_query)
-            |> Repo.preload(osu_beatmap: [:beatmapset])
-            |> Enum.uniq_by(fn(score) -> score.file_md5 end)
-            |> Enum.take(100)
-          end)
+          scores_task = create_scores_task(score_query)
 
           us_query = from us in UserStats,
             where: us.user_id == ^id
@@ -426,12 +421,7 @@ defmodule Trucksu.UserController do
             ", ^user_id, ^game_mode),
               on: sc_.id == sc.id
 
-          first_place_scores_task = Task.async(fn ->
-            first_place_scores = Repo.all(query)
-            |> Repo.preload(osu_beatmap: [:beatmapset])
-            |> Enum.uniq_by(fn(score) -> score.file_md5 end)
-            |> Enum.take(100)
-          end)
+          first_place_scores_task = create_scores_task(query)
 
           %{stats_for_game_mode |
             scores: Task.await(scores_task),
@@ -464,6 +454,15 @@ defmodule Trucksu.UserController do
       user: Task.await(user_task),
       friendship: Task.await(friendship_type_task),
       graphs: Task.await(graphs_task)
+  end
+
+  defp create_scores_task(query) do
+    Task.async(fn ->
+      Repo.all(query)
+      |> Repo.preload(osu_beatmap: [:beatmapset])
+      |> Enum.uniq_by(fn(score) -> score.file_md5 end)
+      |> Enum.take(100)
+    end)
   end
 
   def show_osu_user(conn, %{"user_id" => user_id}) do
