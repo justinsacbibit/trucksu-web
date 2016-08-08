@@ -387,7 +387,7 @@ defmodule Trucksu.UserController do
               and not is_nil(sc.pp),
             order_by: [desc: sc.pp]
 
-          scores_task = create_scores_task(score_query)
+          scores_task = create_scores_task(score_query, "scores")
 
           us_query = from us in UserStats,
             where: us.user_id == ^id
@@ -396,7 +396,11 @@ defmodule Trucksu.UserController do
 
           user_id = user.id
           rank_task = Task.async(fn ->
-            Repo.one UserStats.get_rank(user_id, game_mode)
+            start = Timex.DateTime.now
+            rank = Repo.one UserStats.get_rank(user_id, game_mode)
+            finish = Timex.DateTime.now
+            Logger.info "rank query: #{Timex.diff(finish, start)}"
+            rank
           end)
 
           query = from sc in score_query,
@@ -421,7 +425,7 @@ defmodule Trucksu.UserController do
             ", ^user_id, ^game_mode),
               on: sc_.id == sc.id
 
-          first_place_scores_task = create_scores_task(query)
+          first_place_scores_task = create_scores_task(query, "first_place_scores")
 
           %{stats_for_game_mode |
             scores: Task.await(scores_task),
@@ -456,12 +460,16 @@ defmodule Trucksu.UserController do
       graphs: Task.await(graphs_task)
   end
 
-  defp create_scores_task(query) do
+  defp create_scores_task(query, name) do
     Task.async(fn ->
-      Repo.all(query)
+      start = Timex.DateTime.now
+      scores = Repo.all(query)
       |> Repo.preload(osu_beatmap: [:beatmapset])
       |> Enum.uniq_by(fn(score) -> score.file_md5 end)
       |> Enum.take(100)
+      finish = Timex.DateTime.now
+      Logger.info "#{name} query: #{Timex.diff(finish, start)}"
+      scores
     end)
   end
 
