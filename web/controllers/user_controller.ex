@@ -341,8 +341,8 @@ defmodule Trucksu.UserController do
   end
 
   def show(conn, %{"id" => id}) do
-    logged_in_user = Guardian.Plug.current_resource(conn)
     friendship_type_task = Task.async(fn ->
+      logged_in_user = Guardian.Plug.current_resource(conn)
       if logged_in_user do
         logged_in_user_id = logged_in_user.id
 
@@ -373,17 +373,20 @@ defmodule Trucksu.UserController do
     end)
 
     user_task = Task.async(fn ->
-      user = Repo.get!(User, id)
-      |> Repo.preload(:groups)
+      {user_id, _} = Integer.parse(id)
+      user_task = Task.async(fn ->
+        user = Repo.get!(User, id)
+        |> Repo.preload(:groups)
+      end)
 
       game_mode_range = 0..3
       stats = game_mode_range
       |> Enum.map(fn(game_mode) ->
         Task.async(fn ->
-          {stats_for_game_mode, scores, first_place_scores} = Trucksu.UserScoresCache.get(user.id, game_mode)
+          {stats_for_game_mode, scores, first_place_scores} = Trucksu.UserScoresCache.get(user_id, game_mode)
 
           rank_task = Task.async(fn ->
-            Repo.one UserStats.get_rank(user.id, game_mode)
+            Repo.one UserStats.get_rank(user_id, game_mode)
           end)
 
           %{stats_for_game_mode |
@@ -394,7 +397,7 @@ defmodule Trucksu.UserController do
         end)
       end)
       |> Enum.map(&Task.await/1)
-      user = %{user | stats: stats}
+      user = %{Task.await(user_task) | stats: stats}
       user
     end)
 
