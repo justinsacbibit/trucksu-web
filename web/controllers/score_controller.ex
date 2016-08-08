@@ -372,6 +372,7 @@ defmodule Trucksu.ScoreController do
         ExStatsD.increment "scores.submissions.succeeded"
         # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
         PerformanceGraph.Server.invalidate(user.id, game_mode)
+        Trucksu.UserScoresCache.invalidate(user.id, game_mode)
 
         # TODO: Don't call render func
         render conn, "response.raw", data: build_response(score)

@@ -380,55 +380,12 @@ defmodule Trucksu.UserController do
       stats = game_mode_range
       |> Enum.map(fn(game_mode) ->
         Task.async(fn ->
-          score_query = from sc in Score,
-            where: sc.user_id == ^id
-              and sc.game_mode == ^game_mode
-              and sc.pass
-              and not is_nil(sc.pp),
-            order_by: [desc: sc.pp]
-
-          scores_task = create_scores_task(score_query, "scores")
-
-          us_query = from us in UserStats,
-            where: us.user_id == ^id
-              and us.game_mode == ^game_mode
-          stats_for_game_mode = Repo.one!(us_query)
-
-          user_id = user.id
-          the_fn = fn ->
-            Repo.one UserStats.get_rank(user_id, game_mode)
-          end
-          Logger.info "rank query: #{Trucksu.Benchmark.measure(the_fn)}"
-          rank_task = Task.async(the_fn)
-
-          query = from sc in score_query,
-            join: sc_ in fragment("
-              SELECT id
-              FROM (
-                SELECT
-                   sc.id,
-                   user_id,
-                   sc.game_mode,
-                   row_number()
-                   OVER (PARTITION BY sc.file_md5, sc.game_mode
-                      ORDER BY score DESC) score_rank
-                FROM scores sc
-                JOIN osu_beatmaps ob
-                  on sc.file_md5 = ob.file_md5
-                JOIN users u
-                  on sc.user_id = u.id
-                WHERE sc.pass AND NOT u.banned
-              ) x
-              WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
-            ", ^user_id, ^game_mode),
-              on: sc_.id == sc.id
-
-          first_place_scores_task = create_scores_task(query, "first_place_scores")
+          {stats_for_game_mode, scores, first_place_scores, rank} = Trucksu.UserScoresCache.get(user.id, game_mode)
 
           %{stats_for_game_mode |
-            scores: Task.await(scores_task),
-            rank: Task.await(rank_task),
-            first_place_scores: Task.await(first_place_scores_task),
+            scores: scores,
+            first_place_scores: first_place_scores,
+            rank: rank,
           }
         end)
       end)
@@ -456,17 +413,6 @@ defmodule Trucksu.UserController do
       user: Task.await(user_task),
       friendship: Task.await(friendship_type_task),
       graphs: Task.await(graphs_task)
-  end
-
-  defp create_scores_task(query, name) do
-    the_fn = fn ->
-      Repo.all(query)
-      |> Repo.preload(osu_beatmap: [:beatmapset])
-      |> Enum.uniq_by(fn(score) -> score.file_md5 end)
-      |> Enum.take(100)
-    end
-    Logger.info "#{name} query: #{Trucksu.Benchmark.measure(the_fn)}"
-    Task.async(the_fn)
   end
 
   def show_osu_user(conn, %{"user_id" => user_id}) do

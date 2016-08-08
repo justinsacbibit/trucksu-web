@@ -7,12 +7,11 @@ defmodule Trucksu.PerformanceGraph.Server do
   require Logger
   alias Trucksu.PerformanceGraph.Calculator
 
-  @cache_name :performance_graph_cache
+  @cache_name :trucksu_cache
 
   def get(user_id, game_mode \\ 0) do
     # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
-    key = "#{user_id}/#{game_mode}"
-    {status, graph} = Cachex.get(@cache_name, key, fallback: fn(_key) ->
+    {status, graph} = Cachex.get(@cache_name, key(user_id, game_mode), fallback: fn(_key) ->
       Calculator.compute_graph(user_id, game_mode)
     end)
     case status do
@@ -27,6 +26,10 @@ defmodule Trucksu.PerformanceGraph.Server do
   end
 
   def invalidate(user_id, game_mode \\ 0) do
-    Cachex.del(@cache_name, "#{user_id}/#{game_mode}")
+    Cachex.del(@cache_name, key(user_id, game_mode))
+  end
+
+  defp key(user_id, game_mode) do
+    "performance_graph-#{user_id}/#{game_mode}"
   end
 end
