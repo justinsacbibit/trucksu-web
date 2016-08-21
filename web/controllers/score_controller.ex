@@ -362,6 +362,35 @@ defmodule Trucksu.ScoreController do
   end
 
   defp notify_services_of_score(score, user) do
+    # Check if it's first place
+    user_id = user.id
+    game_mode = score.game_mode
+    score_id = score.id
+    query = from sc in Score,
+      join: sc_ in fragment("
+        SELECT id
+          FROM (
+            SELECT
+              sc.id,
+              user_id,
+              sc.game_mode,
+              row_number()
+              OVER (PARTITION BY sc.file_md5, sc.game_mode
+                 ORDER BY score DESC) score_rank
+            FROM scores sc
+            JOIN users u
+              on sc.user_id = u.id
+            WHERE sc.pass AND NOT u.banned
+          ) x
+        WHERE user_id = (?) AND score_rank = 1 AND game_mode = (?)
+      ", ^user_id, ^game_mode),
+        on: sc_.id == sc.id,
+      where: sc.id == ^score_id
+    is_first_place = case Repo.one(query) do
+      nil -> false
+      _ -> true
+    end
+
     file_md5 = score.file_md5
     osu_beatmap = Repo.one! from ob in OsuBeatmap,
       join: obs in assoc(ob, :beatmapset),
@@ -385,8 +414,9 @@ defmodule Trucksu.ScoreController do
       "accuracy" => score.accuracy,
       "max_combo" => score.max_combo,
       "time" => score.time,
+      "is_first_place" => is_first_place,
     }
-    json = Poison.encode! data
+    json = Poison.encode!(data)
 
     Task.start(fn ->
       response = HTTPoison.post(@bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
