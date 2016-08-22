@@ -43,8 +43,10 @@ defmodule Trucksu.CountryController do
       stats_for_country = %{stats_for_country | accuracy: mean_accuracy}
 
       %{
-        country: country,
-        country_name: Countries.country_name(country),
+        country: %{
+          code: country,
+          name: Countries.country_name(country),
+        },
         stats: stats_for_country,
       }
     end)
