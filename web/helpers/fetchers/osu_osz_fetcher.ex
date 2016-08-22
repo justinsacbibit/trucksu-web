@@ -66,7 +66,7 @@ defmodule Trucksu.OsuOszFetcher do
 
                 {:ok, headers, osz_file_content}
               else
-                Logger.error "Downloaded beatmapset #{beatmapset_id} from osu!, but there is no Content-Length header!"
+                Logger.info "Downloaded beatmapset #{beatmapset_id} from osu!, but there is no Content-Length header!"
                 {:error, :no_content_length}
               end
             end

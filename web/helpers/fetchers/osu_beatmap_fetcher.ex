@@ -62,7 +62,7 @@ defmodule Trucksu.OsuBeatmapFetcher do
 
         {:ok, beatmap_data}
       %HTTPoison.Response{body: []} ->
-        Logger.error "Beatmap not found for params #{inspect params}"
+        Logger.info "Beatmap not found for params #{inspect params}"
         {:error, :beatmap_not_found}
       response ->
         Logger.error "Received unexpected response when attempting to fetch beatmap from osu! API with params #{inspect params}"
