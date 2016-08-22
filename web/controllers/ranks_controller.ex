@@ -1,6 +1,8 @@
 defmodule Trucksu.RanksController do
   use Trucksu.Web, :controller
-  alias Trucksu.UserStats
+  alias Trucksu.{
+    UserStats,
+  }
 
   def index(conn, _params) do
     stats = Repo.all from us in UserStats,
@@ -13,4 +15,3 @@ defmodule Trucksu.RanksController do
     |> json(stats)
   end
 end
-
