@@ -15,7 +15,7 @@ defmodule Trucksu.Performance do
 
   Only takes into account scores which have pp already calculated.
 
-  The update_missing/0 function can calculate and update scores which are
+  The calculate_missing/0 function can calculate and update scores which are
   missing pp values.
   """
   def calculate_stats_for_user(user_id, game_mode) do
