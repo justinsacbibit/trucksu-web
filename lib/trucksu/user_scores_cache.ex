@@ -10,20 +10,24 @@ defmodule Trucksu.UserScoresCache do
   @cache_name :trucksu_cache
 
   def get(user_id, game_mode) do
-    # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
-    {status, result} = Cachex.get(@cache_name, key(user_id, game_mode), fallback: fn(_key) ->
-      calculate(user_id, game_mode)
-    end, ttl: :timer.hours(7 * 24)) # TODO: First place ranks don't get invalidated
-    case status do
-      :loaded ->
-        Logger.info "User scores cache miss"
-        ExStatsD.increment("user_scores.cache.misses")
-      :ok ->
-        Logger.info "User scores cache hit"
-        ExStatsD.increment("user_scores.cache.hits")
-    end
-    result
+    calculate(user_id, game_mode)
   end
+  # TODO: Don't cache first place scores
+  #def get(user_id, game_mode) do
+  #  # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
+  #  {status, result} = Cachex.get(@cache_name, key(user_id, game_mode), fallback: fn(_key) ->
+  #    calculate(user_id, game_mode)
+  #  end, ttl: :timer.hours(7 * 24)) # TODO: First place ranks don't get invalidated
+  #  case status do
+  #    :loaded ->
+  #      Logger.info "User scores cache miss"
+  #      ExStatsD.increment("user_scores.cache.misses")
+  #    :ok ->
+  #      Logger.info "User scores cache hit"
+  #      ExStatsD.increment("user_scores.cache.hits")
+  #  end
+  #  result
+  #end
 
   def invalidate(user_id, game_mode) do
     Cachex.del(@cache_name, key(user_id, game_mode))
