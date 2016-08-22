@@ -2,6 +2,7 @@ defmodule Trucksu.CountryController do
   use Trucksu.Web, :controller
   alias Trucksu.{
     UserStats,
+    Countries,
   }
 
   def index(conn, _params) do
@@ -43,6 +44,7 @@ defmodule Trucksu.CountryController do
 
       %{
         country: country,
+        country_name: Countries.country_name(country),
         stats: stats_for_country,
       }
     end)
