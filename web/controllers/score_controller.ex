@@ -270,8 +270,7 @@ defmodule Trucksu.ScoreController do
               Repo.update! changeset
 
             {:error, error} ->
-              Logger.error "Failed to calculate pp for score: #{inspect score}"
-              Logger.error "Error: #{inspect error}"
+              Logger.error "Failed to calculate pp for score: #{inspect score}, error: #{inspect error}"
 
               score
           end
