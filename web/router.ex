@@ -123,7 +123,10 @@ defmodule Trucksu.Router do
       scope "/me" do
         pipe_through :ensure_authenticated
 
+        get "/", MeController, :show
+
         post "/avatar", UserController, :upload_avatar
+        post "/userpage", MeController, :upload_userpage
 
         scope "/friendships" do
           get "/", UserController, :friends_index

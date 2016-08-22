@@ -39,6 +39,7 @@ config :ex_statsd,
 
 config :trucksu,
   osu_api_key: System.get_env("OSU_API_KEY"),
+  userpage_file_bucket: System.get_env("USERPAGE_FILE_BUCKET"),
   beatmap_file_bucket: System.get_env("BEATMAP_FILE_BUCKET"),
   replay_file_bucket: System.get_env("REPLAY_FILE_BUCKET"),
   avatar_file_bucket: System.get_env("AVATAR_FILE_BUCKET"),

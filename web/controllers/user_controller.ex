@@ -9,6 +9,7 @@ defmodule Trucksu.UserController do
     User,
     UserStats,
     PerformanceGraph,
+    Userpage,
   }
 
   # admin endpoints
@@ -413,13 +414,19 @@ defmodule Trucksu.UserController do
       graphs
     end)
 
+    userpage_task = Task.async(fn ->
+      Userpage.Manager.get(id)
+    end)
+
     user = Task.await(user_task)
     friendship = Task.await(friendship_type_task)
     graphs = Task.await(graphs_task)
-    render conn, "user_detail.json",
+    userpage = Task.await(userpage_task)
+    render conn, Trucksu.UserView, "user_detail.json",
       user: user,
       friendship: friendship,
-      graphs: graphs
+      graphs: graphs,
+      userpage: userpage
   end
 
   def show_osu_user(conn, %{"user_id" => user_id}) do

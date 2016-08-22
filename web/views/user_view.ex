@@ -24,7 +24,8 @@ defmodule Trucksu.UserView do
   def render("user_detail.json", %{
     user: user,
     friendship: friendship,
-    graphs: graphs
+    graphs: graphs,
+    userpage: userpage,
   }) do
     data = %{
       id: user.id,
@@ -33,6 +34,7 @@ defmodule Trucksu.UserView do
       username: user.username,
       groups: render_many(user.groups, Trucksu.GroupView, "show.json"),
       inserted_at: user.inserted_at,
+      userpage: userpage,
       stats: for user_stats <- user.stats do
         %{
           graphs: graphs[user_stats.game_mode]

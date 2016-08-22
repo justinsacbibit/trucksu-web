@@ -17,6 +17,9 @@ defmodule Trucksu do
       worker(Cachex, [:trucksu_cache, [
         default_ttl: :timer.hours(6),
       ]]),
+      worker(Cachex, [:userpage_cache, [
+        default_ttl: :timer.hours(6),
+      ]], id: :userpage_cache),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
