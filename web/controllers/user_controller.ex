@@ -372,12 +372,11 @@ defmodule Trucksu.UserController do
       end
     end)
 
+    user = Repo.get!(User, id)
+    |> Repo.preload(:groups)
+
     user_task = Task.async(fn ->
       {user_id, _} = Integer.parse(id)
-      user_task = Task.async(fn ->
-        user = Repo.get!(User, id)
-        |> Repo.preload(:groups)
-      end)
 
       game_mode_range = 0..3
       stats = game_mode_range
@@ -397,7 +396,7 @@ defmodule Trucksu.UserController do
         end)
       end)
       |> Enum.map(&Task.await/1)
-      user = %{Task.await(user_task) | stats: stats}
+      user = %{user | stats: stats}
       user
     end)
 

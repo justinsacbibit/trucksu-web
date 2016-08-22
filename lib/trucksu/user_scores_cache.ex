@@ -48,15 +48,13 @@ defmodule Trucksu.UserScoresCache do
         SELECT id
         FROM (
           SELECT
-             sc.id,
-             user_id,
-             sc.game_mode,
-             row_number()
-             OVER (PARTITION BY sc.file_md5, sc.game_mode
-                ORDER BY score DESC) score_rank
+            sc.id,
+            user_id,
+            sc.game_mode,
+            row_number()
+            OVER (PARTITION BY sc.file_md5, sc.game_mode
+               ORDER BY score DESC) score_rank
           FROM scores sc
-          JOIN osu_beatmaps ob
-            on sc.file_md5 = ob.file_md5
           JOIN users u
             on sc.user_id = u.id
           WHERE sc.pass AND NOT u.banned
