@@ -198,7 +198,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
                 end
 
               {:ok, body} ->
-                Logger.error "Looks like beatmapset #{beatmapset_id} no longer exists: #{inspect body}"
+                Logger.warn "Looks like beatmapset #{beatmapset_id} no longer exists: #{inspect body}"
 
                 # TODO: Add cascade delete, so that deleting the set will delete the
                 # beatmaps and associated scores. Also add a way to manually delete
