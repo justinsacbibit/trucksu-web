@@ -49,6 +49,11 @@ defmodule Trucksu.PerformanceController do
         Logger.info "Calculated pp: #{inspect data}"
         json(conn, data)
 
+      {:error, :beatmap_not_found} ->
+        conn
+        |> put_status(404)
+        |> json(%{errors: %{detail: "Beatmap not found"}})
+
       error ->
         Logger.error "Failed to calculate pp for identifier=#{identifier}: #{inspect error}"
 

@@ -62,6 +62,15 @@ defmodule Trucksu.OsuBeatmap do
     changeset(model, params)
   end
 
+  def get(beatmap_id) when is_integer(beatmap_id) do
+    from ob in __MODULE__,
+      where: ob.id == ^beatmap_id
+  end
+  def get(file_md5) when is_binary(file_md5) do
+    from ob in __MODULE__,
+      where: ob.file_md5 == ^file_md5
+  end
+
   def set_filenames() do
     osu_beatmaps = Repo.all from ob in __MODULE__,
       join: obs in assoc(ob, :beatmapset),

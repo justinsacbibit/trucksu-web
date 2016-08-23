@@ -14,50 +14,36 @@ defmodule Trucksu.OsuBeatmapFetcher do
   database, then return it.
   """
   def fetch(identifier) do
+    OsuBeatmap.get(identifier)
+    |> Repo.one
+    |> handle_osu_beatmap(identifier)
+  end
 
-    case beatmap_from_repo(identifier) do
-      nil ->
-        # 1 call every 2 hours
-        rate_limit = ExRated.check_rate("beatmap-#{identifier}", 7_200_000, 1)
-        case rate_limit do
-          {:error, _} ->
-            {:error, :rate_limit}
-          _ ->
-            case fetch_with_identifier(identifier) do
-              {:ok, beatmap_map} ->
-                OsuBeatmapsetFetcher.fetch(beatmap_map["beatmapset_id"])
-                case beatmap_from_repo(identifier) do
-                  nil ->
-                    {:error, :unknown_error}
-                  osu_beatmap ->
-                    {:ok, osu_beatmap}
-                end
-              {:error, error} ->
-                {:error, error}
-            end
-        end
-      osu_beatmap ->
-        OsuBeatmapsetFetcher.fetch(osu_beatmap.beatmapset_id)
-        {:ok, osu_beatmap}
+  defp handle_osu_beatmap(nil, identifier) do
+    # 1 call every 2 hours
+    rate_limit = ExRated.check_rate("beatmap-#{identifier}", 7_200_000, 1)
+    case rate_limit do
+      {:error, _} ->
+        {:error, :beatmap_not_found}
+      _ ->
+        fetch_with_identifier(identifier)
     end
   end
-
-  defp beatmap_from_repo(beatmap_id) when is_integer(beatmap_id) do
-    Repo.get OsuBeatmap, beatmap_id
-  end
-  defp beatmap_from_repo(file_md5) when is_binary(file_md5) do
-    Repo.get_by OsuBeatmap, file_md5: file_md5
+  defp handle_osu_beatmap(osu_beatmap, _identifier) do
+    OsuBeatmapsetFetcher.fetch(osu_beatmap.beatmapset_id)
+    {:ok, osu_beatmap}
   end
 
-  defp fetch_with_identifier(beatmap_id) when is_integer(beatmap_id) do
-    fetch_with_params(b: beatmap_id)
+  defp get_params(beatmap_id) when is_integer(beatmap_id) do
+    [b: beatmap_id]
   end
-  defp fetch_with_identifier(file_md5) when is_binary(file_md5) do
-    fetch_with_params(h: file_md5)
+  defp get_params(file_md5) when is_binary(file_md5) do
+    [h: file_md5]
   end
 
-  defp fetch_with_params(params) do
-    case Osu.get_beatmaps!(params) do
+  defp fetch_with_identifier(identifier) do
+    params = get_params(identifier)
+    osu_api_call_result = case Osu.get_beatmaps!(params) do
       %HTTPoison.Response{body: [beatmap_data]} ->
 
         {:ok, beatmap_data}
@@ -65,9 +51,21 @@ defmodule Trucksu.OsuBeatmapFetcher do
         Logger.info "Beatmap not found for params #{inspect params}"
         {:error, :beatmap_not_found}
       response ->
-        Logger.error "Received unexpected response when attempting to fetch beatmap from osu! API with params #{inspect params}"
-        Logger.error inspect(response)
+        Logger.error "Received unexpected response when attempting to fetch beatmap from osu! API with params #{inspect params}, response: #{inspect response}"
         {:error, :unknown}
+    end
+
+    case osu_api_call_result do
+      {:ok, beatmap_map} ->
+        OsuBeatmapsetFetcher.fetch(beatmap_map["beatmapset_id"])
+        case OsuBeatmap.get(identifier) |> Repo.one do
+          nil ->
+            {:error, :unknown_error}
+          osu_beatmap ->
+            {:ok, osu_beatmap}
+        end
+      {:error, error} ->
+        {:error, error}
     end
   end
 end
