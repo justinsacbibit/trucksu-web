@@ -22,6 +22,15 @@ defmodule Trucksu do
       ]], id: :userpage_cache),
     ]
 
+    children = if Application.get_env(:trucksu, :env) == :prod do
+      children ++ [
+        # Periodic tasks
+        worker(Trucksu.PeriodicTasks.CalculateMissingPp, []),
+      ]
+    else
+      children
+    end
+
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Trucksu.Supervisor]

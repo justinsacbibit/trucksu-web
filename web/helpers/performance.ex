@@ -114,7 +114,7 @@ defmodule Trucksu.Performance do
   """
   def calculate_missing() do
     scores = Repo.all from sc in Score,
-      where: is_nil(sc.pp) or sc.pp == 0
+      where: is_nil(sc.pp) or sc.pp == 0.00
 
     for score <- scores do
       case calculate(score) do
