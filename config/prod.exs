@@ -38,6 +38,8 @@ config :logger, level: :info
 
 config :trucksu,
   env: :prod,
+  send_emails: true,
+  screenshots_url: "https://ss.trucksu.com",
   decryption_url: System.get_env("DECRYPTION_URL"),
   decryption_cookie: System.get_env("DECRYPTION_COOKIE"),
   performance_url: System.get_env("PERFORMANCE_URL"),

@@ -25,6 +25,7 @@ config :phoenix, :stacktrace_depth, 20
 
 config :trucksu,
   env: :dev,
+  screenshots_url: "http://localhost/ss",
   performance_url: "http://localhost:5000",
   bancho_url: "http://localhost:4002",
   website_url: "http://localhost:4001",

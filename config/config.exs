@@ -38,6 +38,7 @@ config :ex_statsd,
   namespace: "trucksu.web"
 
 config :trucksu,
+  send_emails: false,
   osu_api_key: System.get_env("OSU_API_KEY"),
   userpage_file_bucket: System.get_env("USERPAGE_FILE_BUCKET"),
   beatmap_file_bucket: System.get_env("BEATMAP_FILE_BUCKET"),

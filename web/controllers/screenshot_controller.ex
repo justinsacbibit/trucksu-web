@@ -7,7 +7,6 @@ defmodule Trucksu.ScreenshotController do
     Screenshot,
   }
 
-  @env Application.get_env(:trucksu, :env)
   @screenshot_file_bucket Application.get_env(:trucksu, :screenshot_file_bucket)
 
   plug :authenticate when action in [:create]
@@ -41,11 +40,7 @@ defmodule Trucksu.ScreenshotController do
   end
 
   def show(%Plug.Conn{host: "osu.ppy.sh"} = conn, %{"id" => id}) do
-    base = if @env == :dev do
-      "http://localhost/ss"
-    else
-      "https://ss.trucksu.com"
-    end
+    base = Application.get_env(:trucksu, :screenshots_url)
     redirect conn, external: "#{base}/#{id}"
   end
 
