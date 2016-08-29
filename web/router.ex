@@ -124,6 +124,7 @@ defmodule Trucksu.Router do
         pipe_through :ensure_authenticated
 
         get "/", MeController, :show
+        patch "/", MeController, :partial_update
 
         post "/avatar", UserController, :upload_avatar
         post "/userpage", MeController, :upload_userpage

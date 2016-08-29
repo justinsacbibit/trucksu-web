@@ -1,8 +1,21 @@
 defmodule Trucksu.Session do
   alias Trucksu.{Hash, Repo, User}
 
-  def authenticate(%{"username" => username, "password" => password}, already_hashed \\ false) do
+  def authenticate(session_params, already_hashed \\ false)
+  def authenticate(%{"username" => username, "password" => password}, already_hashed) do
     authenticate(username, password, already_hashed)
+  end
+
+  def authenticate(_, _) do
+    raise __MODULE__.AuthenticationError
+  end
+
+  defmodule AuthenticationError do
+    @moduledoc """
+    Error raised when unable to authenticate.
+    """
+
+    defexception exception: nil, plug_status: 400
   end
 
   def authenticate(username, password, already_hashed) do
