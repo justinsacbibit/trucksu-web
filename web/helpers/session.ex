@@ -34,11 +34,10 @@ defmodule Trucksu.Session do
     case user do
       nil -> false
       _ ->
-        hashed_password = case already_hashed do
-          true ->
-            password
-          false ->
-            Hash.md5(password)
+        hashed_password = if already_hashed do
+          password
+        else
+          Hash.md5(password)
         end
         Comeonin.Bcrypt.checkpw(hashed_password, user.encrypted_password)
     end
