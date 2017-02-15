@@ -27,3 +27,4 @@ host.pem
 host.key
 /files/
 
+/run.sh
