@@ -1,8 +1,21 @@
 defmodule Trucksu.Session do
   alias Trucksu.{Hash, Repo, User}
 
-  def authenticate(%{"username" => username, "password" => password}, already_hashed \\ false) do
+  def authenticate(session_params, already_hashed \\ false)
+  def authenticate(%{"username" => username, "password" => password}, already_hashed) do
     authenticate(username, password, already_hashed)
+  end
+
+  def authenticate(_, _) do
+    raise __MODULE__.AuthenticationError
+  end
+
+  defmodule AuthenticationError do
+    @moduledoc """
+    Error raised when unable to authenticate.
+    """
+
+    defexception exception: nil, plug_status: 400
   end
 
   def authenticate(username, password, already_hashed) do
@@ -21,11 +34,10 @@ defmodule Trucksu.Session do
     case user do
       nil -> false
       _ ->
-        hashed_password = case already_hashed do
-          true ->
-            password
-          false ->
-            Hash.md5(password)
+        hashed_password = if already_hashed do
+          password
+        else
+          Hash.md5(password)
         end
         Comeonin.Bcrypt.checkpw(hashed_password, user.encrypted_password)
     end
