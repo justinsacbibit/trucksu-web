@@ -32,7 +32,6 @@ defmodule Trucksu.Performance do
   end
 
   def calculate_stats_for_scores(scores) do
-    # TODO: Filter in SQL using a subquery
     unique_by_md5 = fn %Score{file_md5: file_md5} ->
       file_md5
     end
@@ -77,7 +76,6 @@ defmodule Trucksu.Performance do
       preload: [user: u]
 
     results = Enum.map user_stats, fn user_stats ->
-      # TODO: Sort in SQL using a subquery
       calculated = calculate_stats_for_user(user_stats.user_id, user_stats.game_mode)
       [pp: pp, accuracy: accuracy] = calculated
 

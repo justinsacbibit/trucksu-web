@@ -8,6 +8,7 @@ defmodule Trucksu.ScoreController do
     Performance,
     Session,
     Constants,
+    ServiceClients,
 
     Repo,
     OsuBeatmap,
@@ -21,8 +22,6 @@ defmodule Trucksu.ScoreController do
   @bancho_url Application.get_env(:trucksu, :bancho_url)
   @bot_url Application.get_env(:trucksu, :bot_url)
   @server_cookie Application.get_env(:trucksu, :server_cookie)
-  @decryption_url Application.get_env(:trucksu, :decryption_url)
-  @decryption_cookie Application.get_env(:trucksu, :decryption_cookie)
   @replay_file_bucket Application.get_env(:trucksu, :replay_file_bucket)
 
   def create(conn, %{"osuver" => osuver} = params) do
@@ -38,14 +37,7 @@ defmodule Trucksu.ScoreController do
   end
 
   defp decrypt(ciphertext, key, iv) do
-    plaintext = if @decryption_url do
-      body = {:form, [{"c", ciphertext}, {"iv", iv}, {"k", key}, {"cookie", @decryption_cookie}]}
-      %HTTPoison.Response{body: plaintext} = HTTPoison.post!(@decryption_url, body)
-      plaintext
-    else
-      {plaintext, 0} = System.cmd("php", ["score.php", key, ciphertext, iv])
-      plaintext
-    end
+    plaintext = ServiceClients.Decryption.decrypt(ciphertext, key, iv)
 
     # Strip out trailing weird bytes
     plaintext = Regex.replace(~r/\p{Cc}*$/u, plaintext, "")

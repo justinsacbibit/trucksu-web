@@ -49,6 +49,7 @@ defmodule Trucksu.Mixfile do
      {:guardian, git: "https://github.com/ueberauth/guardian.git"},
      {:comeonin, "~> 2.5"},
      {:gettext, "~> 0.9"},
+     {:credo, "~> 0.6", only: [:dev, :test]},
      {:httpoison, "~> 0.9.0"},
      {:poison, "~> 1.5"},
      {:ex_aws, "~> 0.4.10"},

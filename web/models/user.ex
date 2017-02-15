@@ -146,6 +146,20 @@ defmodule Trucksu.User do
     end
   end
 
+  def partial_update_changeset(model, params \\ %{}) do
+    changeset = model
+    |> cast(params, ~w(), ~w(password))
+
+    if get_change(changeset, :password) do
+      changeset
+      |> validate_length(:password, min: 5)
+      |> validate_confirmation(:password, message: "Password does not match")
+      |> generate_encrypted_password
+    else
+      changeset
+    end
+  end
+
   defp generate_encrypted_password(changeset) do
     case changeset do
       %Ecto.Changeset{valid?: true, changes: %{password: password}} ->
