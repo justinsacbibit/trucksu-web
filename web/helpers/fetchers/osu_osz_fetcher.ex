@@ -35,7 +35,7 @@ defmodule Trucksu.OsuOszFetcher do
       {:error, {:http_error, 404, _}} ->
         Logger.warn "Downloading beatmapset #{beatmapset_id} from osu!"
         ExStatsD.increment "osu.osz_downloads.attempted"
-        response = HTTPoison.get("https://osu.ppy.sh/d/#{beatmapset_id}", [], follow_redirect: true, params: [{"u", @osu_username}, {"h", @osu_password_md5}])
+        response = HTTPoison.get("https://osu.ppy.sh/d/#{beatmapset_id}", [], follow_redirect: true, params: [{"u", @osu_username}, {"h", @osu_password_md5}], timeout: 30_000, recv_timeout: 30_000)
         Logger.debug inspect response
         case response do
           {:ok, %HTTPoison.Response{body: osz_file_content, headers: headers} = resp} ->
