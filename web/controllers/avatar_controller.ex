@@ -24,7 +24,7 @@ defmodule Trucksu.AvatarController do
   end
 
   defp get_avatar(conn, user_id) do
-    case ExAws.S3.get_object(@avatar_file_bucket, user_id) do
+    case ExAws.S3.get_object(@avatar_file_bucket, user_id) |> ExAws.request do
       {:error, {:http_error, 404, _}} ->
         etag = "default-avatar"
         AvatarAgent.put(user_id, etag)

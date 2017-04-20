@@ -31,7 +31,7 @@ defmodule Trucksu.ScreenshotController do
       screenshot = Repo.insert! changeset
 
       screenshot_file_content = File.read!(ss_path)
-      ExAws.S3.put_object!(@screenshot_file_bucket, "#{screenshot.id}", screenshot_file_content)
+      ExAws.S3.put_object!(@screenshot_file_bucket, "#{screenshot.id}", screenshot_file_content) |> ExAws.request
 
       screenshot.id
     end)
@@ -45,7 +45,7 @@ defmodule Trucksu.ScreenshotController do
   end
 
   def show(conn, %{"id" => id}) do
-    case ExAws.S3.get_object(@screenshot_file_bucket, id) do
+    case ExAws.S3.get_object(@screenshot_file_bucket, id) |> ExAws.request do
       {:error, {:http_error, 404, _}} ->
 
         conn

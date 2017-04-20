@@ -50,9 +50,7 @@ defmodule Trucksu.Repo.Migrations.CreateOsuBeatmapset do
     #   Repo.insert! changeset
     # end
 
-    alter table(:osu_beatmaps, primary_key: false) do
-      modify :id, :integer, primary_key: true
-
+    alter table(:osu_beatmaps) do
       modify :beatmapset_id, references(:osu_beatmapsets), null: false
       modify :approved, :integer, null: false
       modify :total_length, :integer, null: false

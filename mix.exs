@@ -52,7 +52,7 @@ defmodule Trucksu.Mixfile do
      {:credo, "~> 0.6", only: [:dev, :test]},
      {:httpoison, "~> 0.9.0"},
      {:poison, "~> 1.5"},
-     {:ex_aws, "~> 0.4.10"},
+     {:ex_aws, "~> 1.0.0"},
      {:mailgun, "~> 0.1.2"},
      {:sweet_xml, "~> 0.5.0"},
      {:ex_rated, "~> 1.2"},

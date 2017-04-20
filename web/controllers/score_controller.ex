@@ -348,7 +348,7 @@ defmodule Trucksu.ScoreController do
 
   defp upload_replay(replay_path, score_id, username) do
     replay_file_content = File.read!(replay_path)
-    ExAws.S3.put_object!(@replay_file_bucket, "#{score_id}", replay_file_content)
+    ExAws.S3.put_object!(@replay_file_bucket, "#{score_id}", replay_file_content) |> ExAws.request
     Logger.info "Uploaded replay for #{username}, score id #{score_id}, byte size: #{replay_file_content |> byte_size}"
   end
 

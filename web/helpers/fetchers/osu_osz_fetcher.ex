@@ -14,7 +14,7 @@ defmodule Trucksu.OsuOszFetcher do
   Useful for returning an presigned S3 URL.
   """
   def has?(beatmapset_id) do
-    case ExAws.S3.head_object(@bucket, object_name(beatmapset_id)) do
+    case ExAws.S3.head_object(@bucket, object_name(beatmapset_id)) |> ExAws.request do
       {:ok, _} ->
         true
       _ ->
@@ -31,7 +31,7 @@ defmodule Trucksu.OsuOszFetcher do
     # TODO: Novideo
 
     object = object_name(beatmapset_id)
-    case ExAws.S3.get_object(@bucket, object) do
+    case ExAws.S3.get_object(@bucket, object) |> ExAws.request do
       {:error, {:http_error, 404, _}} ->
         Logger.warn "Downloading beatmapset #{beatmapset_id} from osu!"
         ExStatsD.increment "osu.osz_downloads.attempted"
@@ -56,7 +56,7 @@ defmodule Trucksu.OsuOszFetcher do
                   content_disposition = Enum.find(headers, &(elem(&1, 0) == "Content-Disposition")) |> elem(1)
                   opts = [content_type: content_type, content_length: content_length, content_disposition: content_disposition]
                   # TODO: Multipart upload
-                  case ExAws.S3.put_object(@bucket, object, osz_file_content, opts) do
+                  case ExAws.S3.put_object(@bucket, object, osz_file_content, opts) |> ExAws.request do
                     {:ok, _} ->
                       Logger.debug "Put beatmapset #{beatmapset_id} to S3"
                     {:error, error} ->

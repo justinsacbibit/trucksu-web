@@ -6,13 +6,13 @@ defmodule Trucksu.Userpage.Manager do
   defp object_key(user_id), do: "#{user_id}"
 
   def upload(user_id, userpage) do
-    ExAws.S3.put_object!(@userpage_bucket, object_key(user_id), userpage)
+    ExAws.S3.put_object!(@userpage_bucket, object_key(user_id), userpage) |> ExAws.request
     Cachex.del(@cache_name, cache_key(user_id))
   end
 
   def get(user_id) do
     {_status, userpage} = Cachex.get(@cache_name, cache_key(user_id), fallback: fn(_key) ->
-      case ExAws.S3.get_object(@userpage_bucket, object_key(user_id)) do
+      case ExAws.S3.get_object(@userpage_bucket, object_key(user_id)) |> ExAws.request do
         {:ok, %{body: userpage}} -> userpage
         _ -> nil
       end

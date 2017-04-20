@@ -180,7 +180,7 @@ defmodule Trucksu.UserController do
 
     avatar_file_content = File.read!(avatar_path)
     bucket = Application.get_env(:trucksu, :avatar_file_bucket)
-    ExAws.S3.put_object!(bucket, "#{user.id}", avatar_file_content)
+    ExAws.S3.put_object!(bucket, "#{user.id}", avatar_file_content) |> ExAws.request
 
     AvatarAgent.delete("#{user.id}")
 

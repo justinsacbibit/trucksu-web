@@ -89,7 +89,7 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
 
           if prev_osu_beatmapset.last_update != osu_beatmapset.last_update do
             bucket = Application.get_env(:trucksu, :osz_file_bucket)
-            case ExAws.S3.delete_object(bucket, "#{osu_beatmapset.id}.osz") do
+            case ExAws.S3.delete_object(bucket, "#{osu_beatmapset.id}.osz") |> ExAws.request do
               {:ok, _} ->
                 Logger.warn "Deleted beatmapset #{osu_beatmapset.id} from S3"
               {:error, error} ->

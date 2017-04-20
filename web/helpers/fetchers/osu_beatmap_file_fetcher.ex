@@ -14,12 +14,12 @@ defmodule Trucksu.OsuBeatmapFileFetcher do
 
   defp fetch_with_beatmap(osu_beatmap) do
     bucket = Application.get_env(:trucksu, :beatmap_file_bucket)
-    case ExAws.S3.get_object(bucket, osu_beatmap.file_md5) do
+    case ExAws.S3.get_object(bucket, osu_beatmap.file_md5) |> ExAws.request do
       {:error, {:http_error, 404, _}} ->
         case download_osu_file(osu_beatmap.id) do
           {:ok, osu_file_content} ->
             # TODO: Need to verify beatmap.file_md5 is the same as osu_file_content hash
-            case ExAws.S3.put_object(bucket, osu_beatmap.file_md5, osu_file_content) do
+            case ExAws.S3.put_object(bucket, osu_beatmap.file_md5, osu_file_content) |> ExAws.request do
               {:ok, _} ->
                 {:ok, osu_file_content}
               {:error, error} ->
