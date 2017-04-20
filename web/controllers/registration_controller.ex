@@ -13,6 +13,8 @@ defmodule Trucksu.RegistrationController do
 
   def create(conn, %{"user" => user_params}) do
 
+    raise "no"
+
     changeset = User.changeset(%User{}, user_params)
 
     # TODO: Validate email through Mailgun API
