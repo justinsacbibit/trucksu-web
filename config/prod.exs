@@ -89,3 +89,5 @@ config :trucksu,
 #
 #     config :trucksu, Trucksu.Endpoint, root: "."
 
+import_config "prod.secret.exs"
+
