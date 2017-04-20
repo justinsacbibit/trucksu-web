@@ -28,3 +28,5 @@ host.key
 /files/
 
 /run.sh
+
+/.env
