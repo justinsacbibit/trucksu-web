@@ -13,7 +13,9 @@ defmodule Trucksu.RegistrationController do
 
   def create(conn, %{"user" => user_params}) do
 
-    raise "no"
+    if Application.get_env(:trucksu, :disable_user_registration) do
+      raise "no"
+    end
 
     changeset = User.changeset(%User{}, user_params)
 
