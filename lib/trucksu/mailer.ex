@@ -28,6 +28,8 @@ defmodule Trucksu.Mailer do
   end
 
   def send_verification_email(user) do
+    IO.inspect @config
+
     if Application.get_env(:trucksu, :send_emails) do
       changeset = EmailToken.new(user)
       email_token = Repo.insert!(changeset)
