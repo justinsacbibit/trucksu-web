@@ -21,10 +21,8 @@ defmodule Trucksu.UserScoresCache do
   #  case status do
   #    :loaded ->
   #      Logger.info "User scores cache miss"
-  #      ExStatsD.increment("user_scores.cache.misses")
   #    :ok ->
   #      Logger.info "User scores cache hit"
-  #      ExStatsD.increment("user_scores.cache.hits")
   #  end
   #  result
   #end

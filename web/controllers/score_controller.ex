@@ -292,7 +292,6 @@ defmodule Trucksu.ScoreController do
           Task.start(fn -> notify_services_of_score(score, user) end)
         end
 
-        ExStatsD.increment "scores.submissions.succeeded"
         # TODO: Use Phoenix.PubSub (or another form of pubsub) to invalidate the cache
         PerformanceGraph.Server.invalidate(user.id, game_mode)
         Trucksu.UserScoresCache.invalidate(user.id, game_mode)

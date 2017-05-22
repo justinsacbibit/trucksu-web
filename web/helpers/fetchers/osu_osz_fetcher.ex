@@ -34,7 +34,6 @@ defmodule Trucksu.OsuOszFetcher do
     case ExAws.S3.get_object(@bucket, object) |> ExAws.request do
       {:error, {:http_error, 404, _}} ->
         Logger.warn "Downloading beatmapset #{beatmapset_id} from osu!"
-        ExStatsD.increment "osu.osz_downloads.attempted"
         response = HTTPoison.get("https://osu.ppy.sh/d/#{beatmapset_id}", [], follow_redirect: true, params: [{"u", @osu_username}, {"h", @osu_password_md5}], timeout: 30_000, recv_timeout: 30_000)
         Logger.debug inspect response
         case response do
@@ -49,7 +48,6 @@ defmodule Trucksu.OsuOszFetcher do
               if content_length_header do
                 Task.start(fn ->
                   Logger.warn "Downloaded beatmapset #{beatmapset_id} from osu!"
-                  ExStatsD.increment "osu.osz_downloads.succeeded"
 
                   content_type = Enum.find(headers, &(elem(&1, 0) == "Content-Type")) |> elem(1)
                   content_length = content_length_header |> elem(1)

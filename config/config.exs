@@ -32,11 +32,6 @@ config :guardian, Guardian,
   serializer: Trucksu.GuardianSerializer,
   secret_key: System.get_env("GUARDIAN_SECRET_KEY") || "e2z2aq3mz7GAiStke74ROQ13+nqNmNvXf6EuZNIsK8a8w00VOTLmEpGRBtdKhb5q"
 
-config :ex_statsd,
-  host: "127.0.0.1",
-  port: 8125,
-  namespace: "trucksu.web"
-
 config :trucksu,
   send_emails: false,
   osu_api_key: System.get_env("OSU_API_KEY"),

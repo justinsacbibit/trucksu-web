@@ -13,7 +13,6 @@ defmodule Trucksu.Plugs.EnsureOsuClientAuthenticated do
     case Session.authenticate(username, password_md5, true) do
       {:error, reason} ->
         Logger.info "#{username} was unable to authenticate: #{reason}"
-        ExStatsD.increment "osu.authentication_error"
         handle_error(conn, opts)
       {:ok, user} ->
         assign(conn, :user, user)

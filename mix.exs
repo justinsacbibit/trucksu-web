@@ -23,7 +23,7 @@ defmodule Trucksu.Mixfile do
      applications: [:phoenix, :cowboy, :logger, :gettext,
                     :phoenix_ecto, :postgrex, :comeonin, :timex,
                     :phoenix_html, :guardian, :httpoison, :ex_aws,
-                    :ex_rated, :ex_statsd, :phoenix_pubsub, :cachex]]
+                    :ex_rated, :phoenix_pubsub, :cachex]]
   end
 
   # Specifies which paths to compile per environment.
@@ -57,7 +57,6 @@ defmodule Trucksu.Mixfile do
      {:sweet_xml, "~> 0.5.0"},
      {:ex_rated, "~> 1.2"},
      {:mix_test_watch, "~> 0.2", only: :dev},
-     {:ex_statsd, git: "https://github.com/CargoSense/ex_statsd.git"},
      {:cors_plug, "~> 1.1"},
      {:cowboy, "~> 1.0"}]
   end

@@ -79,8 +79,6 @@ defmodule Trucksu.Osu do
 
     Logger.warn "Executing osu! API call: path=#{path} params=#{inspect params} bang=#{bang}"
 
-    ExStatsD.increment "osu.api_calls"
-
     if bang do
       get!(path, [], opts)
     else

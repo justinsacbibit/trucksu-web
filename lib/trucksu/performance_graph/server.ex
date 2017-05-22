@@ -17,10 +17,8 @@ defmodule Trucksu.PerformanceGraph.Server do
     case status do
       :loaded ->
         Logger.info "Performance graph cache miss"
-        ExStatsD.increment("performance_graph.cache.misses")
       :ok ->
         Logger.info "Performance graph cache hit"
-        ExStatsD.increment("performance_graph.cache.hits")
     end
     graph
   end

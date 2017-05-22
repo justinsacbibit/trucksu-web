@@ -13,19 +13,15 @@ defmodule Trucksu.Router do
     plug :accepts, ["json"]
     plug Guardian.Plug.VerifyHeader
     plug Guardian.Plug.LoadResource
-    plug Trucksu.Plug.IncrementStat, name: "api.requests"
   end
 
   pipeline :screenshots do
-    plug Trucksu.Plug.IncrementStat, name: "screenshots.requests"
   end
 
   pipeline :avatars do
-    plug Trucksu.Plug.IncrementStat, name: "avatars.requests"
   end
 
   pipeline :osu_ppy do
-    plug Trucksu.Plug.IncrementStat, name: "osu.ppy.requests"
   end
 
   pipeline :ensure_authenticated do
