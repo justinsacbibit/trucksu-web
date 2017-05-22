@@ -5,11 +5,11 @@ upstream {{ .APP }} {
 }
 server {
   listen      80;
-  listen      443 ssl http2;
+  # listen      443 ssl http2;
   server_name rt.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
-  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
+  # ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
+  # ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-ss-access.log;
   error_log   /var/log/nginx/{{ .APP }}-ss-error.log;
@@ -34,11 +34,11 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl http2;
+  # listen      443 ssl http2;
   server_name ss.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
-  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
+  # ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
+  # ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-ss-access.log;
   error_log   /var/log/nginx/{{ .APP }}-ss-error.log;
@@ -63,11 +63,11 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl http2;
+  # listen      443 ssl http2;
   server_name api.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
-  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
+  # ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
+  # ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   access_log  /var/log/nginx/{{ .APP }}-api-access.log;
   error_log   /var/log/nginx/{{ .APP }}-api-error.log;
@@ -92,11 +92,11 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl http2;
+  # listen      443 ssl http2;
   server_name osu.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
-  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
+  # ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
+  # ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
@@ -124,11 +124,11 @@ server {
 server {
   listen      80;
   listen      3000;
-  listen      443 ssl;
+  # listen      443 ssl;
   server_name osu.ppy.sh;
 
-  ssl_certificate     {{ .APP_SSL_PATH }}/server.crt;
-  ssl_certificate_key {{ .APP_SSL_PATH }}/server.key;
+  # ssl_certificate     {{ .APP_SSL_PATH }}/server.crt;
+  # ssl_certificate_key {{ .APP_SSL_PATH }}/server.key;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
@@ -158,11 +158,11 @@ server {
 }
 server {
   listen      80;
-  listen      443 ssl http2;
+  # listen      443 ssl http2;
   server_name a.trucksu.com;
 
-  ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
-  ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
+  # ssl_certificate     {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/fullchain.pem;
+  # ssl_certificate_key {{ .DOKKU_ROOT }}/{{ .APP }}/letsencrypt/certs/current/key.pem;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
@@ -190,11 +190,11 @@ server {
 server {
   listen      80;
   listen      3001;
-  listen      443 ssl;
+  # listen      443 ssl;
   server_name a.ppy.sh;
 
-  ssl_certificate     {{ .APP_SSL_PATH }}/server.crt;
-  ssl_certificate_key {{ .APP_SSL_PATH }}/server.key;
+  # ssl_certificate     {{ .APP_SSL_PATH }}/server.crt;
+  # ssl_certificate_key {{ .APP_SSL_PATH }}/server.key;
 
   # TODO: Set up separate logs for (osu|a).ppy.sh
   access_log /var/log/nginx/{{ .APP }}-access.log;
