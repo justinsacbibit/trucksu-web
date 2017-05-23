@@ -42,7 +42,6 @@ defmodule Trucksu.Mixfile do
      {:cachex, "~> 1.2.2"},
      {:postgrex, "~> 0.11.0"},
      {:timex_ecto, "~> 1.0.4"},
-     {:yamerl, github: "yakaz/yamerl"},
      {:countries, github: "SebastianSzturo/countries"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:phoenix_ecto, "~> 3.0.1"},
