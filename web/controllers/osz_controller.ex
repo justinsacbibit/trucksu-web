@@ -49,7 +49,7 @@ defmodule Trucksu.OszController do
   defp handle_already_downloaded(fetch_task, beatmapset_id, conn) do
     Task.shutdown(fetch_task)
     object = "#{beatmapset_id}.osz"
-    case ExAws.S3.presigned_url(:get, @bucket, object) |> ExAws.request do
+    case ExAws.S3.presigned_url(%{}, :get, @bucket, object) |> ExAws.request do
       {:ok, url} ->
         redirect(conn, external: url)
       {:error, error} ->

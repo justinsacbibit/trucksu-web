@@ -29,7 +29,7 @@ defmodule Trucksu.User do
     many_to_many :groups, Trucksu.Group, join_through: Trucksu.UserGroup
     has_many :user_groups, Trucksu.UserGroup, on_replace: :delete
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(username email password)

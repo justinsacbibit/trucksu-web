@@ -7,7 +7,7 @@ defmodule Trucksu.ScoreProcessList do
     field :process_list, :string
     field :version, :string
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(user_id score_id process_list version)

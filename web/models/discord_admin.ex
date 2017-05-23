@@ -4,7 +4,7 @@ defmodule Trucksu.DiscordAdmin do
   schema "discord_admins" do
     field :discord_id, :string
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(discord_id)

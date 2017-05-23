@@ -7,7 +7,7 @@ defmodule Trucksu.EmailToken do
     field :token, :string
     belongs_to :user, Trucksu.User
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(token user_id)

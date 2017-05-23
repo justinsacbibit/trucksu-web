@@ -6,7 +6,7 @@ defmodule Trucksu.Friendship do
     belongs_to :requester, User
     belongs_to :receiver, User
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(requester_id receiver_id)

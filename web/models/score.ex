@@ -46,7 +46,7 @@ defmodule Trucksu.Score do
 
     belongs_to :osu_beatmap, Trucksu.OsuBeatmap, foreign_key: :file_md5, references: :file_md5, type: :string
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(score max_combo full_combo mods count_300 count_100 count_50 katu_count geki_count miss_count time game_mode accuracy pass user_id file_md5)

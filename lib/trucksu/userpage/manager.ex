@@ -6,7 +6,7 @@ defmodule Trucksu.Userpage.Manager do
   defp object_key(user_id), do: "#{user_id}"
 
   def upload(user_id, userpage) do
-    ExAws.S3.put_object!(@userpage_bucket, object_key(user_id), userpage) |> ExAws.request
+    ExAws.S3.put_object(@userpage_bucket, object_key(user_id), userpage) |> ExAws.request
     Cachex.del(@cache_name, cache_key(user_id))
   end
 

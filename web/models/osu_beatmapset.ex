@@ -30,7 +30,7 @@ defmodule Trucksu.OsuBeatmapset do
 
     field :last_check, Timex.Ecto.DateTime
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(id last_update artist title creator bpm source tags favorite_count last_check approved)

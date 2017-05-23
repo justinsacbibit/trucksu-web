@@ -10,8 +10,8 @@ defmodule Trucksu.OsuBeatmapsetFetcher do
     OsuBeatmap,
   }
 
-  @beatmap_status_approved 2
-  @beatmap_status_ranked 1
+#  @beatmap_status_approved 2
+#  @beatmap_status_ranked 1
 
   @hour_threshold_before_updating_pending_maps 2
 

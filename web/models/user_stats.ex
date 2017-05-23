@@ -37,7 +37,7 @@ defmodule Trucksu.UserStats do
     field :rank, :integer, virtual: true
     field :first_place_scores, :any, virtual: true
 
-    timestamps
+    timestamps()
   end
 
   def get_rank(user_id, game_mode) do

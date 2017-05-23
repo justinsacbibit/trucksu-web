@@ -35,7 +35,7 @@ defmodule Trucksu.OsuBeatmap do
 
     has_many :scores, Trucksu.Score, foreign_key: :file_md5, references: :file_md5
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(id beatmapset_id total_length hit_length version file_md5 diff_size diff_overall diff_approach diff_drain game_mode playcount passcount difficultyrating)

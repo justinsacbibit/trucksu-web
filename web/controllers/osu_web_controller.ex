@@ -15,11 +15,11 @@ defmodule Trucksu.OsuWebController do
   }
 
   @ranking_type_global_selected_mods 2
-  @ranking_type_global 1
+#  @ranking_type_global 1
   @ranking_type_country 4
   @ranking_type_friend 3
 
-  @ranked_status_not_submitted -1
+#  @ranked_status_not_submitted -1
   @ranked_status_up_to_date 2
   @ranked_status_update_available 1
 
@@ -329,7 +329,7 @@ defmodule Trucksu.OsuWebController do
   #   ss_file_content = File.read!(ss_file.path)
   #   if byte_size(ss_file_content) > 0 do
   #     bucket = Application.get_env(:trucksu, :desktop_screenshot_file_bucket)
-  #     ExAws.S3.put_object!(bucket, "#{user_id}-#{Time.now |> Time.to_milliseconds}.jpg", ss_file_content)
+  #     ExAws.S3.put_object(bucket, "#{user_id}-#{Time.now |> Time.to_milliseconds}.jpg", ss_file_content)
   #   else
   #     Logger.info "No screenshot file content for #{user_id}"
   #   end
@@ -361,14 +361,14 @@ defmodule Trucksu.OsuWebController do
       ranked_status == 2 or (@everything_is_ranked and ranked_status == 0) ->
         format_beatmap_header(@ranked_status_up_to_date, osu_beatmap)
         <> "0\n" # nothing?
-        <> format_beatmap_song_info
+        <> format_beatmap_song_info()
         <> "0\n" # beatmap appreciation
         <> format_personal_best(osu_beatmap, username, game_mode)
         <> format_beatmap_top_scores(osu_beatmap)
       true ->
         format_beatmap_header(ranked_status, osu_beatmap)
         <> "0\n" # nothing?
-        <> format_beatmap_song_info
+        <> format_beatmap_song_info()
         <> "0\n" # beatmap appreciation
     end
   end

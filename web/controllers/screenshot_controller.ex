@@ -31,7 +31,7 @@ defmodule Trucksu.ScreenshotController do
       screenshot = Repo.insert! changeset
 
       screenshot_file_content = File.read!(ss_path)
-      ExAws.S3.put_object!(@screenshot_file_bucket, "#{screenshot.id}", screenshot_file_content) |> ExAws.request
+      ExAws.S3.put_object(@screenshot_file_bucket, "#{screenshot.id}", screenshot_file_content) |> ExAws.request
 
       screenshot.id
     end)

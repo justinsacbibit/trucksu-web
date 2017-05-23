@@ -6,7 +6,7 @@ defmodule Trucksu.KnownIp do
     belongs_to :user, User
     field :ip_address, :string
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(user_id ip_address)

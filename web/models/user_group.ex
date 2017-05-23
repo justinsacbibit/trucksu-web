@@ -5,7 +5,7 @@ defmodule Trucksu.UserGroup do
     belongs_to :user, Trucksu.User
     belongs_to :group, Trucksu.Group
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w()

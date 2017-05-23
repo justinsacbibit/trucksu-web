@@ -8,7 +8,7 @@ defmodule Trucksu.OsuUserAccessPoint do
     field :disk_md5, :binary
     belongs_to :user, Trucksu.User
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(osu_md5 mac_md5 unique_md5 user_id)

@@ -9,17 +9,6 @@ defmodule Trucksu.OsuDirectController do
   @osu_username Application.get_env(:trucksu, :osu_username)
   @osu_password_md5 Application.get_env(:trucksu, :osu_password_md5)
 
-  @ranking_type_global_selected_mods 2
-  @ranking_type_global 1
-  @ranking_type_country 4
-  @ranking_type_friend 3
-
-  @ranked_status_not_submitted -1
-  @ranked_status_up_to_date 2
-  @ranked_status_update_available 1
-
-  @everything_is_ranked true
-
   # plug :authenticate when action in [:direct_index] # TODO: add :show_map?
 
   # defp authenticate(conn, _) do

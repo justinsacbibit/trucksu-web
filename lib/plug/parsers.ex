@@ -135,7 +135,7 @@ defmodule TruckPlug.Parsers do
   @methods ~w(POST PUT PATCH DELETE)
 
   def init(opts) do
-    parsers = Keyword.get(opts, :parsers) || raise_missing_parsers
+    parsers = Keyword.get(opts, :parsers) || raise_missing_parsers()
 
     opts
     |> Keyword.put(:parsers, convert_parsers(parsers))
