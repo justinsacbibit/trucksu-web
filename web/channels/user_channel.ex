@@ -1,16 +1,18 @@
 defmodule Trucksu.UserChannel do
   use Trucksu.Web, :channel
-  alias Trucksu.{User, UserStats}
+  alias Trucksu.{
+    User,
+    UserStats,
+    Env,
+  }
   require Logger
-
-  @bancho_url Application.get_env(:trucksu, :bancho_url)
 
   def join("users", _params, socket) do
     {:ok, socket}
   end
 
   def join("users:" <> user_id, _params, socket) do
-    case HTTPoison.get(@bancho_url <> "/api/v1/users/#{user_id}") do
+    case HTTPoison.get(Env.bancho_url() <> "/api/v1/users/#{user_id}") do
       {:ok, %HTTPoison.Response{body: user_action}} ->
         user_action = Poison.decode! user_action
         case user_action do
@@ -26,7 +28,7 @@ defmodule Trucksu.UserChannel do
   end
 
   def handle_in("get:users", _, socket) do
-    case HTTPoison.get(@bancho_url <> "/api/v1/users") do
+    case HTTPoison.get(Env.bancho_url() <> "/api/v1/users") do
       {:ok, %HTTPoison.Response{body: user_actions}} ->
         user_actions = Poison.decode! user_actions
         users = for user_action <- user_actions do

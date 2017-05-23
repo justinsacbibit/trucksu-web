@@ -3,6 +3,7 @@ defmodule Trucksu.ScoreController do
   require Logger
   use Bitwise
   alias Trucksu.{
+    Env,
     OsuBeatmapFetcher,
     PerformanceGraph,
     Performance,
@@ -18,11 +19,6 @@ defmodule Trucksu.ScoreController do
     User,
   }
   alias Trucksu.Helpers.Mods
-
-  @bancho_url Application.get_env(:trucksu, :bancho_url)
-  @bot_url Application.get_env(:trucksu, :bot_url)
-  @server_cookie Application.get_env(:trucksu, :server_cookie)
-  @replay_file_bucket Application.get_env(:trucksu, :replay_file_bucket)
 
   def create(conn, %{"osuver" => osuver} = params) do
     key = "osu!-scoreburgr---------#{osuver}"
@@ -347,7 +343,7 @@ defmodule Trucksu.ScoreController do
 
   defp upload_replay(replay_path, score_id, username) do
     replay_file_content = File.read!(replay_path)
-    ExAws.S3.put_object(@replay_file_bucket, "#{score_id}", replay_file_content) |> ExAws.request
+    ExAws.S3.put_object(Env.replay_file_bucket(), "#{score_id}", replay_file_content) |> ExAws.request
     Logger.info "Uploaded replay for #{username}, score id #{score_id}, byte size: #{replay_file_content |> byte_size}"
   end
 
@@ -389,7 +385,7 @@ defmodule Trucksu.ScoreController do
 
     # TODO: Error logging
     data = %{
-      "cookie" => @server_cookie,
+      "cookie" => Env.server_cookie(),
       "event_type" => "pp",
       "pp" => "#{round score.pp}",
       "user_id" => user.id,
@@ -409,7 +405,7 @@ defmodule Trucksu.ScoreController do
     json = Poison.encode!(data)
 
     Task.start(fn ->
-      response = HTTPoison.post(@bancho_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
+      response = HTTPoison.post(Env.bancho_url() <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
 
       case response do
         {:ok, _response} ->
@@ -420,7 +416,7 @@ defmodule Trucksu.ScoreController do
     end)
 
     Task.start(fn ->
-      response = HTTPoison.post(@bot_url <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
+      response = HTTPoison.post(Env.bot_url() <> "/event", json, [{"Content-Type", "application/json"}], timeout: 20000, recv_timeout: 20000)
 
       case response do
         {:ok, _response} ->

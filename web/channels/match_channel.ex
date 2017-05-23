@@ -1,11 +1,10 @@
 defmodule Trucksu.MatchChannel do
   use Trucksu.Web, :channel
+  alias Trucksu.Env
   require Logger
 
-  @bancho_url Application.get_env(:trucksu, :bancho_url)
-
   def join("matches", _params, socket) do
-    case HTTPoison.get(@bancho_url <> "/api/v1/matches") do
+    case HTTPoison.get(Env.bancho_url() <> "/api/v1/matches") do
       {:ok, %HTTPoison.Response{body: matches}} ->
         matches = Poison.decode! matches
         {:ok, %{matches: matches}, socket}
