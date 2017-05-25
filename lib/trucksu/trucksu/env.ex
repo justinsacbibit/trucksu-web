@@ -6,6 +6,7 @@ defmodule Trucksu.Env do
 
   defp get_env(key), do: Application.get_env(:trucksu, key)
 
+  def avatar_file_bucket(), do: get_env(:avatar_file_bucket)
   def bancho_url(), do: get_env(:bancho_url)
   def bot_url(), do: get_env(:bot_url)
   def replay_file_bucket(), do: get_env(:replay_file_bucket)

@@ -1,9 +1,11 @@
 defmodule Trucksu.AvatarController do
   use Trucksu.Web, :controller
-  alias Trucksu.AvatarAgent
+  alias Trucksu.{
+    AvatarAgent,
+    Env,
+  }
 
   @default_path "web/static/images/default_avatar.jpg"
-  @avatar_file_bucket Application.get_env(:trucksu, :avatar_file_bucket)
 
   def show(conn, %{"user_id" => "-1"}) do
     Plug.Conn.send_file(conn, 200, @default_path)
@@ -24,7 +26,7 @@ defmodule Trucksu.AvatarController do
   end
 
   defp get_avatar(conn, user_id) do
-    case ExAws.S3.get_object(@avatar_file_bucket, user_id) |> ExAws.request do
+    case ExAws.S3.get_object(Env.avatar_file_bucket(), user_id) |> ExAws.request do
       {:error, {:http_error, 404, _}} ->
         etag = "default-avatar"
         AvatarAgent.put(user_id, etag)
