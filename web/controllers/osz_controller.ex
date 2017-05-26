@@ -1,9 +1,7 @@
 defmodule Trucksu.OszController do
   use Trucksu.Web, :controller
   require Logger
-  alias Trucksu.OsuOszFetcher
-
-  @bucket Application.get_env(:trucksu, :osz_file_bucket)
+  alias Trucksu.{Env, OsuOszFetcher}
 
   # TODO: If no username/password is specified, redirect to Trucksu website to allow for download
   # plug Trucksu.Plugs.EnsureOsuClientAuthenticated when action == :osu_client_download
@@ -53,7 +51,7 @@ defmodule Trucksu.OszController do
       Task.shutdown(fetch_task)
     end
     object = "#{beatmapset_id}.osz"
-    case ExAws.S3.presigned_url(%{}, :get, @bucket, object) |> ExAws.request do
+    case ExAws.S3.presigned_url(%{}, :get, Env.osz_file_bucket(), object) |> ExAws.request do
       {:ok, url} ->
         redirect(conn, external: url)
       {:error, error} ->

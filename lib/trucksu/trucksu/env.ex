@@ -9,6 +9,7 @@ defmodule Trucksu.Env do
   def avatar_file_bucket(), do: get_env(:avatar_file_bucket)
   def bancho_url(), do: get_env(:bancho_url)
   def bot_url(), do: get_env(:bot_url)
+  def osz_file_bucket(), do: get_env(:osz_file_bucket)
   def replay_file_bucket(), do: get_env(:replay_file_bucket)
   def server_cookie(), do: get_env(:server_cookie)
 end
