@@ -18,7 +18,8 @@ defmodule Trucksu.OszController do
 
     case OsuOszFetcher.fetch(beatmapset_id) do
       {:ok, headers, osz_file_content} ->
-        send_osz(conn, headers, osz_file_content)
+#        send_osz(conn, headers, osz_file_content)
+        handle_already_downloaded(nil, beatmapset_id, conn)
       {:error, _reason} ->
         html(conn, "")
     end
@@ -48,7 +49,9 @@ defmodule Trucksu.OszController do
   end
 
   defp handle_already_downloaded(fetch_task, beatmapset_id, conn) do
-    Task.shutdown(fetch_task)
+    if not is_nil(fetch_task) do
+      Task.shutdown(fetch_task)
+    end
     object = "#{beatmapset_id}.osz"
     case ExAws.S3.presigned_url(%{}, :get, @bucket, object) |> ExAws.request do
       {:ok, url} ->
