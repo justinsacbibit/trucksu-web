@@ -10,6 +10,7 @@ defmodule Trucksu.OszController do
   # plug Guardian.Plug.EnsureAuthenticated, [handler: Trucksu.SessionController] when action == :download
 
   def download(conn, %{"beatmapset_id" => beatmapset_id, "u" => _username, "h" => _password_md5}) do
+    Logger.info "download from osu! client"
     {beatmapset_id, _} = Integer.parse(beatmapset_id)
 
     # TODO: Rate limit
