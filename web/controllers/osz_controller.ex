@@ -16,8 +16,8 @@ defmodule Trucksu.OszController do
 
     case OsuOszFetcher.fetch(beatmapset_id) do
       {:ok, headers, osz_file_content} ->
-#        send_osz(conn, headers, osz_file_content)
-        handle_already_downloaded(nil, beatmapset_id, conn)
+        send_osz(conn, headers, osz_file_content)
+#        handle_already_downloaded(nil, beatmapset_id, conn)
       {:error, _reason} ->
         html(conn, "")
     end
