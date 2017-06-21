@@ -51,7 +51,7 @@ defmodule Trucksu.OszController do
       Task.shutdown(fetch_task)
     end
     object = "#{beatmapset_id}.osz"
-    case ExAws.S3.presigned_url(%{ region: "us-east-1" }, :get, Env.osz_file_bucket(), object) |> ExAws.request do
+    case ExAws.S3.presigned_url(%{ region: "us-east-1", secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY") }, :get, Env.osz_file_bucket(), object) |> ExAws.request do
       {:ok, url} ->
         redirect(conn, external: url)
       {:error, error} ->
